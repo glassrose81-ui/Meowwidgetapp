@@ -1,78 +1,133 @@
 package com.meowwidget.gd1
+
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
-import android.view.animation.LinearInterpolator
-import android.animation.ValueAnimator
-import kotlin.math.*
+import kotlin.math.min
+import kotlin.math.roundToInt
 
-class SplashView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
-  private val bg: Bitmap = BitmapFactory.decodeResource(resources, R.drawable.bg)
-  private val petals: List<Bitmap> = listOf(
-    BitmapFactory.decodeResource(resources, R.drawable.petal1),
-    BitmapFactory.decodeResource(resources, R.drawable.petal2),
-    BitmapFactory.decodeResource(resources, R.drawable.petal3),
-    BitmapFactory.decodeResource(resources, R.drawable.petal4)
-  )
-  // Lưới & vị trí đã chốt
-  private val coords = listOf(3 to 9,3 to 4,3 to 2,1 to 1, 6 to 5,5 to 8,4 to 6,5 to 1, 8 to 8,10 to 3,9 to 6,8 to 4, 8 to 2,1 to 6,5 to 3,2 to 7)
-  private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+class SplashView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null
+) : View(context, attrs) {
 
-  // Wave theo thời điểm đã chốt
-  private val waveStarts = floatArrayOf(0f, 4f, 6.5f)
-  private val waveDurations = floatArrayOf(5.8f, 5.4f, 5.4f)
-  private val fadeTime = 0.35f
-  private val stopMin = 0.47f; private val stopMax = 0.51f
+    // ==== ẢNH NGUỒN (đổi tên id nếu ảnh của bạn khác) ====
+    private val bgRes = R.drawable.meow_bg           // ảnh nền mèo
+    private val petalResIds = intArrayOf(            // 4 cánh hoa đã cắt nền
+        R.drawable.petal1,
+        R.drawable.petal2,
+        R.drawable.petal3,
+        R.drawable.petal4
+    )
 
-  private val rotAmpDeg = 12f; private val rotFreqHz = 0.7f
-  private var tNow = 0f
-  private val animator = ValueAnimator.ofFloat(0f, 10f).apply {
-    duration = 10_000; interpolator = LinearInterpolator()
-    addUpdateListener { tNow = it.animatedValue as Float; invalidate() }; start()
-  }
-  override fun onDraw(canvas: Canvas) {
-    super.onDraw(canvas)
-    val dst = Rect(0, 0, width, height)
-canvas.drawBitmap(bg, null, dst, paint)
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val timeStart = System.currentTimeMillis()
 
-val cols = 10f
-val rows = 10f
-val topHalf = height * 0.5f
+    // Ảnh nền
+    private val bg: Bitmap = BitmapFactory.decodeResource(resources, bgRes)
 
-fun colToX(c: Int): Float = ((c - 0.5f) / cols) * width
-fun rowToY(r: Int): Float = ((r - 0.5f) / rows) * topHalf
+    // Ảnh cánh hoa: bản gốc + bản đã scale theo màn hình
+    private val petalBitmapsOriginal: List<Bitmap> =
+        petalResIds.map { BitmapFactory.decodeResource(resources, it) }
 
-val anchors = coords.map { (c, r) -> Pair(colToX(c), rowToY(r)) }
-val yMax = anchors.maxOf { it.second }
+    private var petalBitmapsScaled: List<Bitmap> = emptyList()
 
-    val offsetStart = -(yMax + 0.06f*height); val offsetEnd = (0.51f*height) - anchors.minOf { it.second }
+    // Tham số “giống mp4”: 3 đợt rơi, cùng tốc độ, dừng ~47–51%
+    private val stopMin = 0.47f
+    private val stopMax = 0.51f
+    private val wave1Start = 0L           // ms
+    private val wave2Start = 4000L        // 4.0s
+    private val wave3Start = 6500L        // 6.5s
+    private val fallDurationMsWave1 = 5800L
+    private val fallDurationMsWave2 = 5400L
+    private val fallDurationMsWave3 = 5400L
 
-    for (w in 0 until 3) {
-      val t0 = waveStarts[w]; val ft = waveDurations[w]; val dt = tNow - t0; if (dt < 0f) continue
-      val offset = if (dt <= ft) { val p=(dt/ft).coerceIn(0f,1f); offsetStart + p*(offsetEnd-offsetStart) } else { offsetEnd }
+    // Gió đong đưa nhẹ
+    private val swayAmpRatio = 0.012f     // 1.2% chiều rộng
+    private val swaySpeed = 1.2f          // tốc độ đong đưa
 
-      for (i in coords.indices) {
-        val bmp = petals[i % petals.size]
-        val (ax, ay)=anchors[i]
-        var y = ay + offset
+    // Lưới 10x10 và các toạ độ bạn đã chốt (áp cho cả 3 wave)
+    // (#1..#17)
+    private val coords: List<Pair<Int, Int>> = listOf(
+        3 to 9, 3 to 4, 3 to 2, 1 to 1, 6 to 5, 5 to 8, 4 to 6,
+        5 to 1, 8 to 8, 10 to 3, 9 to 6, 8 to 4, 8 to 2, 1 to 6, 5 to 3, 2 to 7
+    )
 
-        val yStop = height * (stopMin + (stopMax - stopMin) * (i / (coords.size-1f)))
-        var alpha = 1f
-        if (y >= yStop) {
-          val denom=(offsetEnd-offsetStart)
-          val dtCross = if (denom!=0f) ft * ((yStop - ay - offsetStart) / denom) else dt
-          val fadeElapsed = max(0f, dt - dtCross)
-          alpha = (1f - fadeElapsed / fadeTime).coerceIn(0f,1f)
-          if (alpha <= 0f) continue
-          y = yStop
+    // Tính toạ độ neo (x, y) theo lưới; y tính trên nửa trên (0..50%)
+    private fun colToX(c: Int, w: Int): Float = ((c - 0.5f) / 10f) * w
+    private fun rowToY(r: Int, h: Int): Float = ((r - 0.5f) / 10f) * (h * 0.5f)
+
+    // Scale ảnh cánh hoa theo kích thước màn hình (giữ tỉ lệ, không méo)
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        val base = min(w, h).toFloat()
+        val targetH = base * 0.06f     // ~6% cạnh ngắn → nhỏ–vừa như bản mp4
+        val jitter = 0.10f             // ±10% để tự nhiên
+
+        petalBitmapsScaled = petalBitmapsOriginal.map { bmp ->
+            val aspect = bmp.height / bmp.width.toFloat()
+            val rand = 1f + ((Math.random().toFloat() * 2f - 1f) * jitter) // 0.9..1.1
+            val th = (targetH * rand).roundToInt().coerceAtLeast(1)
+            val tw = (th / aspect).roundToInt().coerceAtLeast(1)
+            Bitmap.createScaledBitmap(bmp, tw, th, true)
+        }
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+
+        // —— Vẽ nền mèo full màn —— //
+        val dst = Rect(0, 0, width, height)
+        canvas.drawBitmap(bg, null, dst, paint)
+
+        if (petalBitmapsScaled.isEmpty()) return
+
+        // Tính neo (x, yStop) theo lưới
+        val anchors = coords.map { (c, r) ->
+            val x = colToX(c, width)
+            val yTopHalf = rowToY(r, height)
+            // Vùng dừng ngẫu nhiên trong 47–51% màn
+            val stopY = height * (stopMin + Math.random().toFloat() * (stopMax - stopMin))
+            Triple(x, yTopHalf, stopY)
         }
 
-        val angle = rotAmpDeg * sin(2f * Math.PI.toFloat() * rotFreqHz * max(0f, dt) + i*0.37f)
-        paint.alpha = (alpha*255).toInt().coerceIn(0,255)
-        canvas.save(); canvas.translate(ax, y); canvas.rotate(angle)
-        canvas.drawBitmap(bmp, -bmp.width/2f, -bmp.height/2f, paint); canvas.restore()
-      }
+        // Vẽ 3 wave
+        val now = System.currentTimeMillis() - timeStart
+        drawWave(canvas, now, wave1Start, fallDurationMsWave1, anchors, 0)
+        drawWave(canvas, now, wave2Start, fallDurationMsWave2, anchors, 1)
+        drawWave(canvas, now, wave3Start, fallDurationMsWave3, anchors, 2)
+
+        // Gọi vẽ lại để animate
+        postInvalidateOnAnimation()
     }
-  }
+
+    private fun drawWave(
+        canvas: Canvas,
+        now: Long,
+        waveStart: Long,
+        duration: Long,
+        anchors: List<Triple<Float, Float, Float>>,
+        waveIndex: Int
+    ) {
+        if (now < waveStart) return
+        val t = (now - waveStart).coerceAtMost(duration).toFloat() / duration.toFloat()
+
+        // Từ cạnh trên (yStart = -hPetal) → tới yStop
+        anchors.forEachIndexed { i, (x, yTopHalf, yStop) ->
+            val bmp = petalBitmapsScaled[i % petalBitmapsScaled.size]
+            val yStart = -bmp.height.toFloat()
+            val yTarget = yStop
+            val yNow = yStart + (yTarget - yStart) * t
+
+            // Đong đưa
+            val sway = (width * swayAmpRatio) *
+                    kotlin.math.sin((now / 1000f + i * 0.37f + waveIndex) * swaySpeed)
+
+            // Vẽ theo TÂM, không dùng Rect để tránh méo
+            val halfW = bmp.width / 2f
+            val halfH = bmp.height / 2f
+            canvas.drawBitmap(bmp, x + sway - halfW, yNow - halfH, paint)
+        }
+    }
 }
