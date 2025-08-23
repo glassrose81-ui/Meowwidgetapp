@@ -33,11 +33,19 @@ class SplashView @JvmOverloads constructor(context: Context, attrs: AttributeSet
   }
   override fun onDraw(canvas: Canvas) {
     super.onDraw(canvas)
-    val dst = Rect(0,0,width,height); canvas.drawBitmap(bg, null, dst, paint)
-    val cols=10f; val rows=10f; val topHalf = height*0.5f
-    fun colToX(c:Int)=((c-0.5f)/cols)*width; fun rowToY(r:Int)=((r-0.5f)/rows)*topHalf
-    val anchors = coords.map{(c,r)->Pair(colToX(c), rowToY(r))}
-    val yMax = anchors.maxOf { it.second }
+    val dst = Rect(0, 0, width, height)
+canvas.drawBitmap(bg, null, dst, paint)
+
+val cols = 10f
+val rows = 10f
+val topHalf = height * 0.5f
+
+fun colToX(c: Int): Float = ((c - 0.5f) / cols) * width
+fun rowToY(r: Int): Float = ((r - 0.5f) / rows) * topHalf
+
+val anchors = coords.map { (c, r) -> Pair(colToX(c), rowToY(r)) }
+val yMax = anchors.maxOf { it.second }
+
     val offsetStart = -(yMax + 0.06f*height); val offsetEnd = (0.51f*height) - anchors.minOf { it.second }
 
     for (w in 0 until 3) {
