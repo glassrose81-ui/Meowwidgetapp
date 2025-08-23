@@ -13,7 +13,7 @@ class SplashView @JvmOverloads constructor(
 ) : View(context, attrs) {
 
     // ==== ẢNH NGUỒN (đổi tên id nếu ảnh của bạn khác) ====
-    private val bgRes = R.drawable.bg.png           // ảnh nền mèo
+    private val bgRes = R.drawable.bg.           // ảnh nền mèo
     private val petalResIds = intArrayOf(            // 4 cánh hoa đã cắt nền
         R.drawable.petal1,
         R.drawable.petal2,
