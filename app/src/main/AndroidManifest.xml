@@ -1,17 +1,25 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.meowwidget.gd1">
-  <application
-      android:allowBackup="true"
-      android:label="Meow Gd1"
-      android:supportsRtl="true"
-      android:theme="@style/Theme.AppCompat.Light.NoActionBar"
-      android:icon="@mipmap/ic_launcher"
-      android:roundIcon="@mipmap/ic_launcher_round">
-    <activity android:name=".MainActivity" />
-    <activity android:name=".SplashActivity">
-      <intent-filter>
-        <action android:name="android.intent.action.MAIN" />
-        <category android:name="android.intent.category.LAUNCHER" />
-      </intent-filter>
-    </activity>
-  </application>
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
+        android:allowBackup="true"
+        android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.MeowGd1">
+
+        <!-- Màn hình mở app (launcher) -->
+        <activity
+            android:name=".SplashActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Màn chính -->
+        <activity android:name=".MainActivity" />
+    </application>
 </manifest>
