@@ -9,7 +9,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MeowGd1">
 
-        <!-- Màn hình mở app (launcher) -->
+        <!-- Màn hình mở app (biểu tượng bấm vào sẽ vào đây) -->
         <activity
             android:name=".SplashActivity"
             android:exported="true">
