@@ -1,5 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App theme -->
-    <style name="Theme.MeowGd1" parent="Theme.Material3.DayNight.NoActionBar"/>
+    <style name="Theme.MeowGd1" parent="Theme.Material3.Light.NoActionBar">
+        <!-- màu chủ đạo của app nếu cần -->
+        <item name="colorPrimary">@android:color/white</item>
+        <item name="colorPrimaryVariant">@android:color/white</item>
+        <item name="colorOnPrimary">@android:color/black</item>
+
+        <!-- Splash toàn màn -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
 </resources>
