@@ -2,9 +2,11 @@ name: Build APK (Debug)
 on:
   workflow_dispatch: {}
   push: {}
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -25,11 +27,16 @@ jobs:
           sdk install gradle 8.7
           gradle wrapper --gradle-version 8.7
 
+      # 👇 Fix: chấp nhận license nhưng KHÔNG fail vì "Broken pipe"
+      - name: Accept Android SDK licenses
+        shell: bash
+        run: |
+          (yes | sdkmanager --licenses >/dev/null) || true
+
       - name: Install required Android SDK components
         shell: bash
         run: |
-          yes | sdkmanager --licenses
-          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+          sdkmanager --install "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
