@@ -2,7 +2,6 @@ package com.meowwidget.gd1
 
 import android.content.Context
 import android.graphics.*
-import android.os.Build
 import android.util.AttributeSet
 import android.view.View
 import android.view.animation.LinearInterpolator
@@ -14,7 +13,7 @@ class SplashView @JvmOverloads constructor(
   attrs: AttributeSet? = null
 ) : View(context, attrs) {
 
-  // Ảnh nền & cánh hoa (GIỮ NGUYÊN tên resource như dự án của bạn)
+  // ====== ASSETS ======
   private val bg: Bitmap = BitmapFactory.decodeResource(resources, R.drawable.bg)
   private val petals: List<Bitmap> = listOf(
     BitmapFactory.decodeResource(resources, R.drawable.petal1),
@@ -23,17 +22,15 @@ class SplashView @JvmOverloads constructor(
     BitmapFactory.decodeResource(resources, R.drawable.petal4)
   )
 
-  // Thu nhỏ cánh theo chốt: tròn -8% (~0.92), còn lại -5% (~0.95)
-  // Tự nhận diện "tròn" theo tỉ lệ w/h gần 1
+  // Thu nhỏ cánh: tròn -8%, còn lại -5%
   private val petalScales: List<Float> = petals.map { bmp ->
     val ar = bmp.width.toFloat() / bmp.height.toFloat()
     if (abs(ar - 1f) <= 0.12f) 0.92f else 0.95f
   }
 
   private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { isFilterBitmap = true }
-  private val blurPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { isFilterBitmap = true }
 
-  // Lưới & vị trí (GIỮ NGUYÊN theo APK đầu)
+  // ====== LƯỚI & TỌA ĐỘ (giữ nguyên) ======
   private val coords = listOf(
     3 to 9, 3 to 4, 3 to 2, 1 to 1,
     6 to 5, 5 to 8, 4 to 6, 5 to 1,
@@ -41,18 +38,18 @@ class SplashView @JvmOverloads constructor(
     8 to 2, 1 to 6, 5 to 3, 2 to 7
   )
 
-  // Wave theo thời điểm & thời lượng đã chốt
+  // ====== WAVE TIMING (giữ nguyên) ======
   private val waveStarts = floatArrayOf(0f, 4f, 6.5f)
   private val waveDurations = floatArrayOf(5.8f, 5.4f, 5.4f)
   private val fadeTime = 0.35f
   private val stopMin = 0.47f
   private val stopMax = 0.51f
 
-  // Quay/đung đưa nhẹ (GIỮ NGUYÊN như APK đầu)
+  // Đong đưa nhẹ (giữ nguyên)
   private val rotAmpDeg = 12f
   private val rotFreqHz = 0.7f
 
-  // Thời gian chạy 0→10s (GIỮ NGUYÊN)
+  // Thời gian tổng 10s (giữ nguyên)
   private var tNow = 0f
   private val animator = ValueAnimator.ofFloat(0f, 10f).apply {
     duration = 10_000
@@ -64,26 +61,68 @@ class SplashView @JvmOverloads constructor(
     start()
   }
 
+  // ====== NỀN: blur phổ thông (không cần API 31) ======
+  private var blurredBg: Bitmap? = null
+  private var fitDstRect = Rect()
+  private var cropSrcForBlur = Rect()
+
+  override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+    super.onSizeChanged(w, h, oldw, oldh)
+    if (w <= 0 || h <= 0) return
+
+    // Tính crop center-crop để lấp đầy màn (lớp nền phía sau)
+    val bw = bg.width; val bh = bg.height
+    val viewAspect = w.toFloat() / h.toFloat()
+    val bmpAspect  = bw.toFloat() / bh.toFloat()
+    cropSrcForBlur = if (bmpAspect > viewAspect) {
+      val srcW = (bh * viewAspect).toInt()
+      val left = ((bw - srcW) / 2).coerceAtLeast(0)
+      Rect(left, 0, (left + srcW).coerceAtMost(bw), bh)
+    } else {
+      val srcH = (bw / viewAspect).toInt()
+      val top  = ((bh - srcH) / 2).coerceAtLeast(0)
+      Rect(0, top, bw, (top + srcH).coerceAtMost(bh))
+    }
+
+    // Tạo ảnh mờ: downscale mạnh rồi upscale lại (blur tự nhiên, 1 lần duy nhất)
+    val smallW = max(16, w / 16)
+    val smallH = max(16, h / 16)
+    val tmpSmall = Bitmap.createBitmap(smallW, smallH, Bitmap.Config.ARGB_8888)
+    Canvas(tmpSmall).drawBitmap(bg, cropSrcForBlur, Rect(0, 0, smallW, smallH), paint)
+    blurredBg = Bitmap.createScaledBitmap(tmpSmall, w, h, true)
+    tmpSmall.recycle()
+
+    // Ảnh chính fit/contain (không méo, có viền nếu cần)
+    val scale = min(w.toFloat() / bw, h.toFloat() / bh)
+    val sw = (bw * scale).toInt()
+    val sh = (bh * scale).toInt()
+    val left = (w - sw) / 2
+    val top  = (h - sh) / 2
+    fitDstRect = Rect(left, top, left + sw, top + sh)
+  }
+
   override fun onDraw(canvas: Canvas) {
     super.onDraw(canvas)
 
-    // (1) NỀN: FIT + BLUR hai bên (không méo, không cắt nội dung)
-    drawBgFitWithSideBlur(canvas)
+    // Lớp nền mờ phủ full
+    blurredBg?.let { canvas.drawBitmap(it, 0f, 0f, paint) }
+      ?: run { canvas.drawBitmap(bg, cropSrcForBlur, Rect(0, 0, width, height), paint) }
 
+    // Ảnh nền gốc dạng fit/contain đặt phía trên (không méo)
+    canvas.drawBitmap(bg, null, fitDstRect, paint)
+
+    // ------ Lưới kéo xuống (giữ nguyên) ------
     val cols = 10f
     val rows = 10f
     val topHalf = height * 0.5f
+    fun colToX(c: Int) = ((c - 0.5f) / cols) * width
+    fun rowToY(r: Int) = ((r - 0.5f) / rows) * topHalf
 
-    fun colToX(c: Int): Float = ((c - 0.5f) / cols) * width
-    fun rowToY(r: Int): Float = ((r - 0.5f) / rows) * topHalf
-
-    // Neo theo lưới (tấm lưới kéo xuống)
     val anchors = coords.map { (c, r) -> Pair(colToX(c), rowToY(r)) }
     val yMax = anchors.maxOf { it.second }
-    val offsetStart = -(yMax + 0.06f * height)                     // xuất phát ngoài mép trên
-    val offsetEnd = (0.51f * height) - anchors.minOf { it.second } // dừng ~47–51%
+    val offsetStart = -(yMax + 0.06f * height)
+    val offsetEnd = (0.51f * height) - anchors.minOf { it.second }
 
-    // Vẽ 3 wave (GIỮ NGUYÊN timing)
     for (w in 0 until 3) {
       val t0 = waveStarts[w]
       val ft = waveDurations[w]
@@ -100,7 +139,6 @@ class SplashView @JvmOverloads constructor(
         val (ax, ay) = anchors[i]
         var y = ay + offset
 
-        // Dải dừng 47–51% (rải nhẹ trong dải để tự nhiên, GIỮ NGUYÊN)
         val yStop = height * (stopMin + (stopMax - stopMin) * (i / (coords.size - 1f)))
         var alpha = 1f
         if (y >= yStop) {
@@ -115,7 +153,6 @@ class SplashView @JvmOverloads constructor(
         val angle = rotAmpDeg * sin(2f * Math.PI.toFloat() * rotFreqHz * max(0f, dt) + i * 0.37f)
         paint.alpha = (alpha * 255).toInt().coerceIn(0, 255)
 
-        // (2) VẼ CÁNH: chỉ thu nhỏ khi vẽ (không đổi đường rơi/timing)
         val scale = petalScales[i % petalScales.size]
         canvas.save()
         canvas.translate(ax, y)
@@ -127,49 +164,5 @@ class SplashView @JvmOverloads constructor(
     }
 
     postInvalidateOnAnimation()
-  }
-
-  // ===== NỀN: fit + blur hai bên (không méo, không cắt nội dung) =====
-  private fun drawBgFitWithSideBlur(canvas: Canvas) {
-    val vw = width
-    val vh = height
-    if (vw <= 0 || vh <= 0) return
-
-    val bw = bg.width
-    val bh = bg.height
-    val viewAspect = vw.toFloat() / vh.toFloat()
-    val bmpAspect  = bw.toFloat() / bh.toFloat()
-
-    // Lớp BLUR phía sau: dùng center-crop để phủ full màn, sau đó làm mờ
-    val srcCrop: Rect = if (bmpAspect > viewAspect) {
-      val srcW = (bh * viewAspect).toInt()
-      val left = ((bw - srcW) / 2).coerceAtLeast(0)
-      Rect(left, 0, (left + srcW).coerceAtMost(bw), bh)
-    } else {
-      val srcH = (bw / viewAspect).toInt()
-      val top  = ((bh - srcH) / 2).coerceAtLeast(0)
-      Rect(0, top, bw, (top + srcH).coerceAtMost(bh))
-    }
-    val dstFull = Rect(0, 0, vw, vh)
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-      // RenderEffect blur (API 31+)
-      val blur = RenderEffect.createBlurEffect(24f, 24f, Shader.TileMode.CLAMP)
-      blurPaint.setRenderEffect(blur)
-      canvas.drawBitmap(bg, srcCrop, dstFull, blurPaint)
-      blurPaint.setRenderEffect(null)
-    } else {
-      // Fallback: không blur (vẫn làm nền đầy màn)
-      canvas.drawBitmap(bg, srcCrop, dstFull, blurPaint)
-    }
-
-    // Lớp ẢNH CHÍNH FIT/CONTAIN phía trên: giữ tỉ lệ, không cắt, có viền hai bên
-    val scale = min(vw.toFloat() / bw, vh.toFloat() / bh)
-    val sw = (bw * scale).toInt()
-    val sh = (bh * scale).toInt()
-    val left = (vw - sw) / 2
-    val top = (vh - sh) / 2
-    val dstFit = Rect(left, top, left + sw, top + sh)
-    canvas.drawBitmap(bg, null, dstFit, paint)
   }
 }
