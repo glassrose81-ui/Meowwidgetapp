@@ -1,4 +1,3 @@
-
 package com.meowwidget.gd1
 import android.content.Context
 import android.graphics.*
