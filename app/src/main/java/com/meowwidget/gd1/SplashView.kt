@@ -149,123 +149,11 @@ class SplashView @JvmOverloads constructor(
   }
 
   // ============ Vẽ nền với 3 chế độ phần dư ============
-    // BEGIN GĐ1-PATCH: draw background respecting contentRect gaps only
   private fun drawBackground(canvas: Canvas) {
-    val w = width
-    val h = height
-    val topGap = contentRect.top.coerceAtLeast(0)
-    val bottomGap = (h - contentRect.bottom).coerceAtLeast(0)
-
-    fun drawTealBands() {
-      val teal = Color.parseColor("#104C4A")
-      paint.shader = null
-      paint.color = teal
-      if (topGap > 0) canvas.drawRect(0f, 0f, w.toFloat(), topGap.toFloat(), paint)
-      if (bottomGap > 0) canvas.drawRect(0f, (h - bottomGap).toFloat(), w.toFloat(), h.toFloat(), paint)
-    }
-
-    fun drawGradientBands() {
-      if (topGap > 0) {
-        paint.shader = LinearGradient(
-          0f, 0f, 0f, topGap.toFloat(),
-          intArrayOf(Color.parseColor("#F2FBFF"), Color.parseColor("#E6F7FF")),
-          floatArrayOf(0f, 1f),
-          Shader.TileMode.CLAMP
-        )
-        canvas.drawRect(0f, 0f, w.toFloat(), topGap.toFloat(), paint)
-      }
-      if (bottomGap > 0) {
-        paint.shader = LinearGradient(
-          0f, (h - bottomGap).toFloat(), 0f, h.toFloat(),
-          intArrayOf(Color.parseColor("#F2FBFF"), Color.parseColor("#E6F7FF")),
-          floatArrayOf(0f, 1f),
-          Shader.TileMode.CLAMP
-        )
-        canvas.drawRect(0f, (h - bottomGap).toFloat(), w.toFloat(), h.toFloat(), paint)
-      }
-      paint.shader = null
-    }
-
-    fun drawBottomBlurGap() {
-      if (bottomGap <= 0) return
-
-      // 1) Copy-block từ 83% chiều cao ảnh gốc → đáy
-      val srcH = bg.height
-      val srcW = bg.width
-      val y83 = (0.83f * srcH).toInt().coerceIn(0, srcH - 1)
-      val blockH = (srcH - y83).coerceAtLeast(1)
-      val srcRect = Rect(0, y83, srcW, srcH)
-      val block = Bitmap.createBitmap(bg, srcRect.left, srcRect.top, srcRect.width(), srcRect.height())
-
-      // 2) Uniform scale khối này sao cho cao = bottomGap
-      val s = bottomGap.toFloat() / blockH.toFloat()
-      val scaledW = max(1, (block.width * s).roundToInt())
-      val scaledH = bottomGap.coerceAtLeast(1)
-      val scaled = Bitmap.createScaledBitmap(block, scaledW, scaledH, true)
-      block.recycle()
-
-      // 3) Làm mờ kiểu downscale → upscale (không RenderEffect)
-      val smallW = max(1, scaledW / 14)
-      val smallH = max(1, scaledH / 14)
-      val tmpSmall = Bitmap.createBitmap(smallW, smallH, Bitmap.Config.ARGB_8888)
-      Canvas(tmpSmall).drawBitmap(scaled, Rect(0,0,scaledW,scaledH), Rect(0,0,smallW,smallH), paint)
-      val blurred = Bitmap.createScaledBitmap(tmpSmall, scaledW, scaledH, true)
-      tmpSmall.recycle()
-      scaled.recycle()
-
-      // 4) Dán vào vùng bottomGap; dùng shader CLAMP để kéo màu ngang viền
-      val gapTop = (h - bottomGap).toFloat()
-      val shader = BitmapShader(blurred, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
-      val local = Matrix()
-      val leftX = ((w - blurred.width) / 2f)
-      local.setTranslate(leftX, gapTop)
-      shader.setLocalMatrix(local)
-      val save = canvas.saveLayer(RectF(0f, gapTop, w.toFloat(), h.toFloat()), null)
-      paint.shader = shader
-      canvas.drawRect(0f, gapTop, w.toFloat(), h.toFloat(), paint)
-
-      // 5) Làm mềm mép trên ~130px bằng DST_IN
-      val soften = min(130f, bottomGap.toFloat())
-      val maskPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        shader = LinearGradient(
-          0f, gapTop, 0f, gapTop + soften,
-          intArrayOf(Color.argb(210, 0, 0, 0), Color.argb(255, 0, 0, 0)),
-          floatArrayOf(0f, 1f),
-          Shader.TileMode.CLAMP
-        )
-        xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_IN)
-      }
-      canvas.drawRect(0f, gapTop, w.toFloat(), gapTop + soften, maskPaint)
-      canvas.restoreToCount(save)
-      paint.shader = null
-
-      // 6) Dải sáng đáy nhẹ
-      val bandH = min(200, bottomGap)
-      if (bandH > 0) {
-        val highlight = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-          shader = LinearGradient(
-            0f, (h - bandH).toFloat(), 0f, h.toFloat(),
-            intArrayOf(Color.argb(0, 255,255,255), Color.argb(52, 255,255,255)),
-            floatArrayOf(0f, 1f),
-            Shader.TileMode.CLAMP
-          )
-        }
-        canvas.drawRect(0f, (h - bandH).toFloat(), w.toFloat(), h.toFloat(), highlight)
-      }
-
-      blurred.recycle()
-    }
-
     when (bgMode) {
-      BgMode.MINT -> drawTealBands()
-      BgMode.GRADIENT -> drawGradientBands()
-      BgMode.BLUR -> drawBottomBlurGap()
-    }
-
-    // Ảnh gốc fit đúng tỉ lệ đặt lên contentRect
-    canvas.drawBitmap(bg, null, contentRect, paint)
-  }
-  // END GĐ1-PATCH
+      BgMode.MINT -> {
+        canvas.drawColor(Color.parseColor("#DFF6F9")) // mint nhạt
+      }
       BgMode.GRADIENT -> {
         val shader = LinearGradient(
           0f, 0f, 0f, height.toFloat(),
@@ -318,87 +206,7 @@ class SplashView @JvmOverloads constructor(
     btnOPlus .set(btnOMinus.right + pad, btnOMinus.top, btnOMinus.right + pad + small, btnOMinus.bottom)
   }
 
-  // ============ Vẽ panel ẩn ============  // BEGIN GĐ1-PATCH: Textbox on board (contentRect-relative)
-  private fun drawTextBox(canvas: Canvas) {
-    // Khung theo contentRect, nới ±2% dọc: x 30–70%, y 58–75%
-    val bx1 = (contentRect.left + 0.30f * contentRect.width()).toInt()
-    val bx2 = (contentRect.left + 0.70f * contentRect.width()).toInt()
-    val by1 = (contentRect.top  + 0.58f * contentRect.height()).toInt()
-    val by2 = (contentRect.top  + 0.75f * contentRect.height()).toInt()
-    val bw = (bx2 - bx1).coerceAtLeast(1)
-    val bh = (by2 - by1).coerceAtLeast(1)
-
-    val padX = (0.03f * bw).toInt()
-    val padY = (0.03f * bh).toInt()
-    val maxW = (bw - 2*padX).coerceAtLeast(1)
-    val maxH = (bh - 2*padY).coerceAtLeast(1)
-
-    val text = "Hoa hồng có gai nhọn còn Rose thì có sắc (nhọn)"
-    val tp = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-      color = Color.WHITE
-      textAlign = Paint.Align.LEFT
-      typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
-    }
-
-    fun wrap(linesOut: MutableList<String>, sizePx: Float): Pair<Int, Int> {
-      tp.textSize = sizePx
-      linesOut.clear()
-      val words = text.split(" ")
-      var cur = StringBuilder()
-      var wmax = 0f
-      val fmH = tp.fontMetrics
-      val lineH = (fmH.descent - fmH.ascent)
-      var totalH = 0f
-      for (w in words) {
-        val trial = if (cur.isEmpty()) w else cur.toString() + " " + w
-        val tw = tp.measureText(trial)
-        if (tw <= maxW) {
-          cur.clear(); cur.append(trial)
-        } else {
-          if (cur.isNotEmpty()) {
-            linesOut.add(cur.toString())
-            wmax = max(wmax, tp.measureText(cur.toString()))
-            totalH += lineH * 1.03f
-          }
-          cur.clear(); cur.append(w)
-        }
-      }
-      if (cur.isNotEmpty()) {
-        linesOut.add(cur.toString())
-        wmax = max(wmax, tp.measureText(cur.toString()))
-        totalH += lineH * 1.03f
-      }
-      return Pair(wmax.roundToInt(), totalH.roundToInt())
-    }
-
-    var lo = 10f
-    var hi = bh.toFloat()
-    var bestSize = lo
-    var bestLines: List<String> = listOf()
-    while (hi - lo >= 0.5f) {
-      val mid = (lo + hi) / 2f
-      val tmp = mutableListOf<String>()
-      val (mw, mh) = wrap(tmp, mid)
-      if (mw <= maxW && mh <= maxH && tmp.isNotEmpty()) {
-        bestSize = mid; bestLines = tmp.toList(); lo = mid + 0.5f
-      } else hi = mid - 0.5f
-    }
-    tp.textSize = bestSize
-
-    val fm = tp.fontMetrics
-    val lineH = (fm.descent - fm.ascent) * 1.03f
-    val blockH = (bestLines.size * lineH).toFloat()
-    var y = by1 + padY + ((maxH - blockH) / 2f).coerceAtLeast(0f) - fm.ascent
-    for (ln in bestLines) {
-      val lw = tp.measureText(ln)
-      val x = bx1 + padX + ((maxW - lw) / 2f)
-      canvas.drawText(ln, x, y, tp)
-      y += lineH
-    }
-  }
-  // END GĐ1-PATCH
-
-
+  // ============ Vẽ panel ẩn ============
   private fun drawPanel(canvas: Canvas) {
     layoutPanel()
     // nền mờ
@@ -592,9 +400,6 @@ class SplashView @JvmOverloads constructor(
         canvas.restore()
       }
     }
-
-    // 3.x) Textbox trên bảng gỗ
-    drawTextBox(canvas)
 
     // 4) Panel ẩn
     if (panelOpen) drawPanel(canvas)
