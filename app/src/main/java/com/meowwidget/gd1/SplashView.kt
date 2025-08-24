@@ -149,11 +149,93 @@ class SplashView @JvmOverloads constructor(
   }
 
   // ============ Vẽ nền với 3 chế độ phần dư ============
+  
+  // BEGIN GĐ1-PATCH: BG gaps only
   private fun drawBackground(canvas: Canvas) {
-    when (bgMode) {
-      BgMode.MINT -> {
-        canvas.drawColor(Color.parseColor("#DFF6F9")) // mint nhạt
+    val w = width
+    val h = height
+    val topGap = contentRect.top.coerceAtLeast(0)
+    val bottomGap = (h - contentRect.bottom).coerceAtLeast(0)
+
+    fun drawTealBands() {
+      val teal = Color.parseColor("#104C4A")
+      paint.shader = null; paint.color = teal
+      if (topGap > 0) canvas.drawRect(0f, 0f, w.toFloat(), topGap.toFloat(), paint)
+      if (bottomGap > 0) canvas.drawRect(0f, (h - bottomGap).toFloat(), w.toFloat(), h.toFloat(), paint)
+    }
+    fun drawGradientBands() {
+      if (topGap > 0) {
+        paint.shader = LinearGradient(0f, 0f, 0f, topGap.toFloat(),
+          intArrayOf(Color.parseColor("#F2FBFF"), Color.parseColor("#E6F7FF")),
+          floatArrayOf(0f,1f), Shader.TileMode.CLAMP)
+        canvas.drawRect(0f, 0f, w.toFloat(), topGap.toFloat(), paint)
       }
+      if (bottomGap > 0) {
+        paint.shader = LinearGradient(0f, (h - bottomGap).toFloat(), 0f, h.toFloat(),
+          intArrayOf(Color.parseColor("#F2FBFF"), Color.parseColor("#E6F7FF")),
+          floatArrayOf(0f,1f), Shader.TileMode.CLAMP)
+        canvas.drawRect(0f, (h - bottomGap).toFloat(), w.toFloat(), h.toFloat(), paint)
+      }
+      paint.shader = null
+    }
+    fun drawBottomBlurGap() {
+      if (bottomGap <= 0) return
+      val srcH = bg.height; val srcW = bg.width
+      val y83 = (0.83f * srcH).toInt().coerceIn(0, srcH - 1)
+      val blockH = (srcH - y83).coerceAtLeast(1)
+      val srcRect = Rect(0, y83, srcW, srcH)
+      val block = Bitmap.createBitmap(bg, srcRect.left, srcRect.top, srcRect.width(), srcRect.height())
+      val s = bottomGap.toFloat() / blockH.toFloat()
+      val scaledW = max(1, (block.width * s).roundToInt())
+      val scaledH = bottomGap.coerceAtLeast(1)
+      val scaled = Bitmap.createScaledBitmap(block, scaledW, scaledH, true)
+      block.recycle()
+
+      val smallW = max(1, scaledW / 14)
+      val smallH = max(1, scaledH / 14)
+      val tmpSmall = Bitmap.createBitmap(smallW, smallH, Bitmap.Config.ARGB_8888)
+      Canvas(tmpSmall).drawBitmap(scaled, Rect(0,0,scaledW,scaledH), Rect(0,0,smallW,smallH), paint)
+      val blurred = Bitmap.createScaledBitmap(tmpSmall, scaledW, scaledH, true)
+      tmpSmall.recycle(); scaled.recycle()
+
+      val gapTop = (h - bottomGap).toFloat()
+      val shader = BitmapShader(blurred, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+      val m = Matrix().apply { setTranslate(((w - blurred.width)/2f), gapTop) }
+      shader.setLocalMatrix(m)
+      val save = canvas.saveLayer(RectF(0f, gapTop, w.toFloat(), h.toFloat()), null)
+      paint.shader = shader
+      canvas.drawRect(0f, gapTop, w.toFloat(), h.toFloat(), paint)
+
+      val soften = min(130f, bottomGap.toFloat())
+      val mask = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        shader = LinearGradient(0f, gapTop, 0f, gapTop+soften,  # <-- we'll fix 'soften' typo next
+          intArrayOf(Color.argb(210,0,0,0), Color.argb(255,0,0,0)),
+          floatArrayOf(0f,1f), Shader.TileMode.CLAMP)
+        xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_IN)
+      }
+      canvas.drawRect(0f, gapTop, w.toFloat(), gapTop + soften, mask)
+      canvas.restoreToCount(save); paint.shader = null
+
+      val bandH = min(200, bottomGap)
+      if (bandH > 0) {
+        val hi = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+          shader = LinearGradient(0f, (h - bandH).toFloat(), 0f, h.toFloat(),
+            intArrayOf(Color.argb(0,255,255,255), Color.argb(52,255,255,255)),
+            floatArrayOf(0f,1f), Shader.TileMode.CLAMP)
+        }
+        canvas.drawRect(0f, (h - bandH).toFloat(), w.toFloat(), h.toFloat(), hi)
+      }
+      blurred.recycle()
+    }
+    when (bgMode) {
+      BgMode.MINT -> drawTealBands()
+      BgMode.GRADIENT -> drawGradientBands()
+      BgMode.BLUR -> drawBottomBlurGap()
+    }
+    canvas.drawBitmap(bg, null, contentRect, paint)
+  }
+  // END GĐ1-PATCH
+
       BgMode.GRADIENT -> {
         val shader = LinearGradient(
           0f, 0f, 0f, height.toFloat(),
@@ -402,9 +484,71 @@ class SplashView @JvmOverloads constructor(
     }
 
     // 4) Panel ẩn
+    // 3.x) Textbox trên bảng gỗ
+    drawTextBox(canvas)
+
     if (panelOpen) drawPanel(canvas)
 
     // 5) schedule khung tiếp theo
     postInvalidateOnAnimation()
   }
 }
+
+  // BEGIN GĐ1-PATCH: Textbox on board (contentRect-relative)
+  private fun drawTextBox(canvas: Canvas) {
+    val bx1 = (contentRect.left + 0.30f * contentRect.width()).toInt()
+    val bx2 = (contentRect.left + 0.70f * contentRect.width()).toInt()
+    val by1 = (contentRect.top  + 0.58f * contentRect.height()).toInt()
+    val by2 = (contentRect.top  + 0.75f * contentRect.height()).toInt()
+    val bw = (bx2 - bx1).coerceAtLeast(1)
+    val bh = (by2 - by1).coerceAtLeast(1)
+
+    val padX = (0.03f * bw).toInt()
+    val padY = (0.03f * bh).toInt()
+    val maxW = (bw - 2*padX).coerceAtLeast(1)
+    val maxH = (bh - 2*padY).coerceAtLeast(1)
+
+    val text = "Hoa hồng có gai nhọn còn Rose thì có sắc (nhọn)"
+    val tp = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+      color = Color.WHITE
+      textAlign = Paint.Align.LEFT
+      typeface = Typeface.create(Typeface.SERIF, Typeface.BOLD)
+    }
+
+    fun wrap(linesOut: MutableList<String>, sizePx: Float): Pair<Int, Int> {
+      tp.textSize = sizePx
+      linesOut.clear()
+      val words = text.split(" ")
+      var cur = StringBuilder()
+      var wmax = 0f
+      val fmH = tp.fontMetrics
+      val lineH = (fmH.descent - fmH.ascent)
+      var totalH = 0f
+      for (w in words) {
+        val trial = if (cur.isEmpty()) w else cur.toString() + " " + w  # we'll fix Python->Kotlin concat next
+      }
+      
+      var totalLines = mutableListOf<String>()
+      // simple greedy wrap
+      var curLine = StringBuilder()
+      for (wd in words) {
+        val tryLine = if (curLine.isEmpty()) wd else curLine.toString() + " " + wd
+        val tw = tp.measureText(tryLine)
+        if (tw <= maxW) {
+          curLine.clear(); curLine.append(tryLine)
+        } else {
+          if (curLine.isNotEmpty()) totalLines.add(curLine.toString())
+          curLine.clear(); curLine.append(wd)
+        }
+      }
+      if (curLine.isNotEmpty()) totalLines.add(curLine.toString())
+      linesOut.addAll(totalLines)
+      var wmax2 = 0f
+      for (ln in linesOut) wmax2 = max(wmax2, tp.measureText(ln))
+      val lineH2 = (tp.fontMetrics.descent - tp.fontMetrics.ascent)
+      val hh = (linesOut.size * lineH2 * 1.03f).roundToInt()
+      Pair(wmax2.roundToInt(), hh)
+    
+    }
+  }
+  // END GĐ1-PATCH
