@@ -1,516 +1,236 @@
-package com.meowwidget.gd1
 
-import android.animation.ValueAnimator
+package com.meowwidget.gd1
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
-import android.view.MotionEvent
 import android.view.View
 import android.view.animation.LinearInterpolator
+import android.animation.ValueAnimator
+import android.graphics.LinearGradient
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
+import android.graphics.RenderEffect
+import android.graphics.Shader
 import kotlin.math.*
 
-class SplashView @JvmOverloads constructor(
-  context: Context,
-  attrs: AttributeSet? = null
-) : View(context, attrs) {
+class SplashView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
 
-  // ============ Assets ============
+  // Assets
   private val bg: Bitmap = BitmapFactory.decodeResource(resources, R.drawable.bg)
-  private val petalsSrc: List<Bitmap> = listOf(
+  private val petals: List<Bitmap> = listOf(
     BitmapFactory.decodeResource(resources, R.drawable.petal1),
     BitmapFactory.decodeResource(resources, R.drawable.petal2),
     BitmapFactory.decodeResource(resources, R.drawable.petal3),
     BitmapFactory.decodeResource(resources, R.drawable.petal4)
   )
 
-  private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { isFilterBitmap = true }
-
-  // ============ Lưới & tọa độ (neo cố định) ============
-  private val coords: List<Pair<Int, Int>> = listOf(
+  // Grid & anchors (C,R) as báº¡n Ä‘Ã£ chá»‘t (Ã¡p dá»¥ng cho cáº£ 3 wave)
+  private val coords: List<Pair<Int,Int>> = listOf(
     3 to 9, 3 to 4, 3 to 2, 1 to 1,
     6 to 5, 5 to 8, 4 to 6, 5 to 1,
-    8 to 8, 10 to 3, 9 to 6, 8 to 4,
+    8 to 8,10 to 3, 9 to 6, 8 to 4,
     8 to 2, 1 to 6, 5 to 3, 2 to 7
   )
-  private val cols = 10f
-  private val rows = 10f
 
-  // ============ Wave & hiệu ứng ============
-  private val waveStarts = floatArrayOf(0f, 4.0f, 6.5f)
+  // Waves: thá»i Ä‘iá»ƒm & thá»i lÆ°á»£ng
+  private val waveStarts = floatArrayOf(0f, 4f, 6.5f)
   private val waveDurations = floatArrayOf(5.8f, 5.4f, 5.4f)
-  private val fadeTime = 0.35f
+
+  // Dáº£i dá»«ng
   private val stopMin = 0.47f
   private val stopMax = 0.51f
+  private val fadeTime = 0.35f
+
+  // Rung nháº¹
   private val rotAmpDeg = 12f
   private val rotFreqHz = 0.7f
 
-  // ============ Nền & contentRect ============
-  private var contentRect = Rect()
-  private var blurredFull: Bitmap? = null
-  private var cropSrcForBlur = Rect()
+  // Text trÃªn báº£ng gá»— (má»™t lá»›p, bÃ¡m báº£ng)
+  private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+  private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    color = Color.rgb(247, 241, 230) // kem ngÃ 
+    typeface = Typeface.create("DejaVu Serif", Typeface.BOLD)
+    textAlign = Paint.Align.CENTER
+  }
 
-  // ============ Văn bản trên bảng gỗ ============
-  // Vùng chữ theo chuẩn bạn chốt: x:30–70%, y:60–73% trong contentRect
-  private val boardRectNorm = RectF(0.30f, 0.60f, 0.70f, 0.73f)
-  private val boardPadFrac = 0.09f // ~9% padding trong vùng chữ
-  private val textColor = Color.parseColor("#F8EAD8") // kem ngà
-  private val lineSpacing = 1.22f
-  // Bạn có thể đổi chuỗi này sau; GĐ2 sẽ thay bằng nguồn động
-  private val displayText = "Hoa hồng có gai nhọn,\nRose thì có sắc (nhọn)"
-
-  // ============ Thời gian & animator ============
+  // Thá»i gian
   private var tNow = 0f
-  private var tFrozen = 0f
-  private var panelOpen = false
-
   private val animator = ValueAnimator.ofFloat(0f, 10f).apply {
     duration = 10_000
     interpolator = LinearInterpolator()
-    addUpdateListener {
-      val v = (it.animatedValue as Float)
-      if (!panelOpen) tNow = v
-      invalidate()
-    }
+    addUpdateListener { tNow = it.animatedValue as Float; invalidate() }
     start()
   }
 
-  // ============ Panel ẩn ============
-  private enum class BgMode { TEAL, BLUR, GRADIENT }
-
-  private val prefs by lazy { context.getSharedPreferences("meow_splash", Context.MODE_PRIVATE) }
-  private var bgMode: BgMode = BgMode.BLUR
-  private var petalScaleRound = 0.42f  // theo bề ngang ô
-  private var petalScaleOther = 0.48f
-
-  private val rightEdgeFraction = 0.20f
-  private val longPressMs = 3000L
-  private var downInRightEdge = false
-  private var longPressPosted = false
-  private val longPressRunnable = Runnable {
-    if (downInRightEdge) {
-      panelOpen = true
-      tFrozen = tNow
-      invalidate()
-    }
-  }
-
-  private var panelRect = RectF()
-  private var btnClose = RectF()
-  private var btnBg = RectF()
-  private var btnRMinus = RectF()
-  private var btnRPlus = RectF()
-  private var btnOMinus = RectF()
-  private var btnOPlus = RectF()
-
-  init {
-    // Map 0->TEAL, 1->BLUR, 2->GRADIENT (giữ tương thích lưu cũ)
-    bgMode = when (prefs.getInt("bg_mode", 1)) {
-      0 -> BgMode.TEAL
-      1 -> BgMode.BLUR
-      else -> BgMode.GRADIENT
-    }
-    petalScaleRound = prefs.getFloat("ps_round", 0.42f)
-    petalScaleOther = prefs.getFloat("ps_other", 0.48f)
-  }
-
-  // ============ Helpers ============
-  private fun withAlpha(color: Int, alpha: Int): Int {
-    return (alpha.coerceIn(0,255) shl 24) or (color and 0x00FFFFFF)
-  }
-
-  private fun avgColor(bmp: Bitmap, src: Rect, samples: Int = 7): Int {
-    var r = 0; var g = 0; var b = 0; var n = 0
-    val stepX = max(1, src.width() / samples)
-    val stepY = max(1, src.height() / samples)
-    var y = src.top
-    while (y < src.bottom) {
-      var x = src.left
-      while (x < src.right) {
-        val c = bmp.getPixel(x.coerceIn(0,bmp.width-1), y.coerceIn(0,bmp.height-1))
-        r += (c shr 16) and 0xFF
-        g += (c shr 8) and 0xFF
-        b += (c) and 0xFF
-        n++
-        x += stepX
-      }
-      y += stepY
-    }
-    if (n == 0) return Color.BLACK
-    return Color.rgb(r/n, g/n, b/n)
-  }
-
-  // ============ Layout ============
-  override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-    super.onSizeChanged(w, h, oldw, oldh)
-    if (w <= 0 || h <= 0) return
-
-    // Fit ảnh gốc vào contentRect (giữ tỉ lệ, căn giữa)
-    val bw = bg.width; val bh = bg.height
-    val scale = min(w.toFloat() / bw, h.toFloat() / bh)
-    val sw = (bw * scale).toInt()
-    val sh = (bh * scale).toInt()
-    val left = (w - sw) / 2
-    val top = (h - sh) / 2
-    contentRect = Rect(left, top, left + sw, top + sh)
-
-    // Nền mờ phủ full view: crop theo tỉ lệ màn rồi downscale→upscale
-    val viewAspect = w.toFloat() / h.toFloat()
-    val bmpAspect = bw.toFloat() / bh.toFloat()
-    cropSrcForBlur = if (bmpAspect > viewAspect) {
-      val srcW = (bh * viewAspect).toInt().coerceIn(1, bw)
-      val l = ((bw - srcW) / 2).coerceAtLeast(0)
-      Rect(l, 0, (l + srcW).coerceAtMost(bw), bh)
-    } else {
-      val srcH = (bw / viewAspect).toInt().coerceIn(1, bh)
-      val t = ((bh - srcH) / 2).coerceAtLeast(0)
-      Rect(0, t, bw, (t + srcH).coerceAtMost(bh))
-    }
-    val smallW = max(16, w / 16)
-    val smallH = max(16, h / 16)
-    val tmpSmall = Bitmap.createBitmap(smallW, smallH, Bitmap.Config.ARGB_8888)
-    Canvas(tmpSmall).drawBitmap(bg, cropSrcForBlur, Rect(0, 0, smallW, smallH), paint)
-    blurredFull?.recycle()
-    blurredFull = Bitmap.createScaledBitmap(tmpSmall, w, h, true)
-    tmpSmall.recycle()
-  }
-
-  // ============ Nền ============
-  private fun drawBackground(canvas: Canvas) {
-    when (bgMode) {
-      BgMode.TEAL -> {
-        canvas.drawColor(Color.parseColor("#174D4A"))
-      }
-      BgMode.GRADIENT -> {
-        val shader = LinearGradient(
-          0f, 0f, 0f, height.toFloat(),
-          intArrayOf(Color.parseColor("#F2FBFF"), Color.parseColor("#E6F7FF")),
-          floatArrayOf(0f, 1f),
-          Shader.TileMode.CLAMP
-        )
-        paint.shader = shader
-        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
-        paint.shader = null
-      }
-      BgMode.BLUR -> {
-        // lớp blur phủ full
-        blurredFull?.let { canvas.drawBitmap(it, 0f, 0f, paint) } ?: canvas.drawColor(Color.BLACK)
-
-        // Ảnh gốc đặt trong contentRect (không kéo méo)
-        canvas.drawBitmap(bg, null, contentRect, paint)
-
-        // ---- Blur đậm hơn cho dải dưới (ngoài contentRect) ----
-        val bottomTop = contentRect.bottom.toFloat()
-        if (bottomTop < height) {
-          // Lấy màu trung bình vùng đáy của ảnh gốc để tint
-          val srcBottom = Rect(
-            cropSrcForBlur.left,
-            (cropSrcForBlur.bottom - max(8, cropSrcForBlur.height()/6)).coerceAtLeast(cropSrcForBlur.top),
-            cropSrcForBlur.right,
-            cropSrcForBlur.bottom
-          )
-          val tint = avgColor(bg, srcBottom)
-          val cStart = withAlpha(tint, 0)
-          val cEnd = withAlpha(tint, 230) // đậm để “nuốt” chi tiết
-          val shader = LinearGradient(
-            0f, bottomTop, 0f, height.toFloat(),
-            intArrayOf(cStart, cEnd),
-            floatArrayOf(0f, 1f),
-            Shader.TileMode.CLAMP
-          )
-          paint.shader = shader
-          canvas.drawRect(0f, bottomTop, width.toFloat(), height.toFloat(), paint)
-          paint.shader = null
-        }
-      }
-    }
-  }
-
-  // ============ (C,R) → (x,y) trong contentRect ============
-  private fun colToX(c: Int): Float =
-    contentRect.left + ((c - 0.5f) / cols) * contentRect.width()
-
-  private fun rowToY(r: Int): Float {
-    val usableH = contentRect.height() * 0.5f
-    return contentRect.top + ((r - 0.5f) / rows) * usableH
-  }
-
-  // ============ Panel ẩn ============
-  private fun layoutPanel() {
-    val pw = width * 0.8f
-    val ph = height * 0.38f
-    val px = (width - pw) / 2f
-    val py = height * 0.12f
-    panelRect.set(px, py, px + pw, py + ph)
-
-    val pad = 16f * resources.displayMetrics.density
-    val rowH = 44f * resources.displayMetrics.scaledDensity
-    val btnW = 120f * resources.displayMetrics.scaledDensity
-    val small = 56f * resources.displayMetrics.scaledDensity
-
-    btnClose.set(panelRect.right - pad - small, panelRect.top + pad, panelRect.right - pad, panelRect.top + pad + small)
-    btnBg.set(panelRect.left + pad, panelRect.top + pad + rowH * 0f, panelRect.left + pad + btnW, panelRect.top + pad + rowH)
-
-    btnRMinus.set(panelRect.left + pad, panelRect.top + pad + rowH * 1.2f, panelRect.left + pad + small, panelRect.top + pad + rowH * 1.2f + small)
-    btnRPlus .set(btnRMinus.right + pad, btnRMinus.top, btnRMinus.right + pad + small, btnRMinus.bottom)
-
-    btnOMinus.set(panelRect.left + pad, panelRect.top + pad + rowH * 2.2f, panelRect.left + pad + small, panelRect.top + pad + rowH * 2.2f + small)
-    btnOPlus .set(btnOMinus.right + pad, btnOMinus.top, btnOMinus.right + pad + small, btnOMinus.bottom)
-  }
-
-  private fun drawPanel(canvas: Canvas) {
-    layoutPanel()
-    paint.color = 0x88000000.toInt()
-    canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
-
-    paint.color = Color.WHITE
-    canvas.drawRoundRect(panelRect, 24f, 24f, paint)
-
-    fun drawTextCenter(r: RectF, txt: String, sizeSp: Float = 16f, bold: Boolean = false) {
-      paint.textSize = sizeSp * resources.displayMetrics.scaledDensity
-      paint.color = Color.BLACK
-      paint.isFakeBoldText = bold
-      paint.textAlign = Paint.Align.CENTER
-      val fm = paint.fontMetrics
-      val cy = (r.top + r.bottom) / 2f - (fm.ascent + fm.descent) / 2f
-      canvas.drawText(txt, (r.left + r.right) / 2f, cy, paint)
-      paint.isFakeBoldText = false
-    }
-
-    // ×
-    paint.color = Color.parseColor("#EEEEEE")
-    canvas.drawRoundRect(btnClose, 14f, 14f, paint)
-    drawTextCenter(btnClose, "×", 22f, true)
-
-    // BG: Teal/Blur/Grad
-    paint.color = Color.parseColor("#F5F5F5")
-    canvas.drawRoundRect(btnBg, 14f, 14f, paint)
-    drawTextCenter(btnBg, "BG: " + when (bgMode) {
-      BgMode.TEAL -> "Teal"
-      BgMode.BLUR -> "Blur"
-      BgMode.GRADIENT -> "Grad"
-    }, 15f, true)
-
-    // R-/R+ (round)
-    paint.color = Color.parseColor("#F7F7F7")
-    canvas.drawRoundRect(btnRMinus, 12f, 12f, paint)
-    drawTextCenter(btnRMinus, "R −", 14f, true)
-    canvas.drawRoundRect(btnRPlus, 12f, 12f, paint)
-    drawTextCenter(btnRPlus, "R +", 14f, true)
-
-    // O-/O+ (other)
-    canvas.drawRoundRect(btnOMinus, 12f, 12f, paint)
-    drawTextCenter(btnOMinus, "O −", 14f, true)
-    canvas.drawRoundRect(btnOPlus, 12f, 12f, paint)
-    drawTextCenter(btnOPlus, "O +", 14f, true)
-
-    // Thông tin hiện tại
-    paint.textAlign = Paint.Align.LEFT
-    paint.color = Color.DKGRAY
-    paint.textSize = 14f * resources.displayMetrics.scaledDensity
-    canvas.drawText("Round: ${"%.2f".format(petalScaleRound)} · Other: ${"%.2f".format(petalScaleOther)}",
-      panelRect.left + 16f, panelRect.bottom - 18f * resources.displayMetrics.scaledDensity, paint)
-  }
-
-  // ============ Touch ============
-  override fun onTouchEvent(event: MotionEvent): Boolean {
-    when (event.actionMasked) {
-      MotionEvent.ACTION_DOWN -> {
-        val onRight = event.x >= width * (1f - rightEdgeFraction)
-        downInRightEdge = onRight
-        if (downInRightEdge && !panelOpen) {
-          if (!longPressPosted) {
-            longPressPosted = true
-            postDelayed(longPressRunnable, longPressMs)
-          }
-        }
-        return true
-      }
-      MotionEvent.ACTION_MOVE -> {
-        if (longPressPosted) {
-          val stillOnRight = event.x >= width * (1f - rightEdgeFraction)
-          if (!stillOnRight) downInRightEdge = false
-        }
-        if (panelOpen) return true
-      }
-      MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-        if (longPressPosted) {
-          longPressPosted = false
-          removeCallbacks(longPressRunnable)
-        }
-        if (panelOpen && event.actionMasked == MotionEvent.ACTION_UP) {
-          val x = event.x; val y = event.y
-          fun inside(r: RectF) = x >= r.left && x <= r.right && y >= r.top && y <= r.bottom
-          var changed = false
-          when {
-            inside(btnClose) -> { panelOpen = false; invalidate(); return true }
-            inside(btnBg) -> {
-              bgMode = when (bgMode) {
-                BgMode.TEAL -> BgMode.BLUR
-                BgMode.BLUR -> BgMode.GRADIENT
-                BgMode.GRADIENT -> BgMode.TEAL
-              }
-              prefs.edit().putInt("bg_mode", when (bgMode) {
-                BgMode.TEAL -> 0; BgMode.BLUR -> 1; BgMode.GRADIENT -> 2
-              }).apply()
-              changed = true
-            }
-            inside(btnRMinus) -> { petalScaleRound = max(0.20f, petalScaleRound - 0.02f); changed = true }
-            inside(btnRPlus)  -> { petalScaleRound = min(0.80f, petalScaleRound + 0.02f); changed = true }
-            inside(btnOMinus) -> { petalScaleOther = max(0.20f, petalScaleOther - 0.02f); changed = true }
-            inside(btnOPlus)  -> { petalScaleOther = min(0.80f, petalScaleOther + 0.02f); changed = true }
-          }
-          if (changed) {
-            prefs.edit().putFloat("ps_round", petalScaleRound)
-              .putFloat("ps_other", petalScaleOther).apply()
-            invalidate()
-          }
-          return true
-        }
-        return true
-      }
-    }
-    return super.onTouchEvent(event)
-  }
-
-  // ============ Vẽ chữ trong bảng gỗ ============
-  private fun drawBoardText(canvas: Canvas) {
-    // Tính vùng chữ theo contentRect + padding
-    val bx = contentRect.left + boardRectNorm.left * contentRect.width()
-    val by = contentRect.top  + boardRectNorm.top  * contentRect.height()
-    val bw = (boardRectNorm.width()) * contentRect.width()
-    val bh = (boardRectNorm.height()) * contentRect.height()
-    val padX = bw * boardPadFrac
-    val padY = bh * boardPadFrac
-    val textRect = RectF(bx + padX, by + padY, bx + bw - padX, by + bh - padY)
-
-    // Auto-fit cỡ chữ + word-wrap đơn giản
-    val maxSize = 34f * resources.displayMetrics.scaledDensity
-    val minSize = 16f * resources.displayMetrics.scaledDensity
-    paint.color = textColor
-    paint.textAlign = Paint.Align.LEFT
-    paint.isFakeBoldText = false
-
-    fun wrapLines(sizePx: Float): Pair<List<String>, Float> {
-      paint.textSize = sizePx
-      val words = displayText.replace("\n", " \n ").split(" ")
-      val lines = mutableListOf<String>()
-      var cur = StringBuilder()
-      for (w in words) {
-        if (w == "\n") {
-          lines += cur.toString().trim()
-          cur = StringBuilder()
-          continue
-        }
-        val trial = (if (cur.isEmpty()) w else cur.toString() + " " + w)
-        if (paint.measureText(trial) <= textRect.width()) {
-          cur.clear(); cur.append(trial)
-        } else {
-          if (cur.isNotEmpty()) lines += cur.toString().trim()
-          cur = StringBuilder(w)
-        }
-      }
-      if (cur.isNotEmpty()) lines += cur.toString().trim()
-
-      val fm = paint.fontMetrics
-      val lineH = (fm.bottom - fm.top) * lineSpacing
-      val totalH = lineH * lines.size
-      return lines to totalH
-    }
-
-    var size = maxSize
-    var lines: List<String>
-    var totalH: Float
-    while (true) {
-      val (ls, h) = wrapLines(size)
-      lines = ls; totalH = h
-      if (totalH <= textRect.height() || size <= minSize) break
-      size *= 0.94f
-      if (size < minSize) { size = minSize; break }
-    }
-
-    // Vẽ căn giữa trong textRect
-    paint.textSize = size
-    val fm = paint.fontMetrics
-    val lineH = (fm.bottom - fm.top) * lineSpacing
-    var y = textRect.centerY() - totalH / 2f - (fm.ascent + fm.descent)/2f
-    for (line in lines) {
-      val x = textRect.centerX() - paint.measureText(line)/2f
-      canvas.drawText(line, x, y, paint)
-      y += lineH
-    }
-  }
-
-  // ============ Vẽ toàn cảnh ============
   override fun onDraw(canvas: Canvas) {
     super.onDraw(canvas)
 
-    // 1) nền (fit + blur mạnh dải dưới)
-    drawBackground(canvas)
+    // ====== 1) Ná»€N: cover-blur toÃ n mÃ n + EXTRA BLUR CHá»ˆ á»ž DÆ¯á»šI (giáº£m ~10%) ======
+    val iw = bg.width.toFloat()
+    val ih = bg.height.toFloat()
+    val screenAspect = width.toFloat() / height.toFloat()
+    val imgAspect = iw / ih
 
-    // 2) Neo chữ vào bảng (bên trong contentRect)
-    drawBoardText(canvas)
+    // "Cover" crop tá»« áº£nh gá»‘c Ä‘á»ƒ ná»n blur khÃ´ng cÃ³ viá»n Ä‘en
+    val srcCover: Rect = if (imgAspect > screenAspect) {
+      val newW = (ih * screenAspect).toInt()
+      val leftC = ((iw - newW) / 2f).toInt()
+      Rect(leftC, 0, leftC + newW, ih.toInt())
+    } else {
+      val newH = (iw / screenAspect).toInt()
+      val topC = ((ih - newH) / 2f).toInt()
+      Rect(0, topC, iw.toInt(), topC + newH)
+    }
+    val dstFull = Rect(0, 0, width, height)
 
-    // 3) Petals theo “kéo lưới”
+    // Ná»n blur "vá»«a"
+    val blurBase = RenderEffect.createBlurEffect(40f, 40f, Shader.TileMode.CLAMP)
+    val paintBlurBase = Paint().apply { renderEffect = blurBase }
+    canvas.drawBitmap(bg, srcCover, dstFull, paintBlurBase)
+
+    // TÃ­nh khung áº£nh theo tá»‰ lá»‡ tháº­t (letterbox) Ä‘á»ƒ biáº¿t mÃ©p dÆ°á»›i
+    val scale = min(width / iw, height / ih)
+    val sw = (iw * scale).toInt()
+    val sh = (ih * scale).toInt()
+    val left = (width - sw) / 2
+    val top = (height - sh) / 2
+    val contentBottom = top + sh
+
+    // Extra blur chá»‰ á»Ÿ pháº§n dÆ°á»›i (giáº£m ~10% vs 60f)
+    val blurStrong = RenderEffect.createBlurEffect(54f, 54f, Shader.TileMode.CLAMP)
+    val paintBlurStrong = Paint().apply { renderEffect = blurStrong }
+    val strongLayer = canvas.saveLayer(null, paintBlurStrong)
+    // Phá»§ cover lÃªn layer blur máº¡nh
+    canvas.drawBitmap(bg, srcCover, dstFull, null)
+    // Mask Ä‘á»ƒ GIá»® blur máº¡nh á»Ÿ dÆ°á»›i (tá»« contentBottom -> Ä‘Ã¡y), mÆ°á»£t dáº§n
+    val maskPaint = Paint().apply {
+      xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_IN)
+      shader = LinearGradient(
+        0f, contentBottom.toFloat(),
+        0f, height.toFloat(),
+        0x00000000.toInt(),    // trong suá»‘t táº¡i mÃ©p áº£nh
+        0xFF000000.toInt(),    // Ä‘áº­m dáº§n vá» Ä‘Ã¡y
+        Shader.TileMode.CLAMP
+      )
+    }
+    canvas.drawRect(0f, contentBottom.toFloat(), width.toFloat(), height.toFloat(), maskPaint)
+    canvas.restoreToCount(strongLayer)
+
+    // Váº½ áº£nh gá»‘c theo tá»‰ lá»‡ tháº­t lÃªn trÃªn (ná»™i dung khÃ´ng bá»‹ blur)
+    val dstContent = Rect(left, top, left + sw, top + sh)
+    canvas.drawBitmap(bg, null, dstContent, null)
+
+    // ====== 2) PETALS: mÆ°a theo lÆ°á»›i (neo cá»™t), 3 wave, rung nháº¹, dá»«ng & tan ======
+    val topHalf = height * 0.5f
+    val cols = 10f; val rows = 10f
+
+    fun colToX(c: Int): Float = ((c - 0.5f) / cols) * width
+    fun rowToY(r: Int): Float = ((r - 0.5f) / rows) * topHalf
+
     val anchors = coords.map { (c, r) -> Pair(colToX(c), rowToY(r)) }
-    val yMin = anchors.minOf { it.second }
     val yMax = anchors.maxOf { it.second }
-    val offsetStart = (contentRect.top - yMax) - 0.06f * contentRect.height()
-    val offsetEnd = (contentRect.top + contentRect.height() * stopMax) - yMin
-    val baseTime = if (panelOpen) tFrozen else tNow
+    val yMin = anchors.minOf { it.second }
+
+    // offset Ä‘á»ƒ kÃ©o "táº¥m lÆ°á»›i" Ä‘i xuá»‘ng
+    val offsetStart = -(yMax + 0.06f * height) // báº¯t Ä‘áº§u cao hÆ¡n khung má»™t chÃºt
+    val stopYMin = height * stopMin
+    val stopYMax = height * stopMax
+    val offsetEnd = (stopYMax) - yMin
+
+    val paintPetal = Paint(Paint.ANTI_ALIAS_FLAG)
 
     for (w in 0 until 3) {
       val t0 = waveStarts[w]
       val ft = waveDurations[w]
-      val dt = baseTime - t0
+      val dt = tNow - t0
       if (dt < 0f) continue
 
-      val offsetY = if (dt <= ft) {
+      val offset = if (dt <= ft) {
         val p = (dt / ft).coerceIn(0f, 1f)
         offsetStart + p * (offsetEnd - offsetStart)
-      } else offsetEnd
+      } else {
+        offsetEnd
+      }
 
-      for (i in anchors.indices) {
-        val bmp = petalsSrc[i % petalsSrc.size]
+      for (i in coords.indices) {
+        val bmp = petals[i % petals.size]
         val (ax, ay) = anchors[i]
-        var y = ay + offsetY
 
-        val yStop = contentRect.top + contentRect.height() * (
-          stopMin + (stopMax - stopMin) * (i / (anchors.size - 1f))
-        )
+        // Dáº£i dá»«ng riÃªng cho tá»«ng cÃ¡nh (á»•n Ä‘á»‹nh)
+        val stopT = stopMin + (stopMax - stopMin) * ((i % 5) / 4f)
+        val yStop = height * stopT
 
         var alpha = 1f
+        var y = ay + offset
+
         if (y >= yStop) {
+          // thá»i Ä‘iá»ƒm cháº¡m yStop
           val denom = (offsetEnd - offsetStart)
-          val dtCross = if (denom != 0f) ft * ((yStop - ay - offsetStart) / denom) else dt
-          val fadeElapsed = max(0f, dt - dtCross)
+          val tCross = if (denom != 0f) ft * ((yStop - ay - offsetStart) / denom) else dt
+          val fadeElapsed = max(0f, dt - tCross)
           alpha = (1f - fadeElapsed / fadeTime).coerceIn(0f, 1f)
           if (alpha <= 0f) continue
           y = yStop
         }
 
-        // cỡ cánh theo bề ngang ô
-        val cellW = contentRect.width() / cols
-        val ar = bmp.width.toFloat() / bmp.height.toFloat()
-        val isRound = abs(ar - 1f) <= 0.12f
-        val desiredW = (if (isRound) petalScaleRound else petalScaleOther) * cellW
-        val s = (desiredW / bmp.width).coerceAtMost(1.5f).coerceAtLeast(0.05f)
-
         val angle = rotAmpDeg * sin(2f * Math.PI.toFloat() * rotFreqHz * max(0f, dt) + i * 0.37f)
-
-        paint.alpha = (alpha * 255).toInt().coerceIn(0, 255)
+        paintPetal.alpha = (alpha * 255).toInt().coerceIn(0, 255)
         canvas.save()
         canvas.translate(ax, y)
         canvas.rotate(angle)
-        canvas.scale(s, s)
-        canvas.drawBitmap(bmp, -bmp.width / 2f, -bmp.height / 2f, paint)
+        canvas.drawBitmap(bmp, -bmp.width / 2f, -bmp.height / 2f, paintPetal)
         canvas.restore()
       }
     }
 
-    // 4) Panel ẩn
-    if (panelOpen) drawPanel(canvas)
+    // ====== 3) TEXT: bÃ¡m báº£ng gá»—, má»™t lá»›p ======
+    // Khung báº£ng theo toáº¡ Ä‘á»™ pháº§n trÄƒm Ä‘Ã£ chá»‘t: x:30..70, y:60..73 (% mÃ n)
+    val padPct = 0.08f // vÃ nh an toÃ n 8%
+    val bx0 = (0.30f + padPct) * width
+    val bx1 = (0.70f - padPct) * width
+    val by0 = (0.60f + padPct) * height
+    val by1 = (0.73f - padPct) * height
+    val textRect = RectF(bx0, by0, bx1, by1)
 
-    // 5) khung tiếp theo
-    postInvalidateOnAnimation()
+    // VÃ­ dá»¥ text máº«u; cÃ³ thá»ƒ thay tá»« code/strings sau
+    val message = "Hoa há»“ng cÃ³ gai nhá»n,\\nRose thÃ¬ cÃ³ sáº¯c (nhá»n)"
+
+    drawAutoFitMultilineCentered(canvas, message, textRect, textPaint)
+  }
+
+  // === Utility: váº½ text tá»± co & báº» dÃ²ng, canh giá»¯a trong RectF ===
+  private fun drawAutoFitMultilineCentered(canvas: Canvas, text: String, box: RectF, p: Paint) {
+    // TÃ¡ch dÃ²ng theo \\n
+    val lines = text.split("\\n".toRegex())
+    // TÃ¬m cá»¡ chá»¯ lá»›n nháº¥t mÃ  tá»•ng chiá»u cao <= box.height vÃ  bá» ngang tá»«ng dÃ²ng <= box.width
+    var lo = 8f; var hi = 120f
+    fun fits(size: Float): Boolean {
+      p.textSize = size
+      val fm = p.fontMetrics
+      val lineH = (fm.bottom - fm.top)
+      val totalH = lineH * lines.size
+      if (totalH > box.height()) return false
+      for (ln in lines) {
+        val w = p.measureText(ln)
+        if (w > box.width()) return false
+      }
+      return true
+    }
+    while (hi - lo > 0.5f) {
+      val mid = (lo + hi) / 2f
+      if (fits(mid)) lo = mid else hi = mid
+    }
+    p.textSize = lo
+
+    // Váº½ canh giá»¯a
+    val fm = p.fontMetrics
+    val lineH = (fm.bottom - fm.top)
+    val totalH = lineH * lines.size
+    var y = box.centerY() - totalH / 2f - fm.top
+    for (ln in lines) {
+      canvas.drawText(ln, box.centerX(), y, p)
+      y += lineH
+    }
   }
 }
+
