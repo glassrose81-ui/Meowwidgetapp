@@ -198,16 +198,16 @@ class SplashView @JvmOverloads constructor(
       tmpSmall.recycle(); scaled.recycle()
 
       val gapTop = (h - bottomGap).toFloat()
-      val shader = BitmapShader(blurred, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+      val bmpShader = BitmapShader(blurred, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
       val m = Matrix().apply { setTranslate(((w - blurred.width)/2f), gapTop) }
-      shader.setLocalMatrix(m)
+      bmpShader.setLocalMatrix(m)
       val save = canvas.saveLayer(RectF(0f, gapTop, w.toFloat(), h.toFloat()), null)
-      paint.shader = shader
+      paint.shader = bmpShader
       canvas.drawRect(0f, gapTop, w.toFloat(), h.toFloat(), paint)
 
       val soften = min(130f, bottomGap.toFloat())
       val mask = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        shader = LinearGradient(0f, gapTop, 0f, gapTop + soften,
+        this.shader = LinearGradient(0f, gapTop, 0f, gapTop + soften,
           intArrayOf(Color.argb(210,0,0,0), Color.argb(255,0,0,0)),
           floatArrayOf(0f,1f), Shader.TileMode.CLAMP)
         xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_IN)
