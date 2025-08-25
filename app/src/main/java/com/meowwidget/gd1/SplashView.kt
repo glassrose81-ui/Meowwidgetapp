@@ -243,7 +243,7 @@ class SplashView @JvmOverloads constructor(
     canvas.drawBitmap(bg, null, contentRect, paint)
 bgMatrix.setRectToRect(
     android.graphics.RectF(0f, 0f, bg.width.toFloat(), bg.height.toFloat()),
-    contentRect,
+    android.graphics.RectF(contentRect),
     android.graphics.Matrix.ScaleToFit.FILL
 )
 
