@@ -283,7 +283,7 @@ bgMatrix.setRectToRect(
   }
 
   // ============ Vẽ panel ẩn ============  // BEGIN GĐ1-PATCH: Textbox on board (contentRect-relative)
-  private fun drawTextBox(canvas: Canvas) {
+  private fun (canvas: Canvas) {
 // Neo theo ảnh gốc (L30–R70–T58–B74) rồi map sang canvas
 val boardRectImg = android.graphics.RectF(
     0.30f * bg.width,
@@ -501,13 +501,14 @@ val by2 = boardRectCanvas.bottom.toInt()
 
   // ============ Vẽ toàn cảnh ============
   override fun onDraw(canvas: Canvas) {
-    // 3.x) Textbox trên bảng gỗ
-    drawTextBox(canvas)
 
     super.onDraw(canvas)
 
     // 1) nền (giữ tỉ lệ + blur phần dư)
     drawBackground(canvas)
+    
+   // 3.x) Textbox trên bảng gỗ
+    drawTextBox(canvas)
 
     // 2) tính anchor theo contentRect
     val anchors = coords.map { (c, r) -> Pair(colToX(c), rowToY(r)) }
