@@ -283,7 +283,7 @@ bgMatrix.setRectToRect(
   }
 
   // ============ Vẽ panel ẩn ============  // BEGIN GĐ1-PATCH: Textbox on board (contentRect-relative)
-  private fun (canvas: Canvas) {
+  private fun drawTextBox(canvas: Canvas) {
 // Neo theo ảnh gốc (L30–R70–T58–B74) rồi map sang canvas
 val boardRectImg = android.graphics.RectF(
     0.30f * bg.width,
