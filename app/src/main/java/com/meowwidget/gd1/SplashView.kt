@@ -24,6 +24,8 @@ class SplashView @JvmOverloads constructor(
   )
 
   private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { isFilterBitmap = true }
+  private val bgMatrix = android.graphics.Matrix()
+
 
   // ============ Lưới & tọa độ (neo cố định) ============
   // 16 điểm như bạn chốt (C,R)
@@ -239,6 +241,12 @@ class SplashView @JvmOverloads constructor(
     }
     }
     canvas.drawBitmap(bg, null, contentRect, paint)
+bgMatrix.setRectToRect(
+    android.graphics.RectF(0f, 0f, bg.width.toFloat(), bg.height.toFloat()),
+    contentRect,
+    android.graphics.Matrix.ScaleToFit.FILL
+)
+
   }
   // END GĐ1-PATCH
 
@@ -276,10 +284,22 @@ class SplashView @JvmOverloads constructor(
 
   // ============ Vẽ panel ẩn ============  // BEGIN GĐ1-PATCH: Textbox on board (contentRect-relative)
   private fun drawTextBox(canvas: Canvas) {
-    val bx1 = (contentRect.left + 0.30f * contentRect.width()).toInt()
-    val bx2 = (contentRect.left + 0.70f * contentRect.width()).toInt()
-    val by1 = (contentRect.top  + 0.58f * contentRect.height()).toInt()
-    val by2 = (contentRect.top  + 0.74f * contentRect.height()).toInt()
+bx1 = (contentRect.left + 0.30f * contentRect.width())
+// Neo theo ảnh gốc (L30–R70–T58–B74) rồi map sang canvas
+val boardRectImg = android.graphics.RectF(
+    0.30f * bg.width,
+    0.58f * bg.height,
+    0.70f * bg.width,
+    0.74f * bg.height
+)
+val boardRectCanvas = android.graphics.RectF(boardRectImg)
+bgMatrix.mapRect(boardRectCanvas)
+
+val bx1 = boardRectCanvas.left.toInt()
+val by1 = boardRectCanvas.top.toInt()
+val bx2 = boardRectCanvas.right.toInt()
+val by2 = boardRectCanvas.bottom.toInt()
+
     val bw = (bx2 - bx1).coerceAtLeast(1)
     val bh = (by2 - by1).coerceAtLeast(1)
 
