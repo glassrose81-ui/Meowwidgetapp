@@ -666,4 +666,4 @@ class SplashView @JvmOverloads constructor(
     return out
   }
 
-}
+
