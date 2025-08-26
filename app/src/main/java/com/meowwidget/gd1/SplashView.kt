@@ -237,48 +237,7 @@ private fun drawBottomBlurGap(canvas: Canvas) {
       }
       paint.shader = null
     }
-    fun drawBottomBlurGap() {
-      if (bottomGap <= 0) return
-      val srcH = bg.height; val srcW = bg.width
-      val y83 = (0.83f * srcH).toInt().coerceIn(0, srcH - 1)
-      val blockH = (srcH - y83).coerceAtLeast(1)
-      val srcRect = Rect(0, y83, srcW, srcH)
-      val block = Bitmap.createBitmap(bg, srcRect.left, srcRect.top, srcRect.width(), srcRect.height())
-      val s = bottomGap.toFloat() / blockH.toFloat()
-      val scaledW = max(1, (block.width * s).roundToInt())
-      val scaledH = bottomGap.coerceAtLeast(1)
-      val scaled = Bitmap.createScaledBitmap(block, scaledW, scaledH, true)
-      block.recycle()
-
-      val smallW = max(1, scaledW / 14)
-      val smallH = max(1, scaledH / 14)
-      val tmpSmall = Bitmap.createBitmap(smallW, smallH, Bitmap.Config.ARGB_8888)
-      Canvas(tmpSmall).drawBitmap(scaled, Rect(0,0,scaledW,scaledH), Rect(0,0,smallW,smallH), paint)
-      val blurred = Bitmap.createScaledBitmap(tmpSmall, scaledW, scaledH, true)
-      tmpSmall.recycle(); scaled.recycle()
-
-      val gapTop = (h - bottomGap).toFloat()
-      val bmpShader = BitmapShader(blurred, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
-      val m = Matrix().apply { setTranslate(((w - blurred.width)/2f), gapTop) }
-      bmpShader.setLocalMatrix(m)
-      val save = canvas.saveLayer(RectF(0f, gapTop, w.toFloat(), h.toFloat()), null)
-      paint.shader = bmpShader
-      canvas.drawRect(0f, gapTop, w.toFloat(), h.toFloat(), paint)
-
-      val soften = min(130f, bottomGap.toFloat())
-      val mask = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        this.shader = LinearGradient(0f, gapTop, 0f, gapTop + soften,
-          intArrayOf(Color.argb(210,0,0,0), Color.argb(255,0,0,0)),
-          floatArrayOf(0f,1f), Shader.TileMode.CLAMP)
-        xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_IN)
-      }
-      canvas.drawRect(0f, gapTop, w.toFloat(), gapTop + soften, mask)
-      canvas.restoreToCount(save); paint.shader = null
-
-      val bandH = min(200, bottomGap)
-      
-      blurred.recycle()
-    }
+    
     when (bgMode) {
       BgMode.MINT -> drawTealBands()
       BgMode.GRADIENT -> drawGradientBands()
