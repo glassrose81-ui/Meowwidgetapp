@@ -280,7 +280,12 @@ run {
         // 4) Vẽ dán full gap (không feather, không blend trắng)
         paint.isFilterBitmap = true
         paint.isDither = true
-        canvas.drawBitmap(blurred, 0f, gapTop, paint)
+        canvas.drawBitmap(
+    blurred,
+    contentRect.left.toFloat(),
+    contentRect.bottom.toFloat(),
+    paint
+)
 
         // 5) Dọn bộ nhớ tạm
         if (!strip.isRecycled) strip.recycle()
