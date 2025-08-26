@@ -25,6 +25,12 @@ class SplashView @JvmOverloads constructor(
 
   private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { isFilterBitmap = true }
   private val bgMatrix = android.graphics.Matrix()
+  // === CACHE: bottom blur band ===
+private var bottomBlurBmp: Bitmap? = null
+private var bottomBlurW = 0
+private var bottomBlurH = 0
+// === /CACHE ===
+
   // === TEXT ROTATION (5 câu) ===
 private val quotes = listOf(
     "Hoa hồng có gai nhọn còn Rose thì có sắc (nhọn)",
@@ -124,6 +130,47 @@ private var selectedText: String? = null
     petalScaleRound = prefs.getFloat("ps_round", 0.42f)
     petalScaleOther = prefs.getFloat("ps_other", 0.48f)
   }
+
+private fun drawBottomBlurGap(canvas: Canvas) {
+    // Dải dưới của ảnh gốc: 83% -> 100%
+    val srcY  = (0.83f * bg.height).toInt().coerceIn(0, bg.height - 1)
+    val srcH  = (bg.height - srcY).coerceAtLeast(1)
+
+    // Khoảng trống dưới màn hình (ngoài contentRect)
+    val gapTop = contentRect.bottom
+    val gapH   = (height - gapTop).coerceAtLeast(0)
+    if (gapH <= 0) return
+
+    val viewW = width.coerceAtLeast(1)
+
+    // Cắt dải nguồn
+    val strip = try {
+        Bitmap.createBitmap(bg, 0, srcY, bg.width, srcH)
+    } catch (_: Throwable) {
+        return
+    }
+
+    // Lite-1 blur: downscale mạnh rồi upscale lại để mờ mịn, nhẹ máy
+    // Bạn có thể tinh chỉnh factor nếu muốn (0.25f ~ nhẹ & mờ, 0.35f ~ rõ hơn)
+    val factor = 0.25f
+    val dw = (viewW * factor).toInt().coerceAtLeast(1)
+    val dh = (gapH   * factor).toInt().coerceAtLeast(1)
+
+    val small  = Bitmap.createScaledBitmap(strip, dw, dh, /*filter*/ true)
+    val blurred = Bitmap.createScaledBitmap(small, viewW, gapH, /*filter*/ true)
+
+    // Vẽ phủ kín dải dưới
+    val dst = android.graphics.Rect(0, gapTop, viewW, height)
+    paint.isFilterBitmap = true
+    paint.isDither = true
+    canvas.drawBitmap(blurred, null, dst, paint)
+
+    // Dọn rác
+    if (!strip.isRecycled)  strip.recycle()
+    if (!small.isRecycled)  small.recycle()
+    // (blurred dùng ngay trên canvas, không recycle ở đây)
+}
+
 
   // ============ Layout / size changes ============
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -248,7 +295,7 @@ private var selectedText: String? = null
           canvas.drawRect(0f, 0f, w.toFloat(), topGap.toFloat(), paint)
         }
       }
-      drawBottomBlurGap()
+      
     }
     }
     canvas.drawBitmap(bg, null, contentRect, paint)
@@ -257,6 +304,8 @@ bgMatrix.setRectToRect(
     android.graphics.RectF(contentRect),
     android.graphics.Matrix.ScaleToFit.FILL
 )
+drawBottomBlurGap()
+
 
   }
   // END GĐ1-PATCH
