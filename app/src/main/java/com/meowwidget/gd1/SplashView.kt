@@ -304,7 +304,7 @@ bgMatrix.setRectToRect(
     android.graphics.RectF(contentRect),
     android.graphics.Matrix.ScaleToFit.FILL
 )
-drawBottomBlurGap()
+drawBottomBlurGap(canvas)
 
 
   }
