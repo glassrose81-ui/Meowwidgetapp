@@ -257,6 +257,39 @@ bgMatrix.setRectToRect(
     android.graphics.RectF(contentRect),
     android.graphics.Matrix.ScaleToFit.FILL
 )
+// --- BLUR bottom gap (look A): cut 83–100%, scale, then blur (down-up) ---
+run {
+    val gapTop = contentRect.bottom
+    val gapH = (height - gapTop).toInt().coerceAtLeast(0)
+    if (gapH > 0) {
+        // 1) Cắt dải 83–100% từ ảnh gốc
+        val y0 = (0.83f * bg.height).toInt().coerceIn(0, bg.height - 1)
+        val srcH = (bg.height - y0).coerceAtLeast(1)
+        val strip = Bitmap.createBitmap(bg, 0, y0, bg.width, srcH)
+
+        // 2) Phóng lên đúng chiều cao gap (lọc mượt)
+        val w = width.coerceAtLeast(1)
+        val scaled = Bitmap.createScaledBitmap(strip, w, gapH, /*filter=*/ true)
+
+        // 3) Làm mờ SAU khi phóng: downscale rồi upscale (xấp xỉ gaussian/box)
+        val dsW = (w / 6).coerceAtLeast(1)     // giảm số này -> blur mạnh hơn (6)
+        val dsH = (gapH / 6).coerceAtLeast(1)  // tăng số này -> blur nhẹ hơn (10)
+        val small1 = Bitmap.createScaledBitmap(scaled, dsW, dsH, true)
+        val blurred = Bitmap.createScaledBitmap(small1, w, gapH, true)
+
+        // 4) Vẽ dán full gap (không feather, không blend trắng)
+        paint.isFilterBitmap = true
+        paint.isDither = true
+        canvas.drawBitmap(blurred, 0f, gapTop, paint)
+
+        // 5) Dọn bộ nhớ tạm
+        if (!strip.isRecycled) strip.recycle()
+        if (scaled !== small1 && !scaled.isRecycled) scaled.recycle()
+        if (!small1.isRecycled) small1.recycle()
+        if (!blurred.isRecycled) blurred.recycle()
+    }
+}
+// --- /BLUR bottom gap ---
 
   }
   // END GĐ1-PATCH
