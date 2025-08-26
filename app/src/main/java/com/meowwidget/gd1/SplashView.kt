@@ -307,7 +307,7 @@ val by2 = boardRectCanvas.bottom.toInt()
     val maxW = (bw - 2*padX).coerceAtLeast(1)
     val maxH = (bh - 2*padY).coerceAtLeast(1)
 
-    val text = "Hoa hồng có gai nhọn còn Rose thì có sắc (nhọn)"
+    val text = "Hoa hồng có gai "
     val tp = Paint(Paint.ANTI_ALIAS_FLAG).apply {
       color = Color.WHITE
       textAlign = Paint.Align.LEFT
