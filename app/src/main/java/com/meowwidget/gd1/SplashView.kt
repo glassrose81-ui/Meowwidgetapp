@@ -25,6 +25,17 @@ class SplashView @JvmOverloads constructor(
 
   private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { isFilterBitmap = true }
   private val bgMatrix = android.graphics.Matrix()
+  // === TEXT ROTATION (5 câu) ===
+private val quotes = listOf(
+    "Hoa hồng có gai nhọn còn Rose thì có sắc (nhọn)",
+    "Meowww~ lại gặp bạn rồi, mình đợi nãy giờ đó",
+    "Tự yêu mình là đẹp nhất đó Rose nè!",
+    "Vì là Rose nên bạn luôn rạng rỡ",
+    "Mình đã bắt đầu một điều lớn hơn mình nghĩ từ một suy nghĩ nhỏ bé"
+)
+private var selectedText: String? = null
+// === /TEXT ROTATION ===
+
 
 
   // ============ Lưới & tọa độ (neo cố định) ============
@@ -307,7 +318,8 @@ val by2 = boardRectCanvas.bottom.toInt()
     val maxW = (bw - 2*padX).coerceAtLeast(1)
     val maxH = (bh - 2*padY).coerceAtLeast(1)
 
-    val text = "Hoa hồng có gai "
+    val text = selectedText ?: ""
+
     val tp = Paint(Paint.ANTI_ALIAS_FLAG).apply {
       color = Color.WHITE
       textAlign = Paint.Align.LEFT
@@ -503,6 +515,11 @@ val by2 = boardRectCanvas.bottom.toInt()
   override fun onDraw(canvas: Canvas) {
 
     super.onDraw(canvas)
+    // pick once per app run
+if (selectedText == null) {
+    val idx = (Math.random() * quotes.size).toInt()
+    selectedText = quotes[idx]
+}
 
     // 1) nền (giữ tỉ lệ + blur phần dư)
     drawBackground(canvas)
