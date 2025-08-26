@@ -239,9 +239,9 @@ private fun drawBottomBlurGap(canvas: Canvas) {
     }
     
 when (bgMode) {
-    BGMODE.MINT -> drawTealBands()
-    BGMODE.GRADIENT -> drawGradientBands()
-    BGMODE.BLUR -> {
+    bgMode.MINT -> drawTealBands()
+    bgMode.GRADIENT -> drawGradientBands()
+    bgMode.BLUR -> {
         // 1) Lấp dải trên (topGap) bằng màu trung bình phần đỉnh ảnh
         if (topGap > 0) {
             val bandH = (0.02f * bg.height).toInt().coerceAtLeast(1)
