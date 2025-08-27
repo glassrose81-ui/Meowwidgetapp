@@ -132,43 +132,64 @@ private var selectedText: String? = null
   }
 
 private fun drawBottomBlurGap(canvas: Canvas) {
-    // Dải dưới của ảnh gốc: 83% -> 100%
-    val srcY  = (0.83f * bg.height).toInt().coerceIn(0, bg.height - 1)
-    val srcH  = (bg.height - srcY).coerceAtLeast(1)
+    // 1) Lát nguồn: 83% → 100% ảnh gốc
+    val srcY = (0.83f * bg.height).toInt().coerceIn(0, bg.height - 1)
+    val srcH = (bg.height - srcY).coerceAtLeast(1)
 
-    // Khoảng trống dưới màn hình (ngoài contentRect)
+    // 2) Khoảng trống dưới ảnh đã vẽ (ngoài contentRect)
     val gapTop = contentRect.bottom
-    val gapH   = (height - gapTop).coerceAtLeast(0)
+    val gapH = (height - gapTop).coerceAtLeast(0)
     if (gapH <= 0) return
 
     val viewW = width.coerceAtLeast(1)
 
-    // Cắt dải nguồn
+    // 3) Cắt lát nguồn
     val strip = try {
         Bitmap.createBitmap(bg, 0, srcY, bg.width, srcH)
     } catch (_: Throwable) {
         return
     }
 
-    // Lite-1 blur: downscale mạnh rồi upscale lại để mờ mịn, nhẹ máy
-    // Bạn có thể tinh chỉnh factor nếu muốn (0.25f ~ nhẹ & mờ, 0.35f ~ rõ hơn)
-    val factor = 0.25f
-    val dw = (viewW * factor).toInt().coerceAtLeast(1)
-    val dh = (gapH   * factor).toInt().coerceAtLeast(1)
+    // 4) Đưa lát về kích thước khoảng trống
+    var blurred = try {
+        Bitmap.createScaledBitmap(strip, viewW, gapH, true)
+    } catch (_: Throwable) {
+        strip
+    }
 
-    val small  = Bitmap.createScaledBitmap(strip, dw, dh, /*filter*/ true)
-    val blurred = Bitmap.createScaledBitmap(small, viewW, gapH, /*filter*/ true)
+    // 5) MAX blur: nhiều lượt downscale → upscale (BILINEAR), không RenderEffect
+    fun pass(f: Float) {
+        val sw = (viewW * f).toInt().coerceAtLeast(1)
+        val sh = (gapH * f).toInt().coerceAtLeast(1)
+        val small = Bitmap.createScaledBitmap(blurred, sw, sh, true)
+        val back = Bitmap.createScaledBitmap(small, viewW, gapH, true)
+        if (blurred !== strip && !blurred.isRecycled) blurred.recycle()
+        if (!small.isRecycled) small.recycle()
+        blurred = back
+    }
+    pass(0.12f)
+    pass(0.06f)
+    pass(0.03f)
+    pass(0.015f)
 
-    // Vẽ phủ kín dải dưới
+    // 6) Làm mượt dọc bổ sung ≈ 10% chiều cao dải
+    val sh = (gapH * 0.10f).toInt().coerceAtLeast(1)
+    val vSmall = Bitmap.createScaledBitmap(blurred, viewW, sh, true)
+    val vBack = Bitmap.createScaledBitmap(vSmall, viewW, gapH, true)
+    if (blurred !== strip && !blurred.isRecycled) blurred.recycle()
+    if (!vSmall.isRecycled) vSmall.recycle()
+    blurred = vBack
+
+    // 7) Vẽ phủ kín khoảng trống đáy
     val dst = android.graphics.Rect(0, gapTop, viewW, height)
     paint.isFilterBitmap = true
     paint.isDither = true
     canvas.drawBitmap(blurred, null, dst, paint)
 
-    // Dọn rác
-    if (!strip.isRecycled)  strip.recycle()
-    if (!small.isRecycled)  small.recycle()
-    // (blurred dùng ngay trên canvas, không recycle ở đây)
+    // 8) Dọn rác tạm
+    if (!strip.isRecycled) strip.recycle()
+    // 'blurred' đang dùng trên canvas, không recycle ở đây
+
 }
 
 
