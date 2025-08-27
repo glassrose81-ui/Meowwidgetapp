@@ -208,6 +208,13 @@ private fun drawBottomBlurGap(canvas: Canvas) {
     val left = (w - sw) / 2
     val top = (h - sh) / 2
     contentRect = Rect(left, top, left + sw, top + sh)
+    // Xóa cache dải mờ đáy khi kích thước thay đổi
+    if (bottomBlurCache != null) {
+        bottomBlurCache?.recycle()
+        bottomBlurCache = null
+    }
+    bottomBlurCacheW = 0
+    bottomBlurCacheH = 0
 
     // 2) Tạo blurredFull: crop ảnh theo tỉ lệ màn hình → downscale mạnh → upscale
     val viewAspect = w.toFloat() / h.toFloat()
