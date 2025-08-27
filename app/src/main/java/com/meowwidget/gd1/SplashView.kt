@@ -8,6 +8,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.animation.LinearInterpolator
 import kotlin.math.*
+import android.graphics.Bitmap
 
 class SplashView @JvmOverloads constructor(
   context: Context,
@@ -24,12 +25,13 @@ class SplashView @JvmOverloads constructor(
   )
 
   private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { isFilterBitmap = true }
-  private val bgMatrix = android.graphics.Matrix()
-  // === CACHE: bottom blur band ===
-private var bottomBlurBmp: Bitmap? = null
-private var bottomBlurW = 0
-private var bottomBlurH = 0
-// === /CACHE ===
+
+  /* Cache cho dải mờ đáy */
+private var bottomBlurCache: Bitmap? = null
+private var bottomBlurCacheW: Int = 0
+private var bottomBlurCacheH: Int = 0
+
+private val bgMatrix = android.graphics.Matrix()
 
   // === TEXT ROTATION (5 câu) ===
 private val quotes = listOf(
