@@ -277,6 +277,7 @@ when (bgMode) {
                 paint.shader = null
                 paint.color = avg
                 canvas.drawRect(0f, 0f, w.toFloat(), topGap.toFloat(), paint)
+            }
                 drawBottomBlurGap(canvas)
             }
         }
