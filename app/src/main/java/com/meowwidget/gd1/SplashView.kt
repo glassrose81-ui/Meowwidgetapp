@@ -278,12 +278,12 @@ when (bgMode) {
                 paint.color = avg
                 canvas.drawRect(0f, 0f, w.toFloat(), topGap.toFloat(), paint)
             }
+         }      
                 drawBottomBlurGap(canvas)
-            }
-        }
+     }
+}
               
-    }
-    }
+canvas.drawBitmap(bg, null, contentRect, paint)
     
 bgMatrix.setRectToRect(
     android.graphics.RectF(0f, 0f, bg.width.toFloat(), bg.height.toFloat()),
