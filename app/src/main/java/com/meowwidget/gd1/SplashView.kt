@@ -335,25 +335,13 @@ private fun ensureBottomBlurCache() {
 when (bgMode) {
     BgMode.MINT -> drawTealBands()
     BgMode.GRADIENT -> drawGradientBands()
-    BgMode.BLUR -> {
-        // 1) Lấp dải trên (topGap) bằng màu trung bình phần đỉnh ảnh
-        if (topGap > 0) {
-            val bandH = (0.02f * bg.height).toInt().coerceAtLeast(1)
-            val safeH = bandH.coerceAtMost(bg.height)
-            if (safeH > 0) {
-                val topBand = Bitmap.createBitmap(bg, 0, 0, bg.width, safeH)
-                val px = Bitmap.createScaledBitmap(topBand, 1, 1, true)
-                val avg = px.getPixel(0, 0)
-                topBand.recycle()
-                px.recycle()
-
-                paint.shader = null
-                paint.color = avg
-                canvas.drawRect(0f, 0f, w.toFloat(), topGap.toFloat(), paint)
-            }
-         }      
-                drawBottomBlurGap(canvas)
-     }
+BgMode.BLUR -> {
+    if (topGap > 0) {
+        paint.shader = null
+        paint.color = avg
+        canvas.drawRect(0f, 0f, w.toFloat(), topGap.toFloat(), paint)
+    }
+    drawBottomBlurGap(canvas)
 }
               
 canvas.drawBitmap(bg, null, contentRect, paint)
@@ -363,8 +351,6 @@ bgMatrix.setRectToRect(
     android.graphics.RectF(contentRect),
     android.graphics.Matrix.ScaleToFit.FILL
 )
-canvas.drawBitmap(bg, null, contentRect, paint)
-
 
   }
   // END GĐ1-PATCH
