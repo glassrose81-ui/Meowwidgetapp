@@ -134,23 +134,24 @@ private var selectedText: String? = null
   }
 
 private fun drawBottomBlurGap(canvas: Canvas) {
-    // 1) Lát nguồn: 83% → 100% ảnh gốc
-    val srcY = (0.83f * bg.height).toInt().coerceIn(0, bg.height - 1)
-    val srcH = (bg.height - srcY).coerceAtLeast(1)
+    // Không có bitmap nền thì thôi
+    if (bg == null) return
 
-    // 2) Khoảng trống dưới ảnh đã vẽ (ngoài contentRect)
+    // Tính khoảng trống dưới ảnh đã vẽ (ngoài contentRect)
     val gapTop = contentRect.bottom
-    val gapH = (height - gapTop).coerceAtLeast(0)
+    val gapH   = (height - gapTop).coerceAtLeast(0)
     if (gapH <= 0) return
 
-    val viewW = width.coerceAtLeast(1)
+    // Nếu cache chưa có hoặc kích thước chưa khớp, không vẽ để tránh méo
+    val cache = bottomBlurCache
+    if (cache == null || bottomBlurCacheW != width || bottomBlurCacheH != gapH) return
 
-    // 3) Cắt lát nguồn
-    val strip = try {
-        Bitmap.createBitmap(bg, 0, srcY, bg.width, srcH)
-    } catch (_: Throwable) {
-        return
-    }
+    // Vẽ cache phủ kín dải dưới
+    val dst = android.graphics.Rect(0, gapTop, width, height)
+    paint.isFilterBitmap = true
+    paint.isDither = true
+    canvas.drawBitmap(cache, null, dst, paint)
+}
 
     // 4) Đưa lát về kích thước khoảng trống
     var blurred = try {
@@ -272,6 +273,8 @@ private fun ensureBottomBlurCache() {
     val left = (w - sw) / 2
     val top = (h - sh) / 2
     contentRect = Rect(left, top, left + sw, top + sh)
+    ensureBottomBlurCache()
+
     // Xóa cache dải mờ đáy khi kích thước thay đổi
     if (bottomBlurCache != null) {
         bottomBlurCache?.recycle()
@@ -344,13 +347,13 @@ BgMode.BLUR -> {
     drawBottomBlurGap(canvas)
 }
               
-canvas.drawBitmap(bg, null, contentRect, paint)
     
 bgMatrix.setRectToRect(
     android.graphics.RectF(0f, 0f, bg.width.toFloat(), bg.height.toFloat()),
     android.graphics.RectF(contentRect),
     android.graphics.Matrix.ScaleToFit.FILL
 )
+canvas.drawBitmap(bg, null, contentRect, paint)
 
   }
   // END GĐ1-PATCH
