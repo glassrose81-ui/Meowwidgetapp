@@ -196,6 +196,70 @@ private fun drawBottomBlurGap(canvas: Canvas) {
 
 
   // ============ Layout / size changes ============
+// Tạo/đảm bảo cache cho dải mờ đáy (MAX mờ, không làm mượt dọc bổ sung)
+private fun ensureBottomBlurCache() {
+    val desiredW = width.coerceAtLeast(1)
+    val desiredH = (height - contentRect.bottom).coerceAtLeast(0)
+
+    // Nếu không có khoảng trống đáy -> dọn cache và thoát
+    if (desiredH <= 0) {
+        if (bottomBlurCache != null) {
+            bottomBlurCache?.recycle()
+            bottomBlurCache = null
+        }
+        bottomBlurCacheW = 0
+        bottomBlurCacheH = 0
+        return
+    }
+
+    // Cache đang đúng kích thước -> dùng lại, không build lại
+    if (bottomBlurCache != null &&
+        bottomBlurCacheW == desiredW &&
+        bottomBlurCacheH == desiredH) {
+        return
+    }
+
+    // 1) Cắt lát nguồn: 83% -> 100% ảnh gốc
+    val srcY = (0.83f * bg.height).toInt().coerceIn(0, bg.height - 1)
+    val srcH = (bg.height - srcY).coerceAtLeast(1)
+    val strip = try {
+        Bitmap.createBitmap(bg, 0, srcY, bg.width, srcH)
+    } catch (_: Throwable) {
+        return
+    }
+
+    // 2) Đưa lát về kích thước dải đáy cần phủ
+    var blurred: Bitmap = try {
+        Bitmap.createScaledBitmap(strip, desiredW, desiredH, true)
+    } catch (_: Throwable) {
+        strip
+    }
+
+    // 3) MAX blur: nhiều lượt downscale -> upscale (bilinear), KHÔNG RenderEffect, KHÔNG làm mượt dọc
+    fun pass(f: Float) {
+        val sw = (desiredW * f).toInt().coerceAtLeast(1)
+        val sh = (desiredH * f).toInt().coerceAtLeast(1)
+        val small = Bitmap.createScaledBitmap(blurred, sw, sh, true)
+        val back  = Bitmap.createScaledBitmap(small, desiredW, desiredH, true)
+        if (blurred !== strip && !blurred.isRecycled) blurred.recycle()
+        if (!small.isRecycled) small.recycle()
+        blurred = back
+    }
+    pass(0.12f)
+    pass(0.06f)
+    pass(0.03f)
+    pass(0.015f)
+
+    // 4) Ghi vào cache
+    bottomBlurCache?.recycle()
+    bottomBlurCache = blurred
+    bottomBlurCacheW = desiredW
+    bottomBlurCacheH = desiredH
+
+    // Dọn lát nguồn
+    if (!strip.isRecycled) strip.recycle()
+}
+  
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
     super.onSizeChanged(w, h, oldw, oldh)
     if (w <= 0 || h <= 0) return
