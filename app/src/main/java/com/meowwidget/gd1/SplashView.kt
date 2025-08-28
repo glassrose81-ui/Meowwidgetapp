@@ -339,24 +339,7 @@ canvas.drawBitmap(bg, null, contentRect, paint)
   // END GĐ1-PATCH
 
   // ============ Chuyển (C,R) → (x,y) trong contentRect ============
-  private fun colToX(c: Int): Float =
-    contentRect.left + ((c - 0.5f) / cols) * contentRect.width()
 
-  private fun rowToY(r: Int): Float {
-    val usableH = contentRect.height() * 0.5f // chỉ 0–50% chiều cao
-    return contentRect.top + ((r - 0.5f) / rows) * usableH
-  }
-
-  // ============ Panel ẩn: layout nút ============
-  private fun layoutPanel() {
-    val pw = width * 0.8f
-    val ph = height * 0.38f
-    val px = (width - pw) / 2f
-    val py = height * 0.12f
-    panelRect.set(px, py, px + pw, py + ph)
-
-    val pad = 16f * resources.displayMetrics.density
-    val rowH = 44f * resources.displayMetrics.density
     val btnW = 120f * resources.displayMetrics.density
     val small = 56f * resources.displayMetrics.density
 
@@ -675,4 +658,23 @@ if (selectedText == null) {
     // 5) schedule khung tiếp theo
     postInvalidateOnAnimation()
   }
-}
+  private fun colToX(c: Int): Float =
+    contentRect.left + ((c - 0.5f) / cols) * contentRect.width()
+
+  private fun rowToY(r: Int): Float {
+    val usableH = contentRect.height() * 0.5f // chỉ 0–50% chiều cao
+    return contentRect.top + ((r - 0.5f) / rows) * usableH
+  }
+
+  // ============ Panel ẩn: layout nút ============
+  private fun layoutPanel() {
+    val pw = width * 0.8f
+    val ph = height * 0.38f
+    val px = (width - pw) / 2f
+    val py = height * 0.12f
+    panelRect.set(px, py, px + pw, py + ph)
+
+    val pad = 16f * resources.displayMetrics.density
+    val rowH = 44f * resources.displayMetrics.density
+   }
+} 
