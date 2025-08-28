@@ -8,12 +8,17 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.animation.LinearInterpolator
 import kotlin.math.*
-import android.graphics.Bitmap
 
 class SplashView @JvmOverloads constructor(
   context: Context,
   attrs: AttributeSet? = null
 ) : View(context, attrs) {
+    // === Blur bottom cache (added) ===
+    private var bottomBlurCache: android.graphics.Bitmap? = null
+    private var bottomBlurCacheW: Int = 0
+    private var bottomBlurCacheH: Int = 0
+    // === /Blur bottom cache ===
+
 
   // ============ Assets ============
   private val bg: Bitmap = BitmapFactory.decodeResource(resources, R.drawable.bg)
@@ -25,13 +30,12 @@ class SplashView @JvmOverloads constructor(
   )
 
   private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { isFilterBitmap = true }
-
-  /* Cache cho dải mờ đáy */
-private var bottomBlurCache: Bitmap? = null
-private var bottomBlurCacheW: Int = 0
-private var bottomBlurCacheH: Int = 0
-
-private val bgMatrix = android.graphics.Matrix()
+  private val bgMatrix = android.graphics.Matrix()
+  // === CACHE: bottom blur band ===
+private var bottomBlurBmp: Bitmap? = null
+private var bottomBlurW = 0
+private var bottomBlurH = 0
+// === /CACHE ===
 
   // === TEXT ROTATION (5 câu) ===
 private val quotes = listOf(
@@ -134,71 +138,37 @@ private var selectedText: String? = null
   }
 
 private fun drawBottomBlurGap(canvas: Canvas) {
-    // Không có bitmap nền thì thôi
-    if (bg == null) return
-
-    // Tính khoảng trống dưới ảnh đã vẽ (ngoài contentRect)
-    val gapTop = contentRect.bottom
-    val gapH   = (height - gapTop).coerceAtLeast(0)
-    if (gapH <= 0) return
-
-    // Nếu cache chưa có hoặc kích thước chưa khớp, không vẽ để tránh méo
-    val cache = bottomBlurCache
-    if (cache == null || bottomBlurCacheW != width || bottomBlurCacheH != gapH) return
-
-    // Vẽ cache phủ kín dải dưới
-    val dst = android.graphics.Rect(0, gapTop, width, height)
-    paint.isFilterBitmap = true
-    paint.isDither = true
-    canvas.drawBitmap(cache, null, dst, paint)
-}
-
-  // ============ Layout / size changes ============
-// Tạo/đảm bảo cache cho dải mờ đáy (MAX mờ, không làm mượt dọc bổ sung)
-private fun ensureBottomBlurCache() {
-    val desiredW = width.coerceAtLeast(1)
-    val desiredH = (height - contentRect.bottom).coerceAtLeast(0)
-
-    // Nếu không có khoảng trống đáy -> dọn cache và thoát
-    if (desiredH <= 0) {
-        if (bottomBlurCache != null) {
-            bottomBlurCache?.recycle()
-            bottomBlurCache = null
-        }
-        bottomBlurCacheW = 0
-        bottomBlurCacheH = 0
-        return
-    }
-
-    // Cache đang đúng kích thước -> dùng lại, không build lại
-    if (bottomBlurCache != null &&
-        bottomBlurCacheW == desiredW &&
-        bottomBlurCacheH == desiredH) {
-        return
-    }
-
-    // 1) Cắt lát nguồn: 83% -> 100% ảnh gốc
+    // 1) Lát nguồn: 83% → 100% ảnh gốc
     val srcY = (0.83f * bg.height).toInt().coerceIn(0, bg.height - 1)
     val srcH = (bg.height - srcY).coerceAtLeast(1)
+
+    // 2) Khoảng trống dưới ảnh đã vẽ (ngoài contentRect)
+    val gapTop = contentRect.bottom
+    val gapH = (height - gapTop).coerceAtLeast(0)
+    if (gapH <= 0) return
+
+    val viewW = width.coerceAtLeast(1)
+
+    // 3) Cắt lát nguồn
     val strip = try {
         Bitmap.createBitmap(bg, 0, srcY, bg.width, srcH)
     } catch (_: Throwable) {
         return
     }
 
-    // 2) Đưa lát về kích thước dải đáy cần phủ
-    var blurred: Bitmap = try {
-        Bitmap.createScaledBitmap(strip, desiredW, desiredH, true)
+    // 4) Đưa lát về kích thước khoảng trống
+    var blurred = try {
+        Bitmap.createScaledBitmap(strip, viewW, gapH, true)
     } catch (_: Throwable) {
         strip
     }
 
-    // 3) MAX blur: nhiều lượt downscale -> upscale (bilinear), KHÔNG RenderEffect, KHÔNG làm mượt dọc
+    // 5) MAX blur: nhiều lượt downscale → upscale (BILINEAR), không RenderEffect
     fun pass(f: Float) {
-        val sw = (desiredW * f).toInt().coerceAtLeast(1)
-        val sh = (desiredH * f).toInt().coerceAtLeast(1)
+        val sw = (viewW * f).toInt().coerceAtLeast(1)
+        val sh = (gapH * f).toInt().coerceAtLeast(1)
         val small = Bitmap.createScaledBitmap(blurred, sw, sh, true)
-        val back  = Bitmap.createScaledBitmap(small, desiredW, desiredH, true)
+        val back = Bitmap.createScaledBitmap(small, viewW, gapH, true)
         if (blurred !== strip && !blurred.isRecycled) blurred.recycle()
         if (!small.isRecycled) small.recycle()
         blurred = back
@@ -208,16 +178,28 @@ private fun ensureBottomBlurCache() {
     pass(0.03f)
     pass(0.015f)
 
-    // 4) Ghi vào cache
-    bottomBlurCache?.recycle()
-    bottomBlurCache = blurred
-    bottomBlurCacheW = desiredW
-    bottomBlurCacheH = desiredH
+    // 6) Làm mượt dọc bổ sung ≈ 10% chiều cao dải
+    val sh = (gapH * 0.10f).toInt().coerceAtLeast(1)
+    val vSmall = Bitmap.createScaledBitmap(blurred, viewW, sh, true)
+    val vBack = Bitmap.createScaledBitmap(vSmall, viewW, gapH, true)
+    if (blurred !== strip && !blurred.isRecycled) blurred.recycle()
+    if (!vSmall.isRecycled) vSmall.recycle()
+    blurred = vBack
 
-    // Dọn lát nguồn
+    // 7) Vẽ phủ kín khoảng trống đáy
+    val dst = android.graphics.Rect(0, gapTop, viewW, height)
+    paint.isFilterBitmap = true
+    paint.isDither = true
+    canvas.drawBitmap(blurred, null, dst, paint)
+
+    // 8) Dọn rác tạm
     if (!strip.isRecycled) strip.recycle()
+    // 'blurred' đang dùng trên canvas, không recycle ở đây
+
 }
-  
+
+
+  // ============ Layout / size changes ============
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
     super.onSizeChanged(w, h, oldw, oldh)
     if (w <= 0 || h <= 0) return
@@ -230,16 +212,7 @@ private fun ensureBottomBlurCache() {
     val left = (w - sw) / 2
     val top = (h - sh) / 2
     contentRect = Rect(left, top, left + sw, top + sh)
-    
-    // Xóa cache dải mờ đáy khi kích thước thay đổi
-    if (bottomBlurCache != null) {
-        bottomBlurCache?.recycle()
-        bottomBlurCache = null
-    }
-    bottomBlurCacheW = 0
-    bottomBlurCacheH = 0
 
-    ensureBottomBlurCache()
     // 2) Tạo blurredFull: crop ảnh theo tỉ lệ màn hình → downscale mạnh → upscale
     val viewAspect = w.toFloat() / h.toFloat()
     val bmpAspect = bw.toFloat() / bh.toFloat()
@@ -295,51 +268,76 @@ private fun ensureBottomBlurCache() {
 when (bgMode) {
     BgMode.MINT -> drawTealBands()
     BgMode.GRADIENT -> drawGradientBands()
-BgMode.BLUR -> {
-    if (topGap > 0) {
-       // Lấy dải trên cùng 2% chiều cao ảnh
-    val sampleH = (bg.height * 0.02f).toInt().coerceAtLeast(1)
-    val sampleStrip = Bitmap.createBitmap(bg, 0, 0, bg.width, sampleH)
+    BgMode.BLUR -> {
+        // 1) Lấp dải trên (topGap) bằng màu trung bình phần đỉnh ảnh
+        if (topGap > 0) {
+            val bandH = (0.02f * bg.height).toInt().coerceAtLeast(1)
+            val safeH = bandH.coerceAtMost(bg.height)
+            if (safeH > 0) {
+                val topBand = Bitmap.createBitmap(bg, 0, 0, bg.width, safeH)
+                val px = Bitmap.createScaledBitmap(topBand, 1, 1, true)
+                val avg = px.getPixel(0, 0)
+                topBand.recycle()
+                px.recycle()
 
-      // Tính màu trung bình của dải trên
-val avg = android.graphics.Color.argb(
-    255,
-    (0 until sampleStrip.width step 10).map { x ->
-        val pixel = sampleStrip.getPixel(x, sampleStrip.height / 2)
-        android.graphics.Color.red(pixel)
-    }.average().toInt(),
-    (0 until sampleStrip.width step 10).map { x ->
-        val pixel = sampleStrip.getPixel(x, sampleStrip.height / 2)
-        android.graphics.Color.green(pixel)
-    }.average().toInt(),
-    (0 until sampleStrip.width step 10).map { x ->
-        val pixel = sampleStrip.getPixel(x, sampleStrip.height / 2)
-        android.graphics.Color.blue(pixel)
-    }.average().toInt()
-)
+                paint.shader = null
+                paint.color = avg
+                canvas.drawRect(0f, 0f, w.toFloat(), topGap.toFloat(), paint)
+            }
+         }      
+                
+                // use cache for bottom blur (added)
+                ensureBottomBlurCache()
+                bottomBlurCache?.let { bmp ->
+                    val dst = android.graphics.Rect(0, contentRect.bottom, width, height)
+                    paint.isFilterBitmap = true
+                    paint.isDither = true
+                    canvas.drawBitmap(bmp, null, dst, paint)
+                }
 
-        paint.shader = null
-        paint.color = avg
-        canvas.drawRect(0f, 0f, w.toFloat(), topGap.toFloat(), paint)
+     }
 
-        if (!sampleStrip.isRecycled) {
-            sampleStrip.recycle()
+        // reset blur cache (added)
+        if (bottomBlurCache != null && !(bottomBlurCache!!.isRecycled)) {
+            bottomBlurCache!!.recycle()
+        }
+        bottomBlurCache = null
+        bottomBlurCacheW = 0
+        bottomBlurCacheH = 0
     }
-    drawBottomBlurGap(canvas)
-}
               
-    bgMatrix.setRectToRect(
+canvas.drawBitmap(bg, null, contentRect, paint)
+    
+bgMatrix.setRectToRect(
     android.graphics.RectF(0f, 0f, bg.width.toFloat(), bg.height.toFloat()),
     android.graphics.RectF(contentRect),
     android.graphics.Matrix.ScaleToFit.FILL
 )
 canvas.drawBitmap(bg, null, contentRect, paint)
 
+
   }
   // END GĐ1-PATCH
 
   // ============ Chuyển (C,R) → (x,y) trong contentRect ============
+  private fun colToX(c: Int): Float =
+    contentRect.left + ((c - 0.5f) / cols) * contentRect.width()
 
+  private fun rowToY(r: Int): Float {
+    val usableH = contentRect.height() * 0.5f // chỉ 0–50% chiều cao
+    return contentRect.top + ((r - 0.5f) / rows) * usableH
+  }
+
+  // ============ Panel ẩn: layout nút ============
+  private fun layoutPanel() {
+    val pw = width * 0.8f
+    val ph = height * 0.38f
+    val px = (width - pw) / 2f
+    val py = height * 0.12f
+    panelRect.set(px, py, px + pw, py + ph)
+
+    val pad = 16f * resources.displayMetrics.density
+    val rowH = 44f * resources.displayMetrics.density
     val btnW = 120f * resources.displayMetrics.density
     val small = 56f * resources.displayMetrics.density
 
@@ -351,7 +349,8 @@ canvas.drawBitmap(bg, null, contentRect, paint)
 
     btnOMinus.set(panelRect.left + pad, panelRect.top + pad + rowH * 2.2f, panelRect.left + pad + small, panelRect.top + pad + rowH * 2.2f + small)
     btnOPlus .set(btnOMinus.right + pad, btnOMinus.top, btnOMinus.right + pad + small, btnOMinus.bottom)
-  
+  }
+
   // ============ Vẽ panel ẩn ============  // BEGIN GĐ1-PATCH: Textbox on board (contentRect-relative)
   private fun drawTextBox(canvas: Canvas) {
 // Neo theo ảnh gốc (L30–R70–T58–B74) rồi map sang canvas
@@ -639,7 +638,7 @@ if (selectedText == null) {
         val s = (desiredW / bmp.width).coerceAtMost(1.5f).coerceAtLeast(0.05f)
 
         // đong đưa nhẹ, không xô ngang
-        val angle: Float = (rotAmpDeg * sin(2f * Math.PI.toFloat() * rotFreqHz * max(0f, dt) + i * 0.37f)).toFloat()
+        val angle = rotAmpDeg * sin(2f * Math.PI.toFloat() * rotFreqHz * max(0f, dt) + i * 0.37f)
 
         paint.alpha = (alpha * 255).toInt().coerceIn(0, 255)
         canvas.save()
@@ -652,29 +651,64 @@ if (selectedText == null) {
     }
 
     // 4) Panel ẩn
-    if (panelOpen) drawTextBox(canvas)
+    if (panelOpen) drawPanel(canvas)
 
     // 5) schedule khung tiếp theo
     postInvalidateOnAnimation()
   }
+
+    // === Ensure bottom blur cache (added) ===
+    private fun ensureBottomBlurCache() {
+        val bg = this.bg ?: return
+        val gapTop = contentRect.bottom
+        val gapH = (height - gapTop).coerceAtLeast(0)
+        val viewW = width.coerceAtLeast(1)
+        if (gapH <= 0 || viewW <= 0) return
+
+        // If cache is valid, skip
+        val cached = bottomBlurCache
+        if (cached != null && !cached.isRecycled && bottomBlurCacheW == viewW && bottomBlurCacheH == gapH) {
+            return
+        }
+        // recycle old
+        if (cached != null && !cached.isRecycled) cached.recycle()
+        bottomBlurCache = null
+
+        // Source strip: bottom 83%..100% of original
+        val srcY = (0.83f * bg.height).toInt().coerceIn(0, bg.height - 1)
+        val srcH = (bg.height - srcY).coerceAtLeast(1)
+        val strip = try {
+            android.graphics.Bitmap.createBitmap(bg, 0, srcY, bg.width, srcH)
+        } catch (_: Throwable) { return }
+
+        // First scale strip to target gap size
+        var blurred = try {
+            android.graphics.Bitmap.createScaledBitmap(strip, viewW, gapH, true)
+        } catch (_: Throwable) {
+            strip
+        }
+
+        fun pass(f: Float) {
+            val sw = (viewW * f).toInt().coerceAtLeast(1)
+            val sh = (gapH * f).toInt().coerceAtLeast(1)
+            val small = android.graphics.Bitmap.createScaledBitmap(blurred, sw, sh, true)
+            val back = android.graphics.Bitmap.createScaledBitmap(small, viewW, gapH, true)
+            if (blurred !== strip && !blurred.isRecycled) blurred.recycle()
+            if (!small.isRecycled) small.recycle()
+            blurred = back
+        }
+        // MAX (no feather/effects): multiple down/up passes
+        pass(0.12f)
+        pass(0.06f)
+        pass(0.03f)
+        pass(0.015f)
+
+        // assign cache
+        bottomBlurCache = blurred
+        bottomBlurCacheW = viewW
+        bottomBlurCacheH = gapH
+
+        if (!strip.isRecycled) strip.recycle()
+    }
+    // === /Ensure bottom blur cache ===
 }
-  private fun colToX(c: Int): Float =
-    contentRect.left + ((c - 0.5f) / cols.toFloat()) * contentRect.width().toFloat()
-
-  private fun rowToY(r: Int): Float {
-    val usableH = contentRect.height().toFloat() * 0.5f // chỉ 0–50% chiều cao
-    return contentRect.top + ((r - 0.5f) / rowstoFloat()) * usableH
-  }
-
-  // ============ Panel ẩn: layout nút ============
-  private fun layoutPanel() {
-    val pw = width * 0.8f
-    val ph = height * 0.38f
-    val px = (width - pw) / 2f
-    val py = height * 0.12f
-    panelRect.set(px, py, px + pw, py + ph)
-
-    val pad = 16f * resources.displayMetrics.density
-    val rowH = 44f * resources.displayMetrics.density
-   }
-} 
