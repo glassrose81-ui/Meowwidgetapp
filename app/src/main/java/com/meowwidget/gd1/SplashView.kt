@@ -639,7 +639,7 @@ if (selectedText == null) {
         val s = (desiredW / bmp.width).coerceAtMost(1.5f).coerceAtLeast(0.05f)
 
         // đong đưa nhẹ, không xô ngang
-        val angle = rotAmpDeg * sin(2f * Math.PI.toFloat() * rotFreqHz * max(0f, dt) + i * 0.37f)
+        val angle: Float = (rotAmpDeg * sin(2f * Math.PI.toFloat() * rotFreqHz * max(0f, dt) + i * 0.37f)).toFloat()
 
         paint.alpha = (alpha * 255).toInt().coerceIn(0, 255)
         canvas.save()
@@ -652,17 +652,18 @@ if (selectedText == null) {
     }
 
     // 4) Panel ẩn
-    if (panelOpen) drawPanel(canvas)
+    if (panelOpen) drawTextBox(canvas)
 
     // 5) schedule khung tiếp theo
     postInvalidateOnAnimation()
   }
+}
   private fun colToX(c: Int): Float =
-    contentRect.left + ((c - 0.5f) / cols) * contentRect.width()
+    contentRect.left + ((c - 0.5f) / cols.toFloat()) * contentRect.width().toFloat()
 
   private fun rowToY(r: Int): Float {
-    val usableH = contentRect.height() * 0.5f // chỉ 0–50% chiều cao
-    return contentRect.top + ((r - 0.5f) / rows) * usableH
+    val usableH = contentRect.height().toFloat() * 0.5f // chỉ 0–50% chiều cao
+    return contentRect.top + ((r - 0.5f) / rowstoFloat()) * usableH
   }
 
   // ============ Panel ẩn: layout nút ============
