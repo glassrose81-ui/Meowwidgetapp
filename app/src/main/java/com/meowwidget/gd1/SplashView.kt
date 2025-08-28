@@ -351,8 +351,7 @@ canvas.drawBitmap(bg, null, contentRect, paint)
 
     btnOMinus.set(panelRect.left + pad, panelRect.top + pad + rowH * 2.2f, panelRect.left + pad + small, panelRect.top + pad + rowH * 2.2f + small)
     btnOPlus .set(btnOMinus.right + pad, btnOMinus.top, btnOMinus.right + pad + small, btnOMinus.bottom)
-  }
-
+  
   // ============ Vẽ panel ẩn ============  // BEGIN GĐ1-PATCH: Textbox on board (contentRect-relative)
   private fun drawTextBox(canvas: Canvas) {
 // Neo theo ảnh gốc (L30–R70–T58–B74) rồi map sang canvas
