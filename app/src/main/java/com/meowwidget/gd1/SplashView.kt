@@ -153,49 +153,6 @@ private fun drawBottomBlurGap(canvas: Canvas) {
     canvas.drawBitmap(cache, null, dst, paint)
 }
 
-    // 4) Đưa lát về kích thước khoảng trống
-    var blurred = try {
-        Bitmap.createScaledBitmap(strip, viewW, gapH, true)
-    } catch (_: Throwable) {
-        strip
-    }
-
-    // 5) MAX blur: nhiều lượt downscale → upscale (BILINEAR), không RenderEffect
-    fun pass(f: Float) {
-        val sw = (viewW * f).toInt().coerceAtLeast(1)
-        val sh = (gapH * f).toInt().coerceAtLeast(1)
-        val small = Bitmap.createScaledBitmap(blurred, sw, sh, true)
-        val back = Bitmap.createScaledBitmap(small, viewW, gapH, true)
-        if (blurred !== strip && !blurred.isRecycled) blurred.recycle()
-        if (!small.isRecycled) small.recycle()
-        blurred = back
-    }
-    pass(0.12f)
-    pass(0.06f)
-    pass(0.03f)
-    pass(0.015f)
-
-    // 6) Làm mượt dọc bổ sung ≈ 10% chiều cao dải
-    val sh = (gapH * 0.10f).toInt().coerceAtLeast(1)
-    val vSmall = Bitmap.createScaledBitmap(blurred, viewW, sh, true)
-    val vBack = Bitmap.createScaledBitmap(vSmall, viewW, gapH, true)
-    if (blurred !== strip && !blurred.isRecycled) blurred.recycle()
-    if (!vSmall.isRecycled) vSmall.recycle()
-    blurred = vBack
-
-    // 7) Vẽ phủ kín khoảng trống đáy
-    val dst = android.graphics.Rect(0, gapTop, viewW, height)
-    paint.isFilterBitmap = true
-    paint.isDither = true
-    canvas.drawBitmap(blurred, null, dst, paint)
-
-    // 8) Dọn rác tạm
-    if (!strip.isRecycled) strip.recycle()
-    // 'blurred' đang dùng trên canvas, không recycle ở đây
-
-}
-
-
   // ============ Layout / size changes ============
 // Tạo/đảm bảo cache cho dải mờ đáy (MAX mờ, không làm mượt dọc bổ sung)
 private fun ensureBottomBlurCache() {
@@ -273,8 +230,7 @@ private fun ensureBottomBlurCache() {
     val left = (w - sw) / 2
     val top = (h - sh) / 2
     contentRect = Rect(left, top, left + sw, top + sh)
-    ensureBottomBlurCache()
-
+    
     // Xóa cache dải mờ đáy khi kích thước thay đổi
     if (bottomBlurCache != null) {
         bottomBlurCache?.recycle()
@@ -283,6 +239,7 @@ private fun ensureBottomBlurCache() {
     bottomBlurCacheW = 0
     bottomBlurCacheH = 0
 
+    ensureBottomBlurCache()
     // 2) Tạo blurredFull: crop ảnh theo tỉ lệ màn hình → downscale mạnh → upscale
     val viewAspect = w.toFloat() / h.toFloat()
     val bmpAspect = bw.toFloat() / bh.toFloat()
