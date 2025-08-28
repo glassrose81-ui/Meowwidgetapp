@@ -297,15 +297,38 @@ when (bgMode) {
     BgMode.GRADIENT -> drawGradientBands()
 BgMode.BLUR -> {
     if (topGap > 0) {
+       // Lấy dải trên cùng 2% chiều cao ảnh
+    val sampleH = (bg.height * 0.02f).toInt().coerceAtLeast(1)
+    val sampleStrip = Bitmap.createBitmap(bg, 0, 0, bg.width, sampleH)
+
+      // Tính màu trung bình của dải trên
+val avg = android.graphics.Color.argb(
+    255,
+    (0 until sampleStrip.width step 10).map { x ->
+        val pixel = sampleStrip.getPixel(x, sampleStrip.height / 2)
+        android.graphics.Color.red(pixel)
+    }.average().toInt(),
+    (0 until sampleStrip.width step 10).map { x ->
+        val pixel = sampleStrip.getPixel(x, sampleStrip.height / 2)
+        android.graphics.Color.green(pixel)
+    }.average().toInt(),
+    (0 until sampleStrip.width step 10).map { x ->
+        val pixel = sampleStrip.getPixel(x, sampleStrip.height / 2)
+        android.graphics.Color.blue(pixel)
+    }.average().toInt()
+)
+
         paint.shader = null
         paint.color = avg
         canvas.drawRect(0f, 0f, w.toFloat(), topGap.toFloat(), paint)
+
+        if (!sampleStrip.isRecycled) {
+            sampleStrip.recycle()
     }
     drawBottomBlurGap(canvas)
 }
               
-    
-bgMatrix.setRectToRect(
+    bgMatrix.setRectToRect(
     android.graphics.RectF(0f, 0f, bg.width.toFloat(), bg.height.toFloat()),
     android.graphics.RectF(contentRect),
     android.graphics.Matrix.ScaleToFit.FILL
