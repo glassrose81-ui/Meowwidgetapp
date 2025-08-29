@@ -7,10 +7,9 @@ import java.io.IOException
 import java.nio.charset.Charset
 import java.util.Calendar
 
-// GĐ2-B2 — QuoteCore.kt (B1 + B2: nhập .txt & dán + đổi theo ngày/1–3 mốc, tuần tự)
-// Quy ước: mỗi dòng = 1 câu. Không tách tác giả. Chống trùng theo chữ đã chuẩn hoá (trim + gộp khoảng trắng + không phân biệt hoa–thường).
-// Lưu dữ liệu người dùng: filesDir/quotes_user.txt (mỗi dòng 1 câu).
-// Lịch mốc giờ: lưu trong SharedPreferences (mặc định 08:00). B3 mới làm phần bền vững nâng cao.
+// GĐ2-B3 — QuoteCore.kt
+// B1: nhập .txt & dán | B2: đổi theo ngày/1–3 mốc (tuần tự) | B3: GIỮ TRẠNG THÁI BỀN VỮNG (+ giả lập sang ngày mới cho test)
+// Ghi chú: Ngày dùng định dạng ddMMyy (ví dụ 300825). Không đụng GĐ1. Không sửa Manifest.
 
 object QuoteCore {
 
@@ -91,7 +90,7 @@ object QuoteCore {
         return ImportReport(added, dupThisBatch, out.size, totals)
     }
 
-    private fun collapseSpaces(s: String): String = s.replace(Regex("\\s+"), " ").trim()
+    private fun collapseSpaces(s: String): String = s.replace(Regex("\s+"), " ").trim()
     private fun normKey(s: String): String = collapseSpaces(s).lowercase()
 
     private fun loadUserQuotes(ctx: Context): List<String> {
@@ -146,10 +145,16 @@ object QuoteCore {
     private const val PREFS = "quote_core_prefs"
     private const val KEY_SCHEDULE_MIN = "schedule_minutes" // CSV "480,720,1200"
 
-    // Trạng thái trong bộ nhớ (B3 sẽ làm bền vững sâu hơn)
-    private var planDateKey: String? = null
-    private var planIndices: IntArray? = null
-    private var rollingCursor: Int = 0
+    // ---------- B3: Trạng thái bền vững ----------
+    private const val KEY_PLAN_DATE = "plan_date_ddMMyy"      // ví dụ "300825"
+    private const val KEY_PLAN_INDICES = "plan_indices_csv"   // ví dụ "10,11,12"
+    private const val KEY_ROLLING_CURSOR = "rolling_cursor"   // Int
+
+    // Bộ nhớ tạm (cache runtime)
+    private var memPlanDate: String? = null
+    private var memPlanIndices: IntArray? = null
+    private var memRollingCursor: Int = 0
+    private var memLoaded: Boolean = false
 
     // Đặt mốc (phút 0..1439), 1..3 mốc. Trả về mảng đã lưu (đã sắp xếp).
     fun setScheduleMinutes(ctx: Context, minutes: List<Int>): IntArray {
@@ -162,9 +167,11 @@ object QuoteCore {
         val finalList = if (clean.isEmpty()) listOf(480) else clean // mặc định 08:00
         val csv = finalList.joinToString(",")
         ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .edit().putString(KEY_SCHEDULE_MIN, csv).apply()
-        planDateKey = null
-        planIndices = null
+            .edit().putString(KEY_SCHEDULE_MIN, csv)
+            // lịch thay đổi → xoá plan để tính lại hôm nay
+            .remove(KEY_PLAN_DATE).remove(KEY_PLAN_INDICES).apply()
+        // làm trống cache
+        memPlanDate = null; memPlanIndices = null; memLoaded = false
         return finalList.toIntArray()
     }
 
@@ -176,13 +183,15 @@ object QuoteCore {
         else csv.split(",").mapNotNull { it.toIntOrNull() }.filter { it in 0..1439 }.sorted().take(3).ifEmpty { listOf(480) }.toIntArray()
     }
 
+    // --------- API chính B2/B3 ---------
+
     // Câu hiện tại theo "bây giờ"
     fun getCurrentQuote(ctx: Context): String? {
         val all = getAllQuotes(ctx)
         if (all.isEmpty()) return null
         ensurePlanForToday(ctx, all.size)
         val slot = currentSlotIndex(nowMinutes(), getScheduleMinutes(ctx))
-        val idx = planIndices?.getOrNull(slot) ?: return null
+        val idx = memPlanIndices?.getOrNull(slot) ?: return null
         return all[idx]
     }
 
@@ -194,14 +203,20 @@ object QuoteCore {
         return null
     }
 
-    // Cho test: chỉ số các câu trong "kế hoạch hôm nay"
+    // Trả về các chỉ số của "kế hoạch hôm nay"
     fun getTodayPlanIndices(ctx: Context): IntArray {
         val all = getAllQuotes(ctx).size
         ensurePlanForToday(ctx, all)
-        return planIndices ?: IntArray(0)
+        return memPlanIndices ?: IntArray(0)
     }
 
-    // Cho test: nhảy tới mốc kế tiếp ngay
+    // Trả về ngày kế hoạch hiện tại (ddMMyy) — để hiển thị test
+    fun getPlanDateKey(ctx: Context): String? {
+        val prefs = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return prefs.getString(KEY_PLAN_DATE, null)
+    }
+
+    // (Test) Nhảy tới mốc kế tiếp ngay (không đợi đồng hồ)
     fun debugAdvanceToNextSlot(ctx: Context): String? {
         val all = getAllQuotes(ctx)
         if (all.isEmpty()) return null
@@ -210,34 +225,76 @@ object QuoteCore {
         val now = nowMinutes()
         val cur = currentSlotIndex(now, sched)
         val nextIdx = (cur + 1).coerceAtMost(sched.size - 1)
-        val idx = planIndices?.getOrNull(nextIdx) ?: return null
+        val idx = memPlanIndices?.getOrNull(nextIdx) ?: return null
         return all[idx]
     }
 
-    // ------------------ Nội bộ B2 ------------------
-    private fun ensurePlanForToday(ctx: Context, totalQuotes: Int) {
-        if (totalQuotes <= 0) { planIndices = IntArray(0); return }
-        val today = todayKey()
-        if (planDateKey == today && planIndices != null && planIndices!!.isNotEmpty()) return
+    // (Test) Giả lập sang "ngày mới": tạo kế hoạch cho ngày mai và lưu ngay
+    fun debugSimulateNextDay(ctx: Context): String? {
+        val all = getAllQuotes(ctx)
+        if (all.isEmpty()) return null
+        val tomorrow = nextDayKey(todayKey())
+        generateAndPersistPlanForDate(ctx, all.size, tomorrow)
+        val firstIdx = memPlanIndices?.getOrNull(0) ?: return null
+        return all[firstIdx]
+    }
 
-        val slots = getScheduleMinutes(ctx)
-        val count = slots.size.coerceAtLeast(1)
+    // ------------------ Nội bộ B3 ------------------
+
+    private fun ensurePlanForToday(ctx: Context, totalQuotes: Int) {
+        if (totalQuotes <= 0) { memPlanIndices = IntArray(0); return }
+        loadPlanIfNeeded(ctx)
+        val today = todayKey()
+        val sched = getScheduleMinutes(ctx)
+        val needRebuild = (memPlanDate != today) || (memPlanIndices == null) || (memPlanIndices?.size != sched.size)
+        if (needRebuild) {
+            generateAndPersistPlanForDate(ctx, totalQuotes, today)
+        }
+    }
+
+    private fun generateAndPersistPlanForDate(ctx: Context, totalQuotes: Int, dateKey: String) {
+        loadPlanIfNeeded(ctx)
+        val sched = getScheduleMinutes(ctx)
+        val count = sched.size.coerceAtLeast(1)
         val plan = IntArray(count)
 
-        var cur = rollingCursor.coerceAtLeast(0) % totalQuotes
+        val safeTotal = if (totalQuotes <= 0) 1 else totalQuotes
+        var cur = memRollingCursor.coerceAtLeast(0) % safeTotal
         for (i in 0 until count) {
-            var pick = cur % totalQuotes
-            if (i > 0 && totalQuotes > 1) {
+            var pick = cur % safeTotal
+            if (i > 0 && safeTotal > 1) {
                 val prev = plan[i - 1]
-                if (pick == prev) { cur++; pick = cur % totalQuotes }
+                if (pick == prev) { cur++; pick = cur % safeTotal }
             }
             plan[i] = pick
             cur++
         }
-        planDateKey = today
-        planIndices = plan
-        rollingCursor = cur % totalQuotes
+        memPlanDate = dateKey
+        memPlanIndices = plan
+        memRollingCursor = if (safeTotal > 0) cur % safeTotal else 0
+        persistPlan(ctx)
     }
+
+    private fun loadPlanIfNeeded(ctx: Context) {
+        if (memLoaded) return
+        val p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        memPlanDate = p.getString(KEY_PLAN_DATE, null)
+        val csv = p.getString(KEY_PLAN_INDICES, null)
+        memPlanIndices = csv?.split(",")?.mapNotNull { it.toIntOrNull() }?.toIntArray()
+        memRollingCursor = p.getInt(KEY_ROLLING_CURSOR, 0)
+        memLoaded = true
+    }
+
+    private fun persistPlan(ctx: Context) {
+        val csv = memPlanIndices?.joinToString(",") ?: ""
+        ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putString(KEY_PLAN_DATE, memPlanDate)
+            .putString(KEY_PLAN_INDICES, csv)
+            .putInt(KEY_ROLLING_CURSOR, memRollingCursor)
+            .apply()
+    }
+
+    // ------------------ Tiện ích thời gian ------------------
 
     private fun currentSlotIndex(nowMin: Int, sched: IntArray): Int {
         if (sched.isEmpty()) return 0
@@ -253,11 +310,23 @@ object QuoteCore {
         return c.get(Calendar.HOUR_OF_DAY) * 60 + c.get(Calendar.MINUTE)
     }
 
+    // ddMMyy
     private fun todayKey(): String {
         val c = Calendar.getInstance()
-        val y = c.get(Calendar.YEAR)
-        val m = c.get(Calendar.MONTH) + 1
         val d = c.get(Calendar.DAY_OF_MONTH)
-        return String.format("%04d%02d%02d", y, m, d)
+        val m = c.get(Calendar.MONTH) + 1
+        val y = c.get(Calendar.YEAR) % 100
+        return String.format("%02d%02d%02d", d, m, y)
+    }
+
+    // ddMMyy → ddMMyy ngày mai
+    private fun nextDayKey(cur: String): String {
+        val c = Calendar.getInstance()
+        c.set(Calendar.HOUR_OF_DAY, 0); c.set(Calendar.MINUTE, 0); c.set(Calendar.SECOND, 0); c.set(Calendar.MILLISECOND, 0)
+        c.add(Calendar.DAY_OF_MONTH, 1)
+        val d = c.get(Calendar.DAY_OF_MONTH)
+        val m = c.get(Calendar.MONTH) + 1
+        val y = c.get(Calendar.YEAR) % 100
+        return String.format("%02d%02d%02d", d, m, y)
     }
 }
