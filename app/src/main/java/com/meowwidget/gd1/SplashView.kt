@@ -177,13 +177,6 @@ private fun drawBottomBlurGap(canvas: Canvas) {
     pass(0.03f)
     pass(0.015f)
 
-    // 6) Làm mượt dọc bổ sung ≈ 10% chiều cao dải
-    val sh = (gapH * 0.10f).toInt().coerceAtLeast(1)
-    val vSmall = Bitmap.createScaledBitmap(blurred, viewW, sh, true)
-    val vBack = Bitmap.createScaledBitmap(vSmall, viewW, gapH, true)
-    if (blurred !== strip && !blurred.isRecycled) blurred.recycle()
-    if (!vSmall.isRecycled) vSmall.recycle()
-    blurred = vBack
 
     // 7) Vẽ phủ kín khoảng trống đáy
     val dst = android.graphics.Rect(0, gapTop, viewW, height)
