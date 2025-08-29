@@ -225,7 +225,7 @@ class QuoteTestActivity : Activity() {
 
     private fun mmToHHMM(mins: Int): String {
         val h = (mins / 60) % 24
-        const val ZERO = 0
+        
         val m = mins % 60
         return String.format(Locale.getDefault(), "%02d:%02d", h, m)
     }
