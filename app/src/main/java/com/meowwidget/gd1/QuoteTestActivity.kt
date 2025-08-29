@@ -8,11 +8,10 @@ import android.provider.DocumentsContract
 import android.text.InputType
 import android.view.View
 import android.widget.*
-import android.widget.Space
 import java.util.Locale
 
-// GĐ2-B2 Test — màn Meow Test (nhập + xem "Câu hôm nay" & "Mốc kế tiếp").
-// Không đụng GĐ1. Dùng để nhìn nhanh kết quả của B1 & B2. Chỉ xuất hiện khi bạn đã khai báo Activity trong Manifest.
+// GĐ2-B3 Test — Bổ sung hiển thị "Ngày kế hoạch (ddMMyy)" & nút "Giả lập ngày mới"
+// Không đụng GĐ1. Manifest giữ nguyên như B1.
 
 class QuoteTestActivity : Activity() {
 
@@ -25,18 +24,21 @@ class QuoteTestActivity : Activity() {
     private lateinit var statusView: TextView
     private lateinit var previewView: TextView
 
-    // B2
+    // B2/B3
     private lateinit var time1: EditText
     private lateinit var time2: EditText
     private lateinit var time3: EditText
     private lateinit var saveScheduleBtn: Button
     private lateinit var currentQuoteView: TextView
     private lateinit var nextChangeView: TextView
+    private lateinit var planDateView: TextView
+    private lateinit var planIndicesView: TextView
     private lateinit var advanceBtn: Button
+    private lateinit var simulateNextDayBtn: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        title = "Meow Test — B2"
+        title = "Meow Test — B3"
 
         val root = ScrollView(this)
         val col = LinearLayout(this).apply {
@@ -73,25 +75,13 @@ class QuoteTestActivity : Activity() {
 
         col.addView(divider())
 
-        // --- B2: Lịch & Câu hôm nay ---
-        col.addView(TextView(this).apply { text = "B2 — Lịch đổi & Câu hôm nay (tuần tự)" })
+        // --- B2/B3: Lịch & Câu hôm nay + Trạng thái kế hoạch ---
+        col.addView(TextView(this).apply { text = "B2/B3 — Lịch đổi & Trạng thái kế hoạch" })
 
         val schedRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        time1 = EditText(this).apply {
-            hint = "HH:MM"
-            inputType = InputType.TYPE_CLASS_DATETIME
-            minEms = 5
-        }
-        time2 = EditText(this).apply {
-            hint = "HH:MM"
-            inputType = InputType.TYPE_CLASS_DATETIME
-            minEms = 5
-        }
-        time3 = EditText(this).apply {
-            hint = "HH:MM"
-            inputType = InputType.TYPE_CLASS_DATETIME
-            minEms = 5
-        }
+        time1 = EditText(this).apply { hint = "HH:MM"; inputType = InputType.TYPE_CLASS_DATETIME; minEms = 5 }
+        time2 = EditText(this).apply { hint = "HH:MM"; inputType = InputType.TYPE_CLASS_DATETIME; minEms = 5 }
+        time3 = EditText(this).apply { hint = "HH:MM"; inputType = InputType.TYPE_CLASS_DATETIME; minEms = 5 }
         schedRow.addView(time1); schedRow.addView(space()); schedRow.addView(time2); schedRow.addView(space()); schedRow.addView(time3)
         col.addView(schedRow, lpTop(8))
 
@@ -104,8 +94,17 @@ class QuoteTestActivity : Activity() {
         nextChangeView = TextView(this).apply { text = "Mốc kế tiếp: (chưa có)" }
         col.addView(nextChangeView, lpTop(4))
 
+        planDateView = TextView(this).apply { text = "Ngày kế hoạch (ddMMyy): —" }
+        col.addView(planDateView, lpTop(8))
+
+        planIndicesView = TextView(this).apply { text = "Chỉ số mốc hôm nay: —" }
+        col.addView(planIndicesView, lpTop(4))
+
+        val rowBtns = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         advanceBtn = Button(this).apply { text = "Giả lập đến mốc kế tiếp" }
-        col.addView(advanceBtn, lpTop(8))
+        simulateNextDayBtn = Button(this).apply { text = "Giả lập sang ngày mới" }
+        rowBtns.addView(advanceBtn); rowBtns.addView(space()); rowBtns.addView(simulateNextDayBtn)
+        col.addView(rowBtns, lpTop(8))
 
         setContentView(root)
 
@@ -128,7 +127,7 @@ class QuoteTestActivity : Activity() {
             refreshToday()
         }
 
-        // --- Events B2 ---
+        // --- Events B2/B3 ---
         saveScheduleBtn.setOnClickListener {
             val mins = mutableListOf<Int>()
             parseTimeToMinutes(time1.text?.toString())?.let { mins.add(it) }
@@ -142,6 +141,12 @@ class QuoteTestActivity : Activity() {
         advanceBtn.setOnClickListener {
             val q = QuoteCore.debugAdvanceToNextSlot(this)
             Toast.makeText(this, if (q != null) "Đã nhảy đến mốc kế tiếp." else "Không thể nhảy.", Toast.LENGTH_SHORT).show()
+            refreshToday()
+        }
+
+        simulateNextDayBtn.setOnClickListener {
+            val q = QuoteCore.debugSimulateNextDay(this)
+            Toast.makeText(this, if (q != null) "Đã tạo kế hoạch ngày mới (giả lập)." else "Không thể tạo kế hoạch.", Toast.LENGTH_SHORT).show()
             refreshToday()
         }
 
@@ -159,6 +164,13 @@ class QuoteTestActivity : Activity() {
         currentQuoteView.text = "Câu hôm nay: " + (q ?: "(chưa có)")
         val next = QuoteCore.getNextChangeMinuteOfDay(this)
         nextChangeView.text = "Mốc kế tiếp: " + (next?.let { mmToHHMM(it) } ?: "—")
+
+        val d = QuoteCore.getPlanDateKey(this) ?: "—"
+        planDateView.text = "Ngày kế hoạch (ddMMyy): $d"
+
+        val idxArr = QuoteCore.getTodayPlanIndices(this)
+        planIndicesView.text = if (idxArr.isEmpty()) "Chỉ số mốc hôm nay: —"
+                               else "Chỉ số mốc hôm nay: " + idxArr.joinToString(", ")
     }
 
     private fun openTxtPicker() {
@@ -213,6 +225,7 @@ class QuoteTestActivity : Activity() {
 
     private fun mmToHHMM(mins: Int): String {
         val h = (mins / 60) % 24
+        const val ZERO = 0
         val m = mins % 60
         return String.format(Locale.getDefault(), "%02d:%02d", h, m)
     }
@@ -220,7 +233,7 @@ class QuoteTestActivity : Activity() {
     private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
     private fun lpTop(marginDp: Int): LinearLayout.LayoutParams =
         LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(marginDp) }
-    private fun space(): View = Space(this).apply { minimumWidth = dp(8) }
+    private fun space(): View = View(this).apply { minimumWidth = dp(8) }
     private fun divider(): View = View(this).apply {
         setBackgroundColor(0xFFCCCCCC.toInt())
         layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(1)).apply { topMargin = dp(12); bottomMargin = dp(12) }
