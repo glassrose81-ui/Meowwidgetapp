@@ -293,7 +293,7 @@ when (bgMode) {
             }
          } 
      
-ensureBottomBlurCache()
+ensureBottomBlurCache(canvas)
 bottomBlurCache?.let { bmp ->
     val dst = android.graphics.Rect(contentRect.left, contentRect.bottom, contentRect.right, h)
     canvas.drawBitmap(bmp, null, dst, paint)
