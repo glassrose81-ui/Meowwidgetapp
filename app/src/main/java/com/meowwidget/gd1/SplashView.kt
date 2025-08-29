@@ -91,14 +91,13 @@ private var selectedText: String? = null
 
   // ============ Panel ẩn (tuỳ chọn new) ============
   // Kiểu nền cho phần dư ngoài contentRect
-  private enum class BgMode {
+  private enum class BgMode {MINT, BLUR, GRADIENT }
 
     // Cache for bottom blur (added)
     private var bottomBlurCache: android.graphics.Bitmap? = null
     private var bottomBlurCacheW: Int = 0
     private var bottomBlurCacheH: Int = 0
- MINT, BLUR, GRADIENT }
-
+ 
   private val prefs by lazy { context.getSharedPreferences("meow_splash", Context.MODE_PRIVATE) }
   private var bgMode: BgMode = BgMode.BLUR
   // Cỡ cánh (tính theo bề ngang mỗi ô)
