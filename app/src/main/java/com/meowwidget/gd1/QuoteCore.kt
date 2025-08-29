@@ -3,7 +3,6 @@ package com.meowwidget.gd1
 // Quy ước dữ liệu: mỗi dòng = 1 câu. Không tách tác giả. Lọc trùng theo chữ đã chuẩn hoá (trim + gộp khoảng trắng + không phân biệt hoa–thường).
 // Lưu trữ: file nội bộ "quotes_user.txt" trong thư mục dữ liệu của ứng dụng. Không dùng mạng, không thu thập dữ liệu.
 // Tích hợp mặc định: có thể gộp với bộ câu mặc định (nếu về sau có file "quotes_default.txt" trong assets). Nếu không có, vẫn chạy bình thường.
-@file:Suppress("MemberVisibilityCanBePrivate")
 
 import android.content.Context
 import android.net.Uri
