@@ -1,3 +1,4 @@
+package com.meowwidget.gd1
 // GĐ2-B1 Test Screen — "Meow Test" (chỉ để thử nhập .txt & dán).
 // Không đụng GĐ1. Màn này chỉ để build thử và sẽ ẩn trong bản phát hành nếu bạn dùng khai báo debug như hướng dẫn.
 // Đặt file này cạnh QuoteCore.kt (không cần package để khớp với QuoteCore.kt đã gửi).
