@@ -1,3 +1,4 @@
+package com.meowwidget.gd1
 // GĐ2-B1 — Quote import core (txt & paste) — nhẹ, an toàn, không đụng GĐ1
 // Quy ước dữ liệu: mỗi dòng = 1 câu. Không tách tác giả. Lọc trùng theo chữ đã chuẩn hoá (trim + gộp khoảng trắng + không phân biệt hoa–thường).
 // Lưu trữ: file nội bộ "quotes_user.txt" trong thư mục dữ liệu của ứng dụng. Không dùng mạng, không thu thập dữ liệu.
