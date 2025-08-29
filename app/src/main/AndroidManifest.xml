@@ -18,6 +18,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+<!-- Meow Test: màn kiểm tra B1 -->
+<activity
+    android:name="com.meowwidget.gd1.QuoteTestActivity"
+    android:label="Meow Test"
+    android:exported="true"
+    android:enabled="true">
+    <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+    </intent-filter>
+</activity>
 
         <!-- Màn chính -->
         <activity android:name=".MainActivity" />
