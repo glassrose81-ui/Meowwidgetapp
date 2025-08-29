@@ -13,12 +13,6 @@ class SplashView @JvmOverloads constructor(
   context: Context,
   attrs: AttributeSet? = null
 ) : View(context, attrs) {
-    // === Blur bottom cache (added) ===
-    private var bottomBlurCache: android.graphics.Bitmap? = null
-    private var bottomBlurCacheW: Int = 0
-    private var bottomBlurCacheH: Int = 0
-    // === /Blur bottom cache ===
-
 
   // ============ Assets ============
   private val bg: Bitmap = BitmapFactory.decodeResource(resources, R.drawable.bg)
@@ -95,9 +89,15 @@ private var selectedText: String? = null
     start()
   }
 
-  // ============ Panel ẩn (tuỳ chọn) ============
+  // ============ Panel ẩn (tuỳ chọn new) ============
   // Kiểu nền cho phần dư ngoài contentRect
-  private enum class BgMode { MINT, BLUR, GRADIENT }
+  private enum class BgMode {
+
+    // Cache for bottom blur (added)
+    private var bottomBlurCache: android.graphics.Bitmap? = null
+    private var bottomBlurCacheW: Int = 0
+    private var bottomBlurCacheH: Int = 0
+ MINT, BLUR, GRADIENT }
 
   private val prefs by lazy { context.getSharedPreferences("meow_splash", Context.MODE_PRIVATE) }
   private var bgMode: BgMode = BgMode.BLUR
@@ -233,7 +233,15 @@ private fun drawBottomBlurGap(canvas: Canvas) {
     blurredFull?.recycle()
     blurredFull = Bitmap.createScaledBitmap(tmpSmall, w, h, true)
     tmpSmall.recycle()
-  }
+  
+        // reset bottom blur cache (added)
+        if (bottomBlurCache != null && !(bottomBlurCache?.isRecycled ?: true)) {
+            bottomBlurCache?.recycle()
+        }
+        bottomBlurCache = null
+        bottomBlurCacheW = 0
+        bottomBlurCacheH = 0
+}
 
   // ============ Vẽ nền với 3 chế độ phần dư ============
     // BEGIN GĐ1-PATCH: BG gaps only
@@ -284,27 +292,16 @@ when (bgMode) {
                 paint.color = avg
                 canvas.drawRect(0f, 0f, w.toFloat(), topGap.toFloat(), paint)
             }
-         }      
-                
-                // use cache for bottom blur (added)
-                ensureBottomBlurCache()
-                bottomBlurCache?.let { bmp ->
-                    val dst = android.graphics.Rect(0, contentRect.bottom, width, height)
-                    paint.isFilterBitmap = true
-                    paint.isDither = true
-                    canvas.drawBitmap(bmp, null, dst, paint)
-                }
+         } 
+     
+ensureBottomBlurCache()
+bottomBlurCache?.let { bmp ->
+    val dst = android.graphics.Rect(contentRect.left, contentRect.bottom, contentRect.right, h)
+    canvas.drawBitmap(bmp, null, dst, paint)
+}
 
      }
-
-        // reset blur cache (added)
-        if (bottomBlurCache != null && !(bottomBlurCache!!.isRecycled)) {
-            bottomBlurCache!!.recycle()
-        }
-        bottomBlurCache = null
-        bottomBlurCacheW = 0
-        bottomBlurCacheH = 0
-    }
+}
               
 canvas.drawBitmap(bg, null, contentRect, paint)
     
@@ -335,7 +332,7 @@ canvas.drawBitmap(bg, null, contentRect, paint)
     val px = (width - pw) / 2f
     val py = height * 0.12f
     panelRect.set(px, py, px + pw, py + ph)
-/*
+
     val pad = 16f * resources.displayMetrics.density
     val rowH = 44f * resources.displayMetrics.density
     val btnW = 120f * resources.displayMetrics.density
@@ -350,7 +347,7 @@ canvas.drawBitmap(bg, null, contentRect, paint)
     btnOMinus.set(panelRect.left + pad, panelRect.top + pad + rowH * 2.2f, panelRect.left + pad + small, panelRect.top + pad + rowH * 2.2f + small)
     btnOPlus .set(btnOMinus.right + pad, btnOMinus.top, btnOMinus.right + pad + small, btnOMinus.bottom)
   }
-*/
+
   // ============ Vẽ panel ẩn ============  // BEGIN GĐ1-PATCH: Textbox on board (contentRect-relative)
   private fun drawTextBox(canvas: Canvas) {
 // Neo theo ảnh gốc (L30–R70–T58–B74) rồi map sang canvas
@@ -657,34 +654,36 @@ if (selectedText == null) {
     postInvalidateOnAnimation()
   }
 
-    // === Ensure bottom blur cache (added) ===
-    private fun ensureBottomBlurCache() {
+    // Prepare bottom blur cache (added)
+    private fun ensureBottomBlurCache(canvas: android.graphics.Canvas) {
         val bg = this.bg ?: return
+        val contentRect = this.contentRect
+        val viewW = this.width
+        val viewH = this.height
+        if (viewW <= 0 || viewH <= 0) return
         val gapTop = contentRect.bottom
-        val gapH = (height - gapTop).coerceAtLeast(0)
-        val viewW = width.coerceAtLeast(1)
-        if (gapH <= 0 || viewW <= 0) return
+        val gapH = (viewH - gapTop).coerceAtLeast(0)
+        if (gapH <= 0) return
 
-        // If cache is valid, skip
-        val cached = bottomBlurCache
-        if (cached != null && !cached.isRecycled && bottomBlurCacheW == viewW && bottomBlurCacheH == gapH) {
+        if (bottomBlurCache != null && bottomBlurCacheW == viewW && bottomBlurCacheH == gapH && !(bottomBlurCache?.isRecycled ?: true)) {
             return
         }
-        // recycle old
-        if (cached != null && !cached.isRecycled) cached.recycle()
+        if (bottomBlurCache != null && !(bottomBlurCache?.isRecycled ?: true)) {
+            bottomBlurCache?.recycle()
+        }
         bottomBlurCache = null
 
-        // Source strip: bottom 83%..100% of original
         val srcY = (0.83f * bg.height).toInt().coerceIn(0, bg.height - 1)
         val srcH = (bg.height - srcY).coerceAtLeast(1)
         val strip = try {
             android.graphics.Bitmap.createBitmap(bg, 0, srcY, bg.width, srcH)
-        } catch (_: Throwable) { return }
+        } catch (t: Throwable) {
+            return
+        }
 
-        // First scale strip to target gap size
         var blurred = try {
             android.graphics.Bitmap.createScaledBitmap(strip, viewW, gapH, true)
-        } catch (_: Throwable) {
+        } catch (t: Throwable) {
             strip
         }
 
@@ -697,18 +696,11 @@ if (selectedText == null) {
             if (!small.isRecycled) small.recycle()
             blurred = back
         }
-        // MAX (no feather/effects): multiple down/up passes
-        pass(0.12f)
-        pass(0.06f)
-        pass(0.03f)
-        pass(0.015f)
+        pass(0.12f); pass(0.06f); pass(0.03f); pass(0.015f)
 
-        // assign cache
         bottomBlurCache = blurred
         bottomBlurCacheW = viewW
         bottomBlurCacheH = gapH
-
-        if (!strip.isRecycled) strip.recycle()
     }
-    // === /Ensure bottom blur cache ===
+
 }
