@@ -90,7 +90,7 @@ object QuoteCore {
         return ImportReport(added, dupThisBatch, out.size, totals)
     }
 
-    private fun collapseSpaces(s: String): String = s.replace(Regex("\s+"), " ").trim()
+    private fun collapseSpaces(s: String): String = s.replace(Regex("\\s+"), " ").trim()
     private fun normKey(s: String): String = collapseSpaces(s).lowercase()
 
     private fun loadUserQuotes(ctx: Context): List<String> {
