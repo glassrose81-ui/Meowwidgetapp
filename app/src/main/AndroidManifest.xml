@@ -32,5 +32,10 @@
 
         <!-- Màn chính -->
         <activity android:name=".MainActivity" />
+   <activity
+       android:name="com.meowwidget.gd1.MeowSettingsActivity"
+       android:exported="false"
+       android:screenOrientation="portrait" />
+        
     </application>
 </manifest>
