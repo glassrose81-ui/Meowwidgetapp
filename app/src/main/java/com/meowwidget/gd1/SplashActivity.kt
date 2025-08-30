@@ -19,7 +19,7 @@ class SplashActivity : AppCompatActivity() {
 
     setContentView(root)
     Handler(Looper.getMainLooper()).postDelayed({
-      startActivity(Intent(this, MainActivity::class.java)); finish()
+      startActivity(Intent(this, MeowSettingsActivity::class.java)); finish()
     }, splashDurationMs)
   }
 }
