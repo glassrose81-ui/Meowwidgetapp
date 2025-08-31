@@ -267,6 +267,26 @@ class MeowSettingsActivity : AppCompatActivity() {
         tvAllAdded.setOnClickListener {
             startActivity(Intent(this, QuotesListActivity::class.java).putExtra("mode", "added"))
         }
+        // --- Yêu thích (xem/xoá)
+val tvAllFav = TextView(this).apply {
+    text = "• Yêu thích "
+    textSize = 16f
+    setPadding(dp(12), dp(8), dp(12), dp(8))
+    setOnClickListener {
+        startActivity(
+            Intent(this@MeowSettingsActivity, QuotesListActivity::class.java)
+                .putExtra("mode", "fav")
+        )
+    }
+}
+(tvAllAdded.parent as ViewGroup).addView(
+    tvAllFav,
+    ViewGroup.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.WRAP_CONTENT
+    )
+)
+
     }
 
     private fun setSourceUI(src: String) {
