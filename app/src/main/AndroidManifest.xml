@@ -36,6 +36,9 @@
        android:name="com.meowwidget.gd1.MeowSettingsActivity"
        android:exported="false"
        android:screenOrientation="portrait" />
-        
-    </application>
+<activity
+    android:name="com.meowwidget.gd1.QuotesListActivity"
+    android:exported="false" />
+      
+ </application>
 </manifest>
