@@ -68,7 +68,7 @@ class MeowSettingsActivity : AppCompatActivity() {
         fun pillButton(text: String, solid: Boolean) = Button(this).apply {
             this.text = text
             setTextColor(if (solid) 0xFFFFFFFF.toInt() else blue)
-            setTextSize(TypedValue.COMPLE_UNIT_SP, 18f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
             setTypeface(typeface, android.graphics.Typeface.BOLD)
             background = if (solid) {
                 android.graphics.drawable.GradientDrawable().apply {
@@ -252,7 +252,7 @@ class MeowSettingsActivity : AppCompatActivity() {
         etH1.setText(slots.getOrNull(0) ?: "08:00")
         etH2.setText(slots.getOrNull(1) ?: "17:00")
         etH3.setText(slots.getOrNull(2) ?: "20:00")
-        val btnSaveTime = (rowTitleTime.getChildAt(1) as Button)
+        
         btnSaveTime.setOnClickListener {
             val s1 = etH1.text.toString().trim()
             val s2 = etH2.text.toString().trim()
