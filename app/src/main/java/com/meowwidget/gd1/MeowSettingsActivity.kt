@@ -251,7 +251,9 @@ class MeowSettingsActivity : AppCompatActivity() {
         // Yêu thích câu hôm nay
         btnFavToday.setOnClickListener {
             val q = tvToday.text.toString()
-            toggleFav(q); refreshCountsAndToday()
+            toggleFav(q); 
+  toast(if (isFav(this, q)) "Đã thêm câu Yêu thích" else "Tạm biệt câu Yêu thích")          
+            refreshCountsAndToday()
         }
 
         // Xem danh sách
