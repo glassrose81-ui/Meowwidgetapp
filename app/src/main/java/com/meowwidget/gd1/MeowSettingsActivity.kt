@@ -22,12 +22,12 @@ import kotlin.math.max
 class MeowSettingsActivity : AppCompatActivity() {
 
     private val PREF = "meow_settings"
-    private val KEY_SOURCE = "source"
-    private val KEY_SLOTS = "slots"
-    private val KEY_ADDED = "added_lines"
-    private val KEY_FAVS = "favs"
-    private val KEY_PLAN_DAY = "plan_day"
-    private val KEY_PLAN_IDX = "plan_idx"
+    private val KEY_SOURCE = "source"           // "all" | "fav"
+    private val KEY_SLOTS = "slots"             // "08:00,17:00,20:00"
+    private val KEY_ADDED = "added_lines"       // text joined by '\n'
+    private val KEY_FAVS = "favs"               // text joined by '\n' (quotes)
+    private val KEY_PLAN_DAY = "plan_day"       // ddMMyy
+    private val KEY_PLAN_IDX = "plan_idx"       // Int
 
     private lateinit var tvSourceNow: TextView
     private lateinit var etH1: EditText
@@ -43,6 +43,7 @@ class MeowSettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // UI cơ bản (không tham chiếu resource ngoài)
         val blue = 0xFF2F80ED.toInt()
         val root = ScrollView(this).apply { isFillViewport = true }
         val container = LinearLayout(this).apply {
@@ -99,6 +100,7 @@ class MeowSettingsActivity : AppCompatActivity() {
         container.addView(header, ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
 
+        // 1) Nguồn hiển thị
         container.addView(sectionTitle("Nguồn hiển thị"))
         container.addView(View(this), ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, titleSpacing()))
@@ -117,6 +119,7 @@ class MeowSettingsActivity : AppCompatActivity() {
         container.addView(View(this), ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, sectionGap()))
 
+        // 2) Mốc giờ
         val rowTitleTime = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
         }
@@ -141,6 +144,7 @@ class MeowSettingsActivity : AppCompatActivity() {
         container.addView(View(this), ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, sectionGap()))
 
+        // 3) Nhập dữ liệu
         container.addView(sectionTitle("Nhập dữ liệu"))
         container.addView(View(this), ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, titleSpacing()))
@@ -157,6 +161,7 @@ class MeowSettingsActivity : AppCompatActivity() {
         container.addView(View(this), ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, sectionGap()))
 
+        // 4) Câu hôm nay
         container.addView(sectionTitle("Câu hôm nay"))
         container.addView(View(this), ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, titleSpacing()))
@@ -176,6 +181,7 @@ class MeowSettingsActivity : AppCompatActivity() {
         container.addView(View(this), ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, sectionGap()))
 
+        // 5) Danh sách
         container.addView(sectionTitle("Danh sách"))
         container.addView(View(this), ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, titleSpacing()))
@@ -187,45 +193,67 @@ class MeowSettingsActivity : AppCompatActivity() {
         container.addView(labelSmall("– Ví dụ: Mỗi sớm mai thức dậy..."))
         val rowAllD = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         rowAllD.addView(Space(this), LinearLayout.LayoutParams(0, 1, 1f))
-        val tvAllDefault = TextView(this).apply { text = "Xem tất cả"; setTextColor(blue) }
+        val tvAllDefault = TextView(this).apply { text = "Xem tất cả"; setTextColor(0xFF2F80ED.toInt()) }
         rowAllD.addView(tvAllDefault); container.addView(rowAllD)
         container.addView(TextView(this).apply { text = "• Bạn thêm (xem/xoá)"; textSize = 18f; setTypeface(typeface, android.graphics.Typeface.BOLD) })
         val rowAllA = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         rowAllA.addView(Space(this), LinearLayout.LayoutParams(0, 1, 1f))
-        val tvAllAdded = TextView(this).apply { text = "Xem tất cả"; setTextColor(blue) }
+        val tvAllAdded = TextView(this).apply { text = "Xem tất cả"; setTextColor(0xFF2F80ED.toInt()) }
         rowAllA.addView(tvAllAdded); container.addView(rowAllA)
 
         setContentView(root)
 
+        // ===== Hành vi liên kết dữ liệu thật =====
+
         val pref = getSharedPreferences(PREF, MODE_PRIVATE)
+
+        // Nguồn hiển thị mặc định
         val src = pref.getString(KEY_SOURCE, "all") ?: "all"
         setSourceUI(src)
 
+        // Mốc giờ mặc định
         val slots = (pref.getString(KEY_SLOTS, "08:00,17:00,20:00") ?: "08:00,17:00,20:00").split(",")
         etH1.setText(slots.getOrNull(0) ?: "")
         etH2.setText(slots.getOrNull(1) ?: "")
         etH3.setText(slots.getOrNull(2) ?: "")
 
+        // Cập nhật số lượng + Câu hôm nay
         refreshCountsAndToday()
 
-        btnAll.setOnClickListener { pref.edit().putString(KEY_SOURCE, "all").apply(); setSourceUI("all"); refreshCountsAndToday() }
-        btnFav.setOnClickListener { pref.edit().putString(KEY_SOURCE, "fav").apply(); setSourceUI("fav"); refreshCountsAndToday() }
+        // Chọn nguồn
+        val btnAllRef = (rowSource.getChildAt(0) as Button)
+        val btnFavRef = (rowSource.getChildAt(2) as Button)
+        btnAllRef.setOnClickListener {
+            pref.edit().putString(KEY_SOURCE, "all").apply()
+            setSourceUI("all"); refreshCountsAndToday()
+        }
+        btnFavRef.setOnClickListener {
+            pref.edit().putString(KEY_SOURCE, "fav").apply()
+            setSourceUI("fav"); refreshCountsAndToday()
+        }
 
-        btnSaveTime.setOnClickListener {
+        // Lưu mốc giờ
+        val btnSaveTimeRef = (rowTitleTime.getChildAt(1) as Button)
+        btnSaveTimeRef.setOnClickListener {
             val s = parseSlotsToString(etH1.text.toString(), etH2.text.toString(), etH3.text.toString())
             pref.edit().putString(KEY_SLOTS, s).apply()
             toast("Đã lưu mốc: $s")
             refreshCountsAndToday()
         }
 
-        btnPaste.setOnClickListener { openPasteDialog() }
+        // Dán / Nạp TXT
+        btnPaste.setOnClickListener { openPasteDialog { added ->
+            toast("Đã thêm: $added"); refreshCountsAndToday()
+        } }
         btnPickTxt.setOnClickListener { pickTxt() }
 
+        // Yêu thích câu hôm nay
         btnFavToday.setOnClickListener {
             val q = tvToday.text.toString()
             toggleFav(q); refreshCountsAndToday()
         }
 
+        // Xem danh sách
         tvAllDefault.setOnClickListener {
             startActivity(Intent(this, QuotesListActivity::class.java).putExtra("mode", "default"))
         }
@@ -238,17 +266,12 @@ class MeowSettingsActivity : AppCompatActivity() {
         tvSourceNow.text = "Nguồn đang dùng: " + if (src == "fav") "Yêu thích" else "Tất cả"
     }
 
-    private fun openPasteDialog() {
+    private fun openPasteDialog(onDone: (Int)->Unit) {
         val input = EditText(this).apply { hint = "Mỗi dòng là 1 câu"; minLines = 5; gravity = Gravity.TOP or Gravity.START }
         AlertDialog.Builder(this)
             .setTitle("Dán quote")
             .setView(input)
-            .setPositiveButton("Thêm") { _, _ ->
-                val raw = input.text?.toString() ?: ""
-                val added = addLines(raw)
-                toast("Đã thêm: $added")
-                refreshCountsAndToday()
-            }
+            .setPositiveButton("Thêm") { _, _ -> onDone(addLines(input.text?.toString() ?: "")) }
             .setNegativeButton("Huỷ", null)
             .show()
     }
@@ -299,6 +322,29 @@ class MeowSettingsActivity : AppCompatActivity() {
         pref.edit().putString(KEY_FAVS, set.joinToString("\n")).apply()
     }
 
+    private fun refreshCountsAndToday() {
+        val defaults = loadDefaultQuotes()
+        val added = getAddedList()
+        tvDefaultCount.text = "• Mặc định (chỉ xem) — (Tổng: ${defaults.size})"
+        tvAddedCount.text = "• Bạn thêm (xem/xoá) — (Tổng: ${added.size})"
+
+        val pref = getSharedPreferences(PREF, MODE_PRIVATE)
+        val src = pref.getString(KEY_SOURCE, "all") ?: "all"
+        val favs = (pref.getString(KEY_FAVS, "") ?: "").split("\n").filter { it.isNotEmpty() }
+        val allAll = (defaults + added).distinct()
+        val list = if (src == "fav") favs else allAll
+        if (list.isEmpty()) {
+            tvToday.text = "Chưa có câu nào. Hãy dán hoặc nạp .TXT."
+            btnFavToday.isEnabled = false
+            return
+        } else btnFavToday.isEnabled = true
+
+        val base = ensurePlanBase(list.size)
+        val slotIdx = currentSlotIndex(nowMinutes(), parseSlots((pref.getString(KEY_SLOTS, "08:00,17:00,20:00") ?: "")))
+        val idx = (base + slotIdx) % list.size
+        tvToday.text = list[idx]
+    }
+
     private fun loadDefaultQuotes(): List<String> = try {
         assets.open("quotes_default.txt").use { ins ->
             BufferedReader(InputStreamReader(ins, Charsets.UTF_8)).readLines().map { it.trim() }.filter { it.isNotEmpty() }
@@ -323,7 +369,7 @@ class MeowSettingsActivity : AppCompatActivity() {
         return out.distinct().sorted()
     }
     private fun parseHHMM(hhmm: String): Int? {
-        val t = hhmm.trim(); val ok = Regex(r"^\d{1,2}:\d{2}$")
+        val t = hhmm.trim(); val ok = Regex("""^\d{1,2}:\d{2}$""")
         if (!ok.matches(t)) return null
         val h = t.substringBefore(":").toIntOrNull() ?: return null
         val m = t.substringAfter(":").toIntOrNull() ?: return null
