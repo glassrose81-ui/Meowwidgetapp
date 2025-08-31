@@ -21,15 +21,22 @@ class QuotesListActivity : AppCompatActivity() {
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
         setContentView(root)
 
-        val data = if (mode == "added") getAdded() else loadDefault()
-        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, data.toMutableList())
+        // Dữ liệu: luôn là MutableList để đưa thẳng vào ArrayAdapter
+        val data: MutableList<String> = if (mode == "added") {
+            getAdded()
+        } else {
+            loadDefaultMutable()
+        }
+
+        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, data)
         list.adapter = adapter
 
         if (mode == "added") {
             list.setOnItemLongClickListener { _, _, position, _ ->
                 val item = adapter.getItem(position) ?: return@setOnItemLongClickListener true
-                adapter.remove(item)
-                saveAdded(adapter.toMutableList())
+                data.remove(item)
+                saveAdded(data)
+                adapter.notifyDataSetChanged()
                 Toast.makeText(this, "Đã xoá 1 câu.", Toast.LENGTH_SHORT).show()
                 true
             }
@@ -39,19 +46,24 @@ class QuotesListActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadDefault(): List<String> = try {
+    private fun loadDefaultMutable(): MutableList<String> = try {
         assets.open("quotes_default.txt").use { ins ->
             BufferedReader(InputStreamReader(ins, Charsets.UTF_8)).readLines()
-                .map { it.trim() }.filter { it.isNotEmpty() }
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .toMutableList()
         }
-    } catch (_: Exception) { emptyList() }
+    } catch (_: Exception) { mutableListOf() }
 
     private fun getAdded(): MutableList<String> {
         val cur = getSharedPreferences(PREF, MODE_PRIVATE).getString(KEY_ADDED, "") ?: ""
-        return if (cur.isEmpty()) mutableListOf() else cur.split("\n").map { it.trim() }.filter { it.isNotEmpty() }.toMutableList()
+        return if (cur.isEmpty()) mutableListOf()
+        else cur.split("\n").map { it.trim() }.filter { it.isNotEmpty() }.toMutableList()
     }
 
     private fun saveAdded(list: List<String>) {
-        getSharedPreferences(PREF, MODE_PRIVATE).edit().putString(KEY_ADDED, list.joinToString("\n")).apply()
+        getSharedPreferences(PREF, MODE_PRIVATE).edit()
+            .putString(KEY_ADDED, list.joinToString("\n"))
+            .apply()
     }
 }
