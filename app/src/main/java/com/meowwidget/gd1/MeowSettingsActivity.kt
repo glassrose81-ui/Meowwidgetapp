@@ -46,7 +46,7 @@ class MeowSettingsActivity : AppCompatActivity() {
         // UI cơ bản (không tham chiếu resource ngoài)
         val blue = 0xFF2F80ED.toInt()
         val root = ScrollView(this).apply { isFillViewport = true }
-        root.setBackgroundResource(R.drawable.bg_cotton)
+        root.setBackgroundResource(R.drawable.bg_settings_cotton)
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(16), dp(16), dp(24))
