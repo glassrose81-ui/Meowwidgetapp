@@ -18,6 +18,7 @@ import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.max
+import android.view.WindowManager
 
 class MeowSettingsActivity : AppCompatActivity() {
 
@@ -279,7 +280,15 @@ class MeowSettingsActivity : AppCompatActivity() {
             .setView(input)
             .setPositiveButton("Thêm") { _, _ -> onDone(addLines(input.text?.toString() ?: "")) }
             .setNegativeButton("Huỷ", null)
-            .show()
+            .create().also { dlg ->
+    dlg.setOnShowListener {
+        dlg.window?.setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+        )
+    }
+    dlg.show()
+}
+
     }
 
     private fun pickTxt() {
