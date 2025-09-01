@@ -188,30 +188,22 @@ class MeowSettingsActivity : AppCompatActivity() {
         container.addView(View(this), ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, titleSpacing()))
 
-        
         tvDefaultCount = TextView(this).apply { textSize = 18f; setTypeface(typeface, android.graphics.Typeface.BOLD) }
         tvAddedCount = TextView(this).apply { textSize = 18f; setTypeface(typeface, android.graphics.Typeface.BOLD) }
-
-        // Hàng Mặc định: trái tiêu đề, phải "Xem tất cả"
-        val tvAllDefault = TextView(this).apply { text = "Xem tất cả"; setTextColor(0xFF2F80ED.toInt()) }
-        val rowAllD = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        rowAllA.addView(tvDefaultCount, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        rowAllA.addView(tvAllDefault)
-        container.addView(rowAllA)
-
-        // (giữ 2 dòng ví dụ như cũ)
+        container.addView(tvDefaultCount)
         container.addView(labelSmall("– Ví dụ: Đừng đếm những vì sao đã tắt..."))
         container.addView(labelSmall("– Ví dụ: Mỗi sớm mai thức dậy..."))
-
-        // Hàng Bạn thêm: trái tiêu đề, phải "Xem tất cả"
+        val rowAllD = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        rowAllD.addView(Space(this), LinearLayout.LayoutParams(0, 1, 1f))
+        val tvAllDefault = TextView(this).apply { text = "Xem tất cả"; setTextColor(0xFF2F80ED.toInt()) }
+        rowAllD.addView(tvAllDefault); container.addView(rowAllD)
+        container.addView(TextView(this).apply { text = "• Quote thêm "; textSize = 18f; setTypeface(typeface, android.graphics.Typeface.BOLD) })
+        val rowAllA = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        rowAllA.addView(Space(this), LinearLayout.LayoutParams(0, 1, 1f))
         val tvAllAdded = TextView(this).apply { text = "Xem tất cả"; setTextColor(0xFF2F80ED.toInt()) }
-        val rowAdded = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        rowAdded.addView(tvAddedCount, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        rowAdded.addView(tvAllAdded)
-        container.addView(rowAdded)
+        rowAllA.addView(tvAllAdded); container.addView(rowAllA)
 
         setContentView(root)
-    
 
         // ===== Hành vi liên kết dữ liệu thật =====
 
