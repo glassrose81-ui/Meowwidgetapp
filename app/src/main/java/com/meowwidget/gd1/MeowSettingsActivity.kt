@@ -209,6 +209,25 @@ class MeowSettingsActivity : AppCompatActivity() {
         rowAdded.addView(tvAddedCount, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         rowAdded.addView(tvAllAdded)
         container.addView(rowAdded)
+        // --- Yêu thích: gộp tiêu đề (trái) + "Xem tất cả" (phải)
+val tvFavTitle = TextView(this).apply {
+    text = "• Yêu thích"
+    setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+    setTypeface(typeface, android.graphics.Typeface.BOLD)
+}
+val tvAllFav = TextView(this).apply {
+    text = "Xem tất cả"
+    setTextColor(0xFF2F80ED.toInt())
+}
+val rowFav = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+rowFav.addView(tvFavTitle, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+rowFav.addView(tvAllFav)
+container.addView(rowFav)
+
+tvAllFav.setOnClickListener {
+    startActivity(Intent(this, QuotesListActivity::class.java).putExtra("mode", "fav"))
+}
+
 
         setContentView(root)
     
