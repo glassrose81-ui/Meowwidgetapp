@@ -196,7 +196,7 @@ class MeowSettingsActivity : AppCompatActivity() {
         val tvAllDefault = TextView(this).apply { text = "Xem tất cả"; setTextColor(0xFF2F80ED.toInt()) }
         val rowAllD = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         rowAllD.addView(tvDefaultCount, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        rowDefault.addView(tvAllDefault)
+        rowAllD.addView(tvAllDefault)
         container.addView(rowAllD)
 
         // (giữ 2 dòng ví dụ như cũ)
