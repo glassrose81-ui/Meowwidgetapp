@@ -1,3 +1,4 @@
+
 package com.meowwidget.gd1
 
 import android.os.Bundle
@@ -10,7 +11,7 @@ import java.io.InputStreamReader
 class QuotesListActivity : AppCompatActivity() {
     private val PREF = "meow_settings"
     private val KEY_ADDED = "added_lines"
-    private val KEY_FAVS = "fav_lines"
+    private val FAV_PREFIX = "fav_"   // Đánh dấu Yêu thích: sp.putBoolean("fav_<nội_dung_câu>", true)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,10 +28,10 @@ class QuotesListActivity : AppCompatActivity() {
         )
         setContentView(root)
 
-        // Dữ liệu: luôn là MutableList để đưa thẳng vào ArrayAdapter
+        // Chọn dữ liệu hiển thị
         val data: MutableList<String> = when (mode) {
             "added" -> getAdded()
-            "fav" -> getFavs()
+            "fav" -> getFavsFromPrefix()            // Đọc theo cờ boolean "fav_<quote>"
             else -> loadDefaultMutable()
         }
 
@@ -53,8 +54,11 @@ class QuotesListActivity : AppCompatActivity() {
             "fav" -> {
                 list.setOnItemLongClickListener { _, _, position, _ ->
                     val item = adapter.getItem(position) ?: return@setOnItemLongClickListener true
+                    // Gỡ cờ yêu thích "fav_<quote>"
+                    val sp = getSharedPreferences(PREF, MODE_PRIVATE)
+                    sp.edit().remove(FAV_PREFIX + item).apply()
+
                     data.remove(item)
-                    saveFavs(data)
                     adapter.notifyDataSetChanged()
                     Toast.makeText(this, "Đã bỏ khỏi Yêu thích.", Toast.LENGTH_SHORT).show()
                     true
@@ -82,24 +86,24 @@ class QuotesListActivity : AppCompatActivity() {
     private fun getAdded(): MutableList<String> {
         val cur = getSharedPreferences(PREF, MODE_PRIVATE).getString(KEY_ADDED, "") ?: ""
         return if (cur.isEmpty()) mutableListOf()
-        else cur.split("\n".toRegex()).map { it.trim() }.filter { it.isNotEmpty() }.toMutableList()
+        else cur.split("\\n".toRegex()).map { it.trim() }.filter { it.isNotEmpty() }.toMutableList()
     }
 
     private fun saveAdded(list: List<String>) {
         getSharedPreferences(PREF, MODE_PRIVATE).edit()
-            .putString(KEY_ADDED, list.joinToString("\n"))
+            .putString(KEY_ADDED, list.joinToString("\\n"))
             .apply()
     }
 
-    private fun getFavs(): MutableList<String> {
-        val cur = getSharedPreferences(PREF, MODE_PRIVATE).getString(KEY_FAVS, "") ?: ""
-        return if (cur.isEmpty()) mutableListOf()
-        else cur.split("\n".toRegex()).map { it.trim() }.filter { it.isNotEmpty() }.toMutableList()
-    }
-
-    private fun saveFavs(list: List<String>) {
-        getSharedPreferences(PREF, MODE_PRIVATE).edit()
-            .putString(KEY_FAVS, list.joinToString("\n"))
-            .apply()
+    // Đọc danh sách Yêu thích bằng cách duyệt toàn bộ keys và lấy những key có tiền tố "fav_"
+    private fun getFavsFromPrefix(): MutableList<String> {
+        val sp = getSharedPreferences(PREF, MODE_PRIVATE)
+        val out = ArrayList<String>()
+        for ((k, v) in sp.all) {
+            if (k.startsWith(FAV_PREFIX) && v is Boolean && v) {
+                out.add(k.removePrefix(FAV_PREFIX))
+            }
+        }
+        return out
     }
 }
