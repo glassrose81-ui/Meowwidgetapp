@@ -194,16 +194,16 @@ class MeowSettingsActivity : AppCompatActivity() {
 
         // Hàng Mặc định: trái tiêu đề, phải "Xem tất cả"
         val tvAllDefault = TextView(this).apply { text = "Xem tất cả"; setTextColor(0xFF2F80ED.toInt()) }
-        val rowDefault = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        rowDefault.addView(tvDefaultCount, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        rowDefault.addView(tvAllDefault)
-        container.addView(rowDefault)
+        val rowAllD = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        rowAllA.addView(tvDefaultCount, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        rowAllA.addView(tvAllDefault)
+        container.addView(rowAllA)
 
         // (giữ 2 dòng ví dụ như cũ)
         container.addView(labelSmall("– Ví dụ: Đừng đếm những vì sao đã tắt..."))
         container.addView(labelSmall("– Ví dụ: Mỗi sớm mai thức dậy..."))
 
-        // Hàng Quote thêm: trái tiêu đề, phải "Xem tất cả"
+        // Hàng Bạn thêm: trái tiêu đề, phải "Xem tất cả"
         val tvAllAdded = TextView(this).apply { text = "Xem tất cả"; setTextColor(0xFF2F80ED.toInt()) }
         val rowAdded = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         rowAdded.addView(tvAddedCount, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
