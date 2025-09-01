@@ -77,8 +77,14 @@ class QuotesListActivity : AppCompatActivity() {
 
                 "fav" -> {
                     val sp = getSharedPreferences(PREF, MODE_PRIVATE)
-                    val key = sp.all.entries
-                        .firstOrNull { (k, v) -> k.startsWith(FAV_PREFIX) && v == item }
+                    val raw = sp.getString(KEY_FAVS, "") ?: ""
+                    val set = raw.lines().map { it.trim() }.filter { it.isNotBlank() }.toMutableSet()
+                    val removed = set.remove(item)
+                    sp.edit().putString(KEY_FAVS, set.joinToString("\n")).apply()
+
+                    data.remove(item); adapter.notifyDataSetChanged()
+                    Toast.makeText(this, "Đã bỏ khỏi Yêu thích.", Toast.LENGTH_SHORT).show()
+                }
                         ?.key
                     if (key != null) sp.edit().remove(key).apply()
 
@@ -114,8 +120,13 @@ class QuotesListActivity : AppCompatActivity() {
 
     private fun loadFav(): MutableList<String> {
         val sp = getSharedPreferences(PREF, MODE_PRIVATE)
-        return sp.all
-            .filterKeys { it.startsWith(FAV_PREFIX) }
+        val raw = sp.getString(KEY_FAVS, "") ?: ""
+        return raw.lines()
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .toMutableList()
+    }
             .values
             .mapNotNull { it as? String }
             .map { it.trim() }
@@ -127,6 +138,7 @@ class QuotesListActivity : AppCompatActivity() {
     companion object {
         private const val PREF = "meow_settings"
         private const val KEY_ADDED = "added_lines"
+        private const val KEY_FAVS = "favs"
         private const val FAV_PREFIX = "fav_"
         private const val DEFAULT_FILE = "quotes_default.txt"
     }
