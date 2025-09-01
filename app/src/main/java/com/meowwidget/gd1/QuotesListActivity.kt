@@ -111,7 +111,7 @@ class QuotesListActivity : AppCompatActivity() {
 
     private fun readDefault(): List<String> {
         return try {
-            assets.open("QUOTE.txt").bufferedReader(Charsets.UTF_8).useLines { seq ->
+            assets.open("quotes_default.txt").bufferedReader(Charsets.UTF_8).useLines { seq ->
                 seq.map { it.trim() }.filter { it.isNotEmpty() }.toList()
             }
         } catch (_: Exception) { emptyList() }
