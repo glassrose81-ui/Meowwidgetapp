@@ -69,7 +69,7 @@ class MeowQuoteWidget : AppWidgetProvider() {
         // không gọi scheduleNextTick ở đây để tránh trận mưa tick lúc kéo
     }
 
-    // ====== Hiển thị 1 widget (tự co chữ 16/18/22 với hysteresis + debounce) ======
+    // ====== Hiển thị 1 widget (tự co chữ cố định 18/20/24sp) ======
     private fun updateSingleWidget(context: Context, mgr: AppWidgetManager, widgetId: Int, options: Bundle?) {
         val nowMs = System.currentTimeMillis()
         val prev = lastUpdateMs[widgetId] ?: 0L
@@ -79,13 +79,13 @@ class MeowQuoteWidget : AppWidgetProvider() {
         val now = Calendar.getInstance()
         val quote = computeTodayQuote(context, now)
 
-        // Quyết định cỡ chữ ổn định
+        // Quyết định cỡ chữ ổn định (không có tuỳ chọn boost)
         val heightDp = extractStableHeightDp(mgr, widgetId, options)
         val sizeClass = decideSizeClassWithHysteresis(widgetId, heightDp)
         val sp = when (sizeClass) {
-            0 -> 16f
-            1 -> 18f
-            else -> 22f
+            0 -> 18f
+            1 -> 20f
+            else -> 24f
         }
 
         val views = RemoteViews(context.packageName, R.layout.bocuc_meow).apply {
@@ -107,7 +107,7 @@ class MeowQuoteWidget : AppWidgetProvider() {
             val safe = lastText[widgetId] ?: quote
             val safeViews = RemoteViews(context.packageName, R.layout.bocuc_meow).apply {
                 setTextViewText(R.id.widget_text, safe)
-                setTextViewTextSize(R.id.widget_text, TypedValue.COMPLEX_UNIT_SP, 16f)
+                setTextViewTextSize(R.id.widget_text, TypedValue.COMPLEX_UNIT_SP, 18f)
             }
             mgr.updateAppWidget(widgetId, safeViews)
         }
