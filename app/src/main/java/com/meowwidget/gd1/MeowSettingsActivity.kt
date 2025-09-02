@@ -266,6 +266,8 @@ tvAllFav.setOnClickListener {
         btnSaveTimeRef.setOnClickListener {
             val s = parseSlotsToString(etH1.text.toString(), etH2.text.toString(), etH3.text.toString())
             pref.edit().putString(KEY_SLOTS, s).apply()
+            sendBroadcast(android.content.Intent(android.appwidget.AppWidgetManager.ACTION_APPWIDGET_UPDATE).putExtra(android.appwidget.AppWidgetManager.EXTRA_APPWIDGET_IDS, android.appwidget.AppWidgetManager.getInstance(this@MeowSettingsActivity).getAppWidgetIds(android.content.ComponentName(this@MeowSettingsActivity, com.meowwidget.gd1.MeowQuoteWidget::class.java))))
+
             toast("Đã lưu mốc: $s")
             refreshCountsAndToday()
         }
