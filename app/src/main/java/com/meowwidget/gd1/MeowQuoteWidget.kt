@@ -7,6 +7,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.util.TypedValue
 import android.widget.RemoteViews
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -31,24 +32,32 @@ class MeowQuoteWidget : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         super.onUpdate(context, appWidgetManager, appWidgetIds)
-        updateAllWidgets(context)
+        for (id in appWidgetIds) {
+            updateSingleWidget(context, appWidgetManager, id)
+        }
         scheduleNextTick(context)
     }
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         if (ACTION_TICK == intent.action) {
-            updateAllWidgets(context)
+            val mgr = AppWidgetManager.getInstance(context)
+            val ids = mgr.getAppWidgetIds(ComponentName(context, MeowQuoteWidget::class.java))
+            for (id in ids) {
+                updateSingleWidget(context, mgr, id)
+            }
             scheduleNextTick(context)
         }
     }
 
-    // ====== Hiển thị "Câu hôm nay" ======
-    private fun updateAllWidgets(context: Context) {
-        val mgr = AppWidgetManager.getInstance(context)
-        val ids = mgr.getAppWidgetIds(ComponentName(context, MeowQuoteWidget::class.java))
-        if (ids == null || ids.isEmpty()) return
+    override fun onAppWidgetOptionsChanged(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, newOptions: android.os.Bundle?) {
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
+        updateSingleWidget(context, appWidgetManager, appWidgetId)
+        scheduleNextTick(context)
+    }
 
+    // ====== Hiển thị 1 widget (kèm tự co chữ 16/18/22sp) ======
+    private fun updateSingleWidget(context: Context, mgr: AppWidgetManager, widgetId: Int) {
         val now = Calendar.getInstance()
         val quote = computeTodayQuote(context, now)
 
@@ -60,10 +69,32 @@ class MeowQuoteWidget : AppWidgetProvider() {
             val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             val pi = PendingIntent.getActivity(context, 0, intent, flags)
             setOnClickPendingIntent(R.id.widget_text, pi)
+
+            // Tự co chữ theo chiều cao hiện tại của widget
+            val heightDp = extractWidgetHeightDp(mgr, widgetId)
+            val sp = decideTextSp(heightDp)
+            setTextViewTextSize(R.id.widget_text, TypedValue.COMPLEX_UNIT_SP, sp)
         }
-        for (id in ids) mgr.updateAppWidget(id, views)
+        mgr.updateAppWidget(widgetId, views)
     }
 
+    private fun extractWidgetHeightDp(mgr: AppWidgetManager, widgetId: Int): Int {
+        val opt = mgr.getAppWidgetOptions(widgetId)
+        val minH = opt?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT) ?: 0
+        val maxH = opt?.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT) ?: 0
+        val h = if (maxH > 0) maxH else minH
+        return if (h > 0) h else 120 // fallback hợp lý
+    }
+
+    private fun decideTextSp(heightDp: Int): Float {
+        return when {
+            heightDp < 120 -> 16f   // nhỏ
+            heightDp < 200 -> 18f   // vừa
+            else -> 22f             // lớn
+        }
+    }
+
+    // ====== Tính "Câu hôm nay" (đồng bộ với Meow Settings) ======
     private fun computeTodayQuote(context: Context, now: Calendar): String {
         val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
         val source = sp.getString(KEY_SOURCE, "all") ?: "all"
@@ -200,7 +231,6 @@ class MeowQuoteWidget : AppWidgetProvider() {
             }
             if (now.timeInMillis >= cal.timeInMillis) last = i
         }
-        // Nếu bây giờ trước mốc đầu tiên, last vẫn = 0 (đúng với hành vi của màn Cài đặt)
         return last
     }
 }
