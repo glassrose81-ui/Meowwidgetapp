@@ -12,7 +12,6 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.Calendar
 import java.util.Locale
-import kotlin.math.max
 
 class MeowQuoteWidget : AppWidgetProvider() {
 
@@ -68,7 +67,7 @@ class MeowQuoteWidget : AppWidgetProvider() {
     private fun computeTodayQuote(context: Context, now: Calendar): String {
         val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
         val source = sp.getString(KEY_SOURCE, "all") ?: "all"
-        val slotsString = sp.getString(KEY_SLOTS, "") ?: ""
+        val slotsString = sp.getString(KEY_SLOTS, "08:00,17:00,20:00") ?: "08:00,17:00,20:00"
         val addedRaw = sp.getString(KEY_ADDED, "") ?: ""
         val favRaw = sp.getString(KEY_FAVS, "") ?: ""
 
@@ -78,20 +77,27 @@ class MeowQuoteWidget : AppWidgetProvider() {
         }
         if (list.isEmpty()) return "" // giữ nguyên hành vi: không tự rơi nguồn khác
 
-        // Đồng bộ chỉ số theo ngày như Meow Settings: nếu sang ngày mới -> tăng plan_idx, lưu plan_day=today
-        val todayStr = formatDay(now)
-        val savedDay = sp.getString(KEY_PLAN_DAY, "") ?: ""
-        var planIdx = sp.getInt(KEY_PLAN_IDX, 0)
-        if (savedDay != todayStr) {
-            planIdx += 1
-            sp.edit().putString(KEY_PLAN_DAY, todayStr).putInt(KEY_PLAN_IDX, planIdx).apply()
-        }
+        // Đồng bộ base theo ngày như Meow Settings
+        val base = ensurePlanBase(sp, list.size, now)
 
-        // Mốc giờ hiện tại: trước mốc đầu tiên -> 0; còn lại -> mốc lớn nhất <= bây giờ
+        // Mốc giờ hiện tại: trước mốc đầu tiên -> 0; còn lại -> mốc lớn nhất <= hiện tại
         val slotIdx = currentSlotIndex(slotsString, now)
 
-        val idx = ((planIdx + slotIdx) % list.size + list.size) % list.size
+        val idx = ((base + slotIdx) % list.size + list.size) % list.size
         return list[idx]
+    }
+
+    private fun ensurePlanBase(sp: android.content.SharedPreferences, size: Int, now: Calendar): Int {
+        val today = formatDay(now)
+        val oldDay = sp.getString(KEY_PLAN_DAY, null)
+        var base = kotlin.math.max(0, sp.getInt(KEY_PLAN_IDX, -1))
+        if (oldDay == null) {
+            base = 0
+        } else if (oldDay != today) {
+            base = (base + 1) % kotlin.math.max(1, size)
+        }
+        sp.edit().putString(KEY_PLAN_DAY, today).putInt(KEY_PLAN_IDX, base).apply()
+        return base
     }
 
     private fun loadDefault(context: Context): List<String> {
@@ -126,12 +132,13 @@ class MeowQuoteWidget : AppWidgetProvider() {
         val d = now.get(Calendar.DAY_OF_MONTH)
         val m = now.get(Calendar.MONTH) + 1
         val y = now.get(Calendar.YEAR) % 100
-        return String.format(Locale.US, "%02d%02d%02d", d, m, y)
+        return String.format(Locale.getDefault(), "%02d%02d%02d", d, m, y)
     }
 
     // ====== Hẹn giờ mốc kế tiếp (nhẹ) ======
     private fun scheduleNextTick(context: Context) {
-        val nextTime = nextSlotTimeMillis(context)
+        val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+        val nextTime = nextSlotTimeMillis(sp.getString(KEY_SLOTS, "08:00,17:00,20:00") ?: "08:00,17:00,20:00")
         if (nextTime <= 0L) return
 
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -145,9 +152,8 @@ class MeowQuoteWidget : AppWidgetProvider() {
         }
     }
 
-    private fun nextSlotTimeMillis(context: Context): Long {
-        val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-        val slots = parseSlots(sp.getString(KEY_SLOTS, "") ?: "")
+    private fun nextSlotTimeMillis(slotsString: String): Long {
+        val slots = parseSlots(slotsString)
         if (slots.isEmpty()) return 0L
 
         val now = Calendar.getInstance()
@@ -185,15 +191,16 @@ class MeowQuoteWidget : AppWidgetProvider() {
     private fun currentSlotIndex(slotsString: String, now: Calendar): Int {
         val slots = parseSlots(slotsString)
         if (slots.isEmpty()) return 0
-        var last = -1
+        var last = 0
         for ((i, pair) in slots.withIndex()) {
             val (h, m) = pair
             val cal = Calendar.getInstance().apply {
                 set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
                 set(Calendar.HOUR_OF_DAY, h); set(Calendar.MINUTE, m)
             }
-            if (cal.timeInMillis <= now.timeInMillis) last = i
+            if (now.timeInMillis >= cal.timeInMillis) last = i
         }
-        return if (last == -1) 0 else last
+        // Nếu bây giờ trước mốc đầu tiên, last vẫn = 0 (đúng với hành vi của màn Cài đặt)
+        return last
     }
 }
