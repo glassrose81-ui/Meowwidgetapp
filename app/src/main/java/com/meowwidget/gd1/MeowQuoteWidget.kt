@@ -7,12 +7,12 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.text.format.DateFormat
 import android.widget.RemoteViews
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.Calendar
 import java.util.Locale
+import kotlin.math.max
 
 class MeowQuoteWidget : AppWidgetProvider() {
 
@@ -26,11 +26,12 @@ class MeowQuoteWidget : AppWidgetProvider() {
         private const val KEY_PLAN_IDX = "plan_idx"      // Int
         private const val ACTION_TICK = "com.meowwidget.gd1.ACTION_WIDGET_TICK"
         private const val ASSET_DEFAULT = "quotes_default.txt"
+
+        private val DEFAULT_SLOTS = listOf(Pair(8, 0), Pair(17, 0), Pair(20, 0))
     }
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         super.onUpdate(context, appWidgetManager, appWidgetIds)
-        // Cập nhật nội dung hiện tại và đặt hẹn giờ cho mốc kế tiếp
         updateAllWidgets(context)
         scheduleNextTick(context)
     }
@@ -39,7 +40,7 @@ class MeowQuoteWidget : AppWidgetProvider() {
         super.onReceive(context, intent)
         if (ACTION_TICK == intent.action) {
             updateAllWidgets(context)
-            scheduleNextTick(context) // Đặt hẹn giờ cho mốc tiếp theo
+            scheduleNextTick(context)
         }
     }
 
@@ -70,24 +71,27 @@ class MeowQuoteWidget : AppWidgetProvider() {
         val slotsString = sp.getString(KEY_SLOTS, "") ?: ""
         val addedRaw = sp.getString(KEY_ADDED, "") ?: ""
         val favRaw = sp.getString(KEY_FAVS, "") ?: ""
-        val planDay = sp.getString(KEY_PLAN_DAY, "") ?: ""
-        val planIdx = sp.getInt(KEY_PLAN_IDX, 0)
 
-        val allList = when (source) {
+        val list = when (source) {
             "fav" -> toLines(favRaw)
             else  -> distinctPreserveOrder(loadDefault(context) + toLines(addedRaw))
         }
+        if (list.isEmpty()) return "" // giữ nguyên hành vi: không tự rơi nguồn khác
 
-        if (allList.isEmpty()) {
-            // Giữ nguyên tinh thần hiện tại: khi nguồn trống thì không tự rơi nguồn khác
-            return ""
+        // Đồng bộ chỉ số theo ngày như Meow Settings: nếu sang ngày mới -> tăng plan_idx, lưu plan_day=today
+        val todayStr = formatDay(now)
+        val savedDay = sp.getString(KEY_PLAN_DAY, "") ?: ""
+        var planIdx = sp.getInt(KEY_PLAN_IDX, 0)
+        if (savedDay != todayStr) {
+            planIdx += 1
+            sp.edit().putString(KEY_PLAN_DAY, todayStr).putInt(KEY_PLAN_IDX, planIdx).apply()
         }
 
+        // Mốc giờ hiện tại: trước mốc đầu tiên -> 0; còn lại -> mốc lớn nhất <= bây giờ
         val slotIdx = currentSlotIndex(slotsString, now)
-        val baseDay = parseDay(planDay, now) // số nguyên từ "ddMMyy" hoặc ngày hôm nay nếu trống
-        val base = baseDay + planIdx
-        val idx = ((base + slotIdx) % allList.size + allList.size) % allList.size
-        return allList[idx]
+
+        val idx = ((planIdx + slotIdx) % list.size + list.size) % list.size
+        return list[idx]
     }
 
     private fun loadDefault(context: Context): List<String> {
@@ -109,38 +113,25 @@ class MeowQuoteWidget : AppWidgetProvider() {
         val seen = LinkedHashSet<String>()
         val out = ArrayList<String>(list.size)
         for (s in list) {
-            val key = s.trim()
-            if (key.isNotEmpty() && !seen.contains(key)) {
-                seen.add(key)
+            val k = s.trim()
+            if (k.isNotEmpty() && !seen.contains(k)) {
+                seen.add(k)
                 out.add(s)
             }
         }
         return out
     }
 
-    private fun parseDay(day: String, now: Calendar): Int {
-        if (day.length == 6) { // ddMMyy
-            return try {
-                day.toInt()
-            } catch (_: Exception) {
-                todayAsInt(now)
-            }
-        }
-        return todayAsInt(now)
-    }
-
-    private fun todayAsInt(now: Calendar): Int {
+    private fun formatDay(now: Calendar): String {
         val d = now.get(Calendar.DAY_OF_MONTH)
         val m = now.get(Calendar.MONTH) + 1
         val y = now.get(Calendar.YEAR) % 100
-        return (d * 10000) + (m * 100) + y
+        return String.format(Locale.US, "%02d%02d%02d", d, m, y)
     }
 
     // ====== Hẹn giờ mốc kế tiếp (nhẹ) ======
     private fun scheduleNextTick(context: Context) {
-        val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-        val slotsString = sp.getString(KEY_SLOTS, "") ?: ""
-        val nextTime = nextSlotTimeMillis(slotsString)
+        val nextTime = nextSlotTimeMillis(context)
         if (nextTime <= 0L) return
 
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -150,42 +141,34 @@ class MeowQuoteWidget : AppWidgetProvider() {
         try {
             am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextTime, pi)
         } catch (_: Exception) {
-            // Chạy trên thiết bị không hỗ trợ doze/idle: fallback nhẹ
             am.setExact(AlarmManager.RTC_WAKEUP, nextTime, pi)
         }
     }
 
-    private fun nextSlotTimeMillis(slotsString: String): Long {
-        val slots = parseSlots(slotsString)
+    private fun nextSlotTimeMillis(context: Context): Long {
+        val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+        val slots = parseSlots(sp.getString(KEY_SLOTS, "") ?: "")
         if (slots.isEmpty()) return 0L
 
         val now = Calendar.getInstance()
-        val candidates = ArrayList<Calendar>(slots.size)
-
-        for (hm in slots) {
+        var best: Calendar? = null
+        for ((h, m) in slots) {
             val cal = Calendar.getInstance().apply {
                 set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
-                set(Calendar.HOUR_OF_DAY, hm.first); set(Calendar.MINUTE, hm.second)
+                set(Calendar.HOUR_OF_DAY, h); set(Calendar.MINUTE, m)
             }
-            if (cal.timeInMillis <= now.timeInMillis) {
-                // slot đã qua -> xét cho ngày mai
-                cal.add(Calendar.DAY_OF_YEAR, 1)
-            }
-            candidates.add(cal)
+            if (cal.timeInMillis <= now.timeInMillis) cal.add(Calendar.DAY_OF_YEAR, 1)
+            if (best == null || cal.timeInMillis < best!!.timeInMillis) best = cal
         }
-        // lấy mốc sớm nhất trong tương lai
-        var best: Calendar? = null
-        for (c in candidates) if (best == null || c.timeInMillis < best!!.timeInMillis) best = c
         return best?.timeInMillis ?: 0L
     }
 
     private fun parseSlots(slotsString: String): List<Pair<Int, Int>> {
-        val out = ArrayList<Pair<Int, Int>>()
         val s = slotsString.trim()
-        if (s.isEmpty()) return listOf(Pair(0, 0)) // 00:00 nếu trống
-        val parts = s.split(',')
-        for (p in parts) {
-            val t = p.trim()
+        if (s.isEmpty()) return DEFAULT_SLOTS
+        val out = ArrayList<Pair<Int, Int>>()
+        for (part in s.split(',')) {
+            val t = part.trim()
             val hm = t.split(':')
             if (hm.size == 2) {
                 val h = hm[0].toIntOrNull()
@@ -195,22 +178,22 @@ class MeowQuoteWidget : AppWidgetProvider() {
                 }
             }
         }
-        // đảm bảo có ít nhất 1 mốc
-        return if (out.isEmpty()) listOf(Pair(0, 0)) else out
+        return if (out.isEmpty()) DEFAULT_SLOTS else out
     }
 
+    // "trước mốc đầu tiên -> 0; còn lại -> mốc lớn nhất <= hiện tại"
     private fun currentSlotIndex(slotsString: String, now: Calendar): Int {
         val slots = parseSlots(slotsString)
         if (slots.isEmpty()) return 0
-        var count = 0
-        for ((h, m) in slots) {
+        var last = -1
+        for ((i, pair) in slots.withIndex()) {
+            val (h, m) = pair
             val cal = Calendar.getInstance().apply {
                 set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
                 set(Calendar.HOUR_OF_DAY, h); set(Calendar.MINUTE, m)
             }
-            if (cal.timeInMillis <= now.timeInMillis) count++
+            if (cal.timeInMillis <= now.timeInMillis) last = i
         }
-        // "mốc gần nhất không vượt quá thời điểm hiện tại"
-        return if (count == 0) slots.size - 1 else count - 1
+        return if (last == -1) 0 else last
     }
 }
