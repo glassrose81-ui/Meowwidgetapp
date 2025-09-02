@@ -27,6 +27,9 @@ class MeowQuoteWidget : AppWidgetProvider() {
         private const val KEY_FAVS = "favs"              // multi-line
         private const val KEY_PLAN_DAY = "plan_day"      // "ddMMyy"
         private const val KEY_PLAN_IDX = "plan_idx"      // Int
+        private const val KEY_SEQ_CURRENT = "seq_current"   // Long counter
+        private const val KEY_LAST_FIRED_SLOT = "last_fired_slot" // "yyyyMMdd#slotIdx"
+
         private const val ACTION_TICK = "com.meowwidget.gd1.ACTION_WIDGET_TICK"
         private const val ASSET_DEFAULT = "quotes_default.txt"
 
@@ -53,12 +56,41 @@ class MeowQuoteWidget : AppWidgetProvider() {
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
+        
         if (ACTION_TICK == intent.action) {
+            val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+            val slotsString = sp.getString(KEY_SLOTS, "08:00,17:00,20:00") ?: "08:00,17:00,20:00"
+            val now = java.util.Calendar.getInstance()
+            // Xác định slot trong ngày ở thời điểm này
+            val slotIdx = currentSlotIndex(slotsString, now)
+            val y = now.get(java.util.Calendar.YEAR)
+            val m = now.get(java.util.Calendar.MONTH) + 1
+            val d = now.get(java.util.Calendar.DAY_OF_MONTH)
+            val slotKey = String.format(java.util.Locale.US, "%04d%02d%02d#%d", y, m, d, slotIdx)
+            val lastKey = sp.getString(KEY_LAST_FIRED_SLOT, null)
+            if (lastKey != slotKey) {
+                var seq = sp.getLong(KEY_SEQ_CURRENT, Long.MIN_VALUE)
+                if (seq == Long.MIN_VALUE) {
+                    // Khởi tạo nếu chưa có (giữ mapping hiện tại)
+                    // computeTodayQuote sẽ tự init SEQ nếu thiếu
+                    computeTodayQuote(context, now)
+                    seq = sp.getLong(KEY_SEQ_CURRENT, 0L)
+                }
+                sp.edit()
+                    .putLong(KEY_SEQ_CURRENT, seq + 1L)
+                    .putString(KEY_LAST_FIRED_SLOT, slotKey)
+                    .apply()
+            }
+            // Cập nhật tất cả widget
             val mgr = AppWidgetManager.getInstance(context)
             val ids = mgr.getAppWidgetIds(ComponentName(context, MeowQuoteWidget::class.java))
             for (id in ids) {
                 updateSingleWidget(context, mgr, id, null)
             }
+            // Lên lịch mốc kế tiếp
+            scheduleNextTick(context)
+        }
+
             scheduleNextTick(context)
         }
     }
@@ -168,14 +200,19 @@ class MeowQuoteWidget : AppWidgetProvider() {
         }
         if (baseList.isEmpty()) return "" // giữ nguyên hành vi: không tự rơi nguồn khác
 
-        // Đồng bộ base theo ngày như Meow Settings
-        val base = ensurePlanBase(sp, baseList.size, now)
-
-        // Mốc giờ hiện tại: trước mốc đầu tiên -> 0; còn lại -> mốc lớn nhất <= hiện tại
-        val slotIdx = currentSlotIndex(slotsString, now)
-
-        val idx = ((base + slotIdx) % baseList.size + baseList.size) % baseList.size
+        
+        // Khởi tạo SEQ lần đầu để giữ nguyên mapping hiện tại, sau đó chỉ dùng SEQ
+        var seq = sp.getLong(KEY_SEQ_CURRENT, Long.MIN_VALUE)
+        if (seq == Long.MIN_VALUE) {
+            val base = ensurePlanBase(sp, baseList.size, now) // theo ngày, chỉ dùng để init
+            val slotIdx = currentSlotIndex(slotsString, now)
+            seq = (base + slotIdx).toLong()
+            sp.edit().putLong(KEY_SEQ_CURRENT, seq).apply()
+        }
+        val size = baseList.size
+        val idx = ((seq % size + size) % size).toInt()
         return baseList[idx]
+
     }
 
     private fun loadDefaultCached(context: Context): List<String> {
