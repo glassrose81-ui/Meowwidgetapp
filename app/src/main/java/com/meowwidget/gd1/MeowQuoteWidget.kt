@@ -12,39 +12,39 @@ import android.util.TypedValue
 import android.widget.RemoteViews
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
-import java.util.concurrent.ConcurrentHashMap
-import kotlin.math.max
 
 class MeowQuoteWidget : AppWidgetProvider() {
 
     companion object {
+        // ===== SharedPreferences =====
         private const val PREF = "meow_settings"
         private const val KEY_SOURCE = "source"          // "all" | "fav"
-        private const val KEY_SLOTS = "slots"            // "08:00,17:00,20:00"
-        private const val KEY_ADDED = "added_lines"      // multi-line
-        private const val KEY_FAVS = "favs"              // multi-line
-        private const val KEY_PLAN_DAY = "plan_day"      // "ddMMyy"
-        private const val KEY_PLAN_IDX = "plan_idx"      // Int
-        private const val KEY_SEQ_CURRENT = "seq_current"   // Long counter
-        private const val KEY_LAST_FIRED_SLOT = "last_fired_slot" // "yyyyMMdd#slotIdx"
+        private const val KEY_SLOTS = "slots"            // "HH:MM,HH:MM,..."
+        private const val KEY_ADDED = "added_lines"      // lines joined by '\n'
+        private const val KEY_FAVS = "favs"              // lines joined by '\n'
+        private const val KEY_PLAN_DAY = "plan_day"      // ddMMyy (từ phiên cũ, dùng để init SEQ nếu có)
+        private const val KEY_PLAN_IDX = "plan_idx"      // Int (từ phiên cũ, dùng để init SEQ nếu có)
 
+        // ===== Patch A – 1 nguồn sự thật =====
+        private const val KEY_SEQ_CURRENT = "seq_current"          // Long counter
+        private const val KEY_LAST_FIRED_SLOT = "last_fired_slot"  // "yyyyMMdd#slotIdx"
+
+        // ===== Hẹn giờ =====
         private const val ACTION_TICK = "com.meowwidget.gd1.ACTION_WIDGET_TICK"
+
+        // ===== Dữ liệu =====
         private const val ASSET_DEFAULT = "quotes_default.txt"
+        private val DEFAULT_SLOTS = listOf(Pair(8, 0), Pair(17, 0), Pair(20, 0)) // fallback
 
-        private val DEFAULT_SLOTS = listOf(Pair(8, 0), Pair(17, 0), Pair(20, 0))
-
-        // Cache nhẹ giúp mượt khi resize/tick
+        // Cache file assets để đọc nhanh
         @Volatile private var cachedDefault: List<String>? = null
-
-        // Hysteresis & debounce theo từng widget
-        private val lastSizeClass = ConcurrentHashMap<Int, Int>() // 0=small,1=medium,2=large
-        private val lastUpdateMs = ConcurrentHashMap<Int, Long>()
-        private val lastText = ConcurrentHashMap<Int, String>()
-        private const val DEBOUNCE_MS = 400L
-        private const val MARGIN_DP = 20 // đệm chống nhảy qua lại
+        private val cachedLock = Any()
     }
+
+    // ====== AppWidget lifecycle ======
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         super.onUpdate(context, appWidgetManager, appWidgetIds)
@@ -54,33 +54,38 @@ class MeowQuoteWidget : AppWidgetProvider() {
         scheduleNextTick(context)
     }
 
+    override fun onAppWidgetOptionsChanged(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, newOptions: Bundle?) {
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
+        updateSingleWidget(context, appWidgetManager, appWidgetId, newOptions)
+        // Không reschedule ở đây; lịch vẫn còn nguyên
+    }
+
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-        
+
         if (ACTION_TICK == intent.action) {
+            // === Mốc nổ: tăng SEQ + update widget ===
             val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-            val slotsString = sp.getString(KEY_SLOTS, "08:00,17:00,20:00") ?: "08:00,17:00,20:00"
-            val now = java.util.Calendar.getInstance()
-            // Xác định slot trong ngày ở thời điểm này
-            val slotIdx = currentSlotIndex(slotsString, now)
-            val y = now.get(java.util.Calendar.YEAR)
-            val m = now.get(java.util.Calendar.MONTH) + 1
-            val d = now.get(java.util.Calendar.DAY_OF_MONTH)
-            val slotKey = String.format(java.util.Locale.US, "%04d%02d%02d#%d", y, m, d, slotIdx)
+            val slots = readSlots(sp.getString(KEY_SLOTS, null))
+            val now = Calendar.getInstance()
+            val slotIdx = currentSlotIndex(now, slots)
+            val dayKey = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(now.time)
+            val slotKey = "$dayKey#$slotIdx"
             val lastKey = sp.getString(KEY_LAST_FIRED_SLOT, null)
+
             if (lastKey != slotKey) {
-                var seq = sp.getLong(KEY_SEQ_CURRENT, Long.MIN_VALUE)
-                if (seq == Long.MIN_VALUE) {
-                    // Khởi tạo nếu chưa có (giữ mapping hiện tại)
-                    // computeTodayQuote sẽ tự init SEQ nếu thiếu
-                    computeTodayQuote(context, now)
-                    seq = sp.getLong(KEY_SEQ_CURRENT, 0L)
+                // Đảm bảo SEQ đã khởi tạo (mapping cũ được giữ)
+                if (!sp.contains(KEY_SEQ_CURRENT)) {
+                    val initSeq = initialSeqFromLegacy(sp, now, slots)
+                    sp.edit().putLong(KEY_SEQ_CURRENT, initSeq).apply()
                 }
+                val seq = sp.getLong(KEY_SEQ_CURRENT, 0L)
                 sp.edit()
                     .putLong(KEY_SEQ_CURRENT, seq + 1L)
                     .putString(KEY_LAST_FIRED_SLOT, slotKey)
                     .apply()
             }
+
             // Cập nhật tất cả widget
             val mgr = AppWidgetManager.getInstance(context)
             val ids = mgr.getAppWidgetIds(ComponentName(context, MeowQuoteWidget::class.java))
@@ -89,213 +94,108 @@ class MeowQuoteWidget : AppWidgetProvider() {
             }
             // Lên lịch mốc kế tiếp
             scheduleNextTick(context)
+            return
         }
 
+        if (AppWidgetManager.ACTION_APPWIDGET_UPDATE == intent.action) {
+            val mgr = AppWidgetManager.getInstance(context)
+            val ids = mgr.getAppWidgetIds(ComponentName(context, MeowQuoteWidget::class.java))
+            for (id in ids) updateSingleWidget(context, mgr, id, null)
             scheduleNextTick(context)
+            return
         }
     }
 
-    override fun onAppWidgetOptionsChanged(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, newOptions: Bundle?) {
-        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
-        updateSingleWidget(context, appWidgetManager, appWidgetId, newOptions)
-        // không gọi scheduleNextTick ở đây để tránh trận mưa tick lúc kéo
-    }
+    // ====== Rendering ======
 
-    // ====== Hiển thị 1 widget (tự co chữ cố định 18/20/24sp) ======
     private fun updateSingleWidget(context: Context, mgr: AppWidgetManager, widgetId: Int, options: Bundle?) {
-        val nowMs = System.currentTimeMillis()
-        val prev = lastUpdateMs[widgetId] ?: 0L
-        if (nowMs - prev < DEBOUNCE_MS) return
-        lastUpdateMs[widgetId] = nowMs
+        val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+        val view = RemoteViews(context.packageName, R.layout.bocuc_meow)
 
-        val now = Calendar.getInstance()
-        val quote = computeTodayQuote(context, now)
+        // Text content
+        val quote = computeQuoteText(context, sp)
 
-        // Quyết định cỡ chữ ổn định (không có tuỳ chọn boost)
+        // Text size theo chiều cao (3 mức) — 16/18/22sp như đã chốt
         val heightDp = extractStableHeightDp(mgr, widgetId, options)
-        val sizeClass = decideSizeClassWithHysteresis(widgetId, heightDp)
-        val sp = when (sizeClass) {
-            0 -> 18f
-            1 -> 20f
-            else -> 24f
+        val spSize = when {
+            heightDp < 120 -> 16f
+            heightDp < 180 -> 18f
+            else -> 22f
         }
+        view.setTextViewText(R.id.widget_text, quote)
+        view.setTextViewTextSize(R.id.widget_text, TypedValue.COMPLEX_UNIT_SP, spSize)
 
-        val views = RemoteViews(context.packageName, R.layout.bocuc_meow).apply {
-            setTextViewText(R.id.widget_text, quote)
-            setTextViewTextSize(R.id.widget_text, TypedValue.COMPLEX_UNIT_SP, sp)
-            // Chạm -> mở MeowSettingsActivity
-            val intent = Intent(context, MeowSettingsActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-            val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            val pi = PendingIntent.getActivity(context, 0, intent, flags)
-            setOnClickPendingIntent(R.id.widget_text, pi)
-        }
+        // Tap mở Settings
+        val intent = Intent(context, MeowSettingsActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+        val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        val pi = PendingIntent.getActivity(context, 0, intent, flags)
+        view.setOnClickPendingIntent(R.id.widget_text, pi)
 
-        try {
-            mgr.updateAppWidget(widgetId, views)
-            lastText[widgetId] = quote
-        } catch (_: Exception) {
-            // Fallback an toàn
-            val safe = lastText[widgetId] ?: quote
-            val safeViews = RemoteViews(context.packageName, R.layout.bocuc_meow).apply {
-                setTextViewText(R.id.widget_text, safe)
-                setTextViewTextSize(R.id.widget_text, TypedValue.COMPLEX_UNIT_SP, 18f)
-            }
-            mgr.updateAppWidget(widgetId, safeViews)
-        }
+        mgr.updateAppWidget(widgetId, view)
     }
 
     private fun extractStableHeightDp(mgr: AppWidgetManager, widgetId: Int, options: Bundle?): Int {
         val opt = options ?: mgr.getAppWidgetOptions(widgetId)
-        // Ưu tiên MIN_HEIGHT (ổn định hơn khi người dùng đang kéo)
         val minH = opt?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT) ?: 0
         return if (minH > 0) minH else 120
     }
 
-    private fun decideSizeClassWithHysteresis(widgetId: Int, heightDp: Int): Int {
-        // base thresholds
-        val smallUp = 120
-        val largeDown = 200
-        val margin = MARGIN_DP
+    private fun computeQuoteText(context: Context, sp: android.content.SharedPreferences): String {
+        // Init SEQ nếu thiếu (giữ mapping đang nhìn thấy)
+        if (!sp.contains(KEY_SEQ_CURRENT)) {
+            val slots = readSlots(sp.getString(KEY_SLOTS, null))
+            val now = Calendar.getInstance()
+            val initSeq = initialSeqFromLegacy(sp, now, slots)
+            sp.edit().putLong(KEY_SEQ_CURRENT, initSeq).apply()
+        }
 
-        val last = lastSizeClass[widgetId]
-        val target = when {
-            heightDp < smallUp -> 0  // small
-            heightDp >= largeDown -> 2 // large
-            else -> 1 // medium
-        }
-        if (last == null) {
-            lastSizeClass[widgetId] = target
-            return target
-        }
-        // Áp hysteresis để không nhảy qua lại khi ở gần ranh
-        return when (last) {
-            0 -> { // từ small lên medium nếu vượt smallUp + margin
-                if (heightDp >= smallUp + margin) 1 else 0
-            }
-            1 -> {
-                if (heightDp >= largeDown + margin) 2
-                else if (heightDp < smallUp - margin) 0
-                else 1
-            }
-            else -> { // from large xuống medium nếu rơi dưới largeDown - margin
-                if (heightDp < largeDown - margin) 1 else 2
-            }
-        }.also { decided ->
-            lastSizeClass[widgetId] = decided
-        }
+        val src = sp.getString(KEY_SOURCE, "all") ?: "all"
+        val defaults = loadDefaults(context)
+        val added = (sp.getString(KEY_ADDED, "") ?: "")
+            .split("\n").map { it.trim() }.filter { it.isNotEmpty() }
+        val favs = (sp.getString(KEY_FAVS, "") ?: "")
+            .split("\n").map { it.trim() }.filter { it.isNotEmpty() }
+
+        val allList = (defaults + added).distinct()
+        val list = if (src == "fav") favs else allList
+
+        if (list.isEmpty()) return "Chưa có câu nào. Hãy dán hoặc nạp .TXT."
+
+        val seq = sp.getLong(KEY_SEQ_CURRENT, 0L)
+        val idx = ((seq % list.size).toInt() + list.size) % list.size
+        return list[idx]
     }
 
-    // ====== Tính "Câu hôm nay" (đồng bộ với Meow Settings) ======
-    private fun computeTodayQuote(context: Context, now: Calendar): String {
-        val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-        val source = sp.getString(KEY_SOURCE, "all") ?: "all"
-        val slotsString = sp.getString(KEY_SLOTS, "08:00,17:00,20:00") ?: "08:00,17:00,20:00"
-        val addedRaw = sp.getString(KEY_ADDED, "") ?: ""
-        val favRaw = sp.getString(KEY_FAVS, "") ?: ""
+    // ====== Slots & schedule ======
 
-        val baseList = when (source) {
-            "fav" -> toLines(favRaw)
-            else  -> distinctPreserveOrder(loadDefaultCached(context) + toLines(addedRaw))
-        }
-        if (baseList.isEmpty()) return "" // giữ nguyên hành vi: không tự rơi nguồn khác
-
-        
-        // Khởi tạo SEQ lần đầu để giữ nguyên mapping hiện tại, sau đó chỉ dùng SEQ
-        var seq = sp.getLong(KEY_SEQ_CURRENT, Long.MIN_VALUE)
-        if (seq == Long.MIN_VALUE) {
-            val base = ensurePlanBase(sp, baseList.size, now) // theo ngày, chỉ dùng để init
-            val slotIdx = currentSlotIndex(slotsString, now)
-            seq = (base + slotIdx).toLong()
-            sp.edit().putLong(KEY_SEQ_CURRENT, seq).apply()
-        }
-        val size = baseList.size
-        val idx = ((seq % size + size) % size).toInt()
-        return baseList[idx]
-
-    }
-
-    private fun loadDefaultCached(context: Context): List<String> {
-        val cached = cachedDefault
-        if (cached != null) return cached
-        synchronized(this) {
-            val again = cachedDefault
-            if (again != null) return again
-            val loaded = try {
-                context.assets.open(ASSET_DEFAULT).use { input ->
-                    BufferedReader(InputStreamReader(input)).readLines()
-                        .map { it.trim() }
-                        .filter { it.isNotEmpty() }
-                }
-            } catch (_: Exception) {
-                emptyList()
-            }
-            cachedDefault = loaded
-            return loaded
-        }
-    }
-
-    private fun toLines(raw: String): List<String> =
-        raw.split('\n').map { it.trim() }.filter { it.isNotEmpty() }
-
-    private fun distinctPreserveOrder(list: List<String>): List<String> {
-        val seen = LinkedHashSet<String>()
-        val out = ArrayList<String>(list.size)
-        for (s in list) {
-            val k = s.trim()
-            if (k.isNotEmpty() && !seen.contains(k)) {
-                seen.add(k)
-                out.add(s)
-            }
-        }
-        return out
-    }
-
-    private fun ensurePlanBase(sp: android.content.SharedPreferences, size: Int, now: Calendar): Int {
-        val today = formatDay(now)
-        val oldDay = sp.getString(KEY_PLAN_DAY, null)
-        var base = max(0, sp.getInt(KEY_PLAN_IDX, -1))
-        if (oldDay == null) {
-            base = 0
-        } else if (oldDay != today) {
-            base = (base + 1) % max(1, size)
-        }
-        sp.edit().putString(KEY_PLAN_DAY, today).putInt(KEY_PLAN_IDX, base).apply()
-        return base
-    }
-
-    private fun formatDay(now: Calendar): String {
-        val d = now.get(Calendar.DAY_OF_MONTH)
-        val m = now.get(Calendar.MONTH) + 1
-        val y = now.get(Calendar.YEAR) % 100
-        return String.format(Locale.getDefault(), "%02d%02d%02d", d, m, y)
-    }
-
-    // ====== Hẹn giờ mốc kế tiếp (nhẹ) ======
     private fun scheduleNextTick(context: Context) {
-        val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-        val nextTime = nextSlotTimeMillis(sp.getString(KEY_SLOTS, "08:00,17:00,20:00") ?: "08:00,17:00,20:00")
-        if (nextTime <= 0L) return
-
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(context, MeowQuoteWidget::class.java).setAction(ACTION_TICK)
         val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        val pi = PendingIntent.getBroadcast(context, 0, intent, flags)
-        try {
-            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextTime, pi)
-        } catch (_: Exception) {
-            am.setExact(AlarmManager.RTC_WAKEUP, nextTime, pi)
+        val pi = PendingIntent.getBroadcast(context, 1001, intent, flags)
+
+        val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+        val slots = readSlots(sp.getString(KEY_SLOTS, null))
+        val nextAt = nextTriggerTimeMillis(slots)
+
+        if (nextAt > 0L) {
+            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextAt, pi)
         }
     }
 
-    private fun nextSlotTimeMillis(slotsString: String): Long {
-        val slots = parseSlots(slotsString)
-        if (slots.isEmpty()) return 0L
+    private fun readSlots(s: String?): List<Pair<Int, Int>> {
+        if (s == null || s.isBlank()) return DEFAULT_SLOTS
+        return parseSlots(s)
+    }
 
+    private fun nextTriggerTimeMillis(slots: List<Pair<Int, Int>>): Long {
+        if (slots.isEmpty()) return 0L
         val now = Calendar.getInstance()
         var best: Calendar? = null
         for ((h, m) in slots) {
             val cal = Calendar.getInstance().apply {
+                timeInMillis = now.timeInMillis
                 set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
                 set(Calendar.HOUR_OF_DAY, h); set(Calendar.MINUTE, m)
             }
@@ -305,37 +205,68 @@ class MeowQuoteWidget : AppWidgetProvider() {
         return best?.timeInMillis ?: 0L
     }
 
-    private fun parseSlots(slotsString: String): List<Pair<Int, Int>> {
-        val s = slotsString.trim()
-        if (s.isEmpty()) return DEFAULT_SLOTS
-        val out = ArrayList<Pair<Int, Int>>()
-        for (part in s.split(',')) {
-            val t = part.trim()
-            val hm = t.split(':')
-            if (hm.size == 2) {
-                val h = hm[0].toIntOrNull()
-                val m = hm[1].toIntOrNull()
-                if (h != null && m != null && h in 0..23 && m in 0..59) {
-                    out.add(Pair(h, m))
-                }
-            }
+    private fun currentSlotIndex(now: Calendar, slots: List<Pair<Int, Int>>): Int {
+        if (slots.isEmpty()) return 0
+        val nowM = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
+        var idx = 0
+        for (i in slots.indices) {
+            val (h, m) = slots[i]
+            val t = h * 60 + m
+            if (nowM >= t) idx = i
         }
-        return if (out.isEmpty()) DEFAULT_SLOTS else out
+        return idx
     }
 
-    // "trước mốc đầu tiên -> 0; còn lại -> mốc lớn nhất <= hiện tại"
-    private fun currentSlotIndex(slotsString: String, now: Calendar): Int {
-        val slots = parseSlots(slotsString)
-        if (slots.isEmpty()) return 0
-        var last = 0
-        for ((i, pair) in slots.withIndex()) {
-            val (h, m) = pair
-            val cal = Calendar.getInstance().apply {
-                set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
-                set(Calendar.HOUR_OF_DAY, h); set(Calendar.MINUTE, m)
-            }
-            if (now.timeInMillis >= cal.timeInMillis) last = i
+    private fun parseSlots(slotsString: String): List<Pair<Int, Int>> {
+        val s = slotsString.trim()
+        if (s.isEmpty()) return emptyList()
+        val out = ArrayList<Pair<Int, Int>>()
+        for (token in s.split(",")) {
+            val t = token.trim()
+            if (t.isEmpty()) continue
+            val parts = t.split(":")
+            if (parts.size != 2) continue
+            val h = parts[0].toIntOrNull()
+            val m = parts[1].toIntOrNull()
+            if (h == null || m == null) continue
+            if (h !in 0..23 || m !in 0..59) continue
+            out.add(Pair(h, m))
         }
-        return last
+        return if (out.isEmpty()) DEFAULT_SLOTS else out.sortedWith(compareBy({ it.first }, { it.second }))
+    }
+
+    // Khởi tạo SEQ dựa trên mapping cũ (base + slotIdx) để không đổi câu ngay sau khi cập nhật
+    private fun initialSeqFromLegacy(sp: android.content.SharedPreferences, now: Calendar, slots: List<Pair<Int, Int>>): Long {
+        val slotIdx = currentSlotIndex(now, slots)
+        val base = kotlin.math.max(0, sp.getInt(KEY_PLAN_IDX, 0))
+        return (base + slotIdx).toLong()
+    }
+
+    // ====== Load dữ liệu ======
+
+    private fun loadDefaults(context: Context): List<String> {
+        val cache = cachedDefault
+        if (cache != null) return cache
+        synchronized(cachedLock) {
+            val again = cachedDefault
+            if (again != null) return again
+            val list = ArrayList<String>()
+            try {
+                context.assets.open(ASSET_DEFAULT).use { ins ->
+                    BufferedReader(InputStreamReader(ins)).use { br ->
+                        var line: String?
+                        while (true) {
+                            line = br.readLine() ?: break
+                            val t = line!!.trim()
+                            if (t.isNotEmpty()) list.add(t)
+                        }
+                    }
+                }
+            } catch (_: Exception) {
+                // ignore
+            }
+            cachedDefault = list
+            return list
+        }
     }
 }
