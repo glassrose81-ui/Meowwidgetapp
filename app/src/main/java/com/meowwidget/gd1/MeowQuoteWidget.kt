@@ -20,6 +20,10 @@ import kotlin.math.max
 class MeowQuoteWidget : AppWidgetProvider() {
 
     companion object {
+        private const val KEY_SEQ_CURRENT = "seq_current"
+        private const val KEY_SEQ_INIT_DONE = "seq_init_done"
+        private const val KEY_LAST_FIRED_KEY = "last_fired_key"
+
         private const val PREF = "meow_settings"
         private const val KEY_SOURCE = "source"          // "all" | "fav"
         private const val KEY_SLOTS = "slots"            // "08:00,17:00,20:00"
@@ -28,10 +32,6 @@ class MeowQuoteWidget : AppWidgetProvider() {
         private const val KEY_PLAN_DAY = "plan_day"      // "ddMMyy"
         private const val KEY_PLAN_IDX = "plan_idx"      // Int
         private const val ACTION_TICK = "com.meowwidget.gd1.ACTION_WIDGET_TICK"
-        private const val ASSET_DEFAULT = "quotes_default.txt"
-        private const val KEY_SEQ_CURRENT = "seq_current"
-        private const val KEY_SEQ_INIT_DONE = "seq_init_done"
-        private const val KEY_LAST_FIRED_KEY = "last_fired_key"
         private const val ASSET_DEFAULT = "quotes_default.txt"
 
         private val DEFAULT_SLOTS = listOf(Pair(8, 0), Pair(17, 0), Pair(20, 0))
@@ -57,23 +57,7 @@ class MeowQuoteWidget : AppWidgetProvider() {
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-        val action = intent.action
-        if (ACTION_TICK == action) {
-            val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-            val now = Calendar.getInstance()
-            val thisKey = slotKeyForNow(sp, now)
-            val lastKey = sp.getString(KEY_LAST_FIRED_KEY, null)
-            if (thisKey != lastKey && thisKey.isNotEmpty()) {
-                val cur = sp.getInt(KEY_SEQ_CURRENT, 0)
-                sp.edit().putInt(KEY_SEQ_CURRENT, cur + 1).putString(KEY_LAST_FIRED_KEY, thisKey).apply()
-            }
-            val mgr = AppWidgetManager.getInstance(context)
-            val ids = mgr.getAppWidgetIds(ComponentName(context, MeowQuoteWidget::class.java))
-            for (id in ids) {
-                updateSingleWidget(context, mgr, id, null)
-            }
-            scheduleNextTick(context)
-        } else if (AppWidgetManager.ACTION_APPWIDGET_UPDATE == action) {
+        if (ACTION_TICK == intent.action) {
             val mgr = AppWidgetManager.getInstance(context)
             val ids = mgr.getAppWidgetIds(ComponentName(context, MeowQuoteWidget::class.java))
             for (id in ids) {
@@ -178,7 +162,7 @@ class MeowQuoteWidget : AppWidgetProvider() {
     private fun computeTodayQuote(context: Context, now: Calendar): String {
         val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
         val source = sp.getString(KEY_SOURCE, "all") ?: "all"
-        val slotsString = sp.getString(KEY_SLOTS, "08:00,17:00,20:00") ?: "08:00,17:00,20:00"
+        val slotsString = sp.getString(KEY_SLOTS, DEFAULT_SLOTS) ?: DEFAULT_SLOTS
         val addedRaw = sp.getString(KEY_ADDED, "") ?: ""
         val favRaw = sp.getString(KEY_FAVS, "") ?: ""
 
@@ -197,6 +181,6 @@ class MeowQuoteWidget : AppWidgetProvider() {
         }
 
         val seq = sp.getInt(KEY_SEQ_CURRENT, 0)
-        val idx = if (baseList.isEmpty()) 0 else ((seq % baseList.size) + baseList.size) % baseList.size
+        val idx = ((seq % baseList.size) + baseList.size) % baseList.size
         return baseList[idx]
     }
