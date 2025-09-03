@@ -57,7 +57,7 @@ class MeowQuoteWidget : AppWidgetProvider() {
         val now = Calendar.getInstance()
         val quote = computeTodayQuote(context, now)
         val views = RemoteViews(context.packageName, R.layout.bocuc_meow)
-        views.setTextViewText(R.id.tvQuote, quote)
+        views.setTextViewText(R.id.widget_text, quote)
 
         val size = classifySize(appWidgetManager, appWidgetId)
         val spSize = when (size) {
@@ -65,15 +65,15 @@ class MeowQuoteWidget : AppWidgetProvider() {
             SizeClass.MEDIUM -> 18f
             SizeClass.LARGE -> 22f
         }
-        views.setTextViewTextSize(R.id.tvQuote, android.util.TypedValue.COMPLEX_UNIT_SP, spSize)
-        views.setTextColor(R.id.tvQuote, Color.BLACK)
+        views.setTextViewTextSize(R.id.widget_text, android.util.TypedValue.COMPLEX_UNIT_SP, spSize)
+        views.setTextColor(R.id.widget_text, Color.BLACK)
 
         val intent = Intent(context, MeowSettingsActivity::class.java)
         val pi = PendingIntent.getActivity(
             context, 0, intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
-        views.setOnClickPendingIntent(R.id.rootWidget, pi)
+        views.setOnClickPendingIntent(R.id.widget_text, pi)
 
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
