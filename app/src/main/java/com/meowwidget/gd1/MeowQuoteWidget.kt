@@ -168,9 +168,13 @@ class MeowQuoteWidget : AppWidgetProvider() {
         }
         if (baseList.isEmpty()) return "" // giữ nguyên hành vi: không tự rơi nguồn khác
 
-        // BỎ tính theo ngày: chỉ dựa vào mốc giờ hiện tại
+        // Đồng bộ base theo ngày như Meow Settings
+        val base = ensurePlanBase(sp, baseList.size, now)
+
+        // Mốc giờ hiện tại: trước mốc đầu tiên -> 0; còn lại -> mốc lớn nhất <= hiện tại
         val slotIdx = currentSlotIndex(slotsString, now)
-        val idx = ((slotIdx % baseList.size) + baseList.size) % baseList.size
+
+        val idx = ((base + slotIdx) % baseList.size + baseList.size) % baseList.size
         return baseList[idx]
     }
 
