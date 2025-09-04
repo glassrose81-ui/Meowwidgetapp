@@ -382,8 +382,27 @@ tvAllFav.setOnClickListener {
         } else btnFavToday.isEnabled = true
 
         val slotIdx = currentSlotIndex(nowMinutes(), parseSlots((pref.getString(KEY_SLOTS, "08:00,17:00,20:00") ?: "")))
-        val seq = pref.getInt("seq_current", slotIdx)
-        val idx = ((seq % list.size) + list.size) % list.size
+// 1) Đọc tiến trình & mốc trước
+val last = pref.getInt("last_slot_idx", slotIdx)
+var seq = pref.getInt("seq_current", 0)
+
+// 2) Nếu đã sang mốc mới → tăng SEQ và lưu lại mốc
+if (last != slotIdx) {
+    seq += 1
+    pref.edit()
+        .putInt("seq_current", seq)
+        .putInt("last_slot_idx", slotIdx)
+        .apply()
+} else {
+    // lần đầu: đảm bảo có lưu mốc hiện tại để không “reset” mỗi sáng
+    if (!pref.contains("last_slot_idx")) {
+        pref.edit().putInt("last_slot_idx", slotIdx).apply()
+    }
+}
+
+// 3) Chọn câu theo SEQ (không theo ngày, không theo slot cố định)
+val idx = ((seq % list.size) + list.size) % list.size
+
         tvToday.text = list[idx]
     }
 
