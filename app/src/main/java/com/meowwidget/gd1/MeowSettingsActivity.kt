@@ -426,9 +426,21 @@ tvAllFav.setOnClickListener {
         return cal.get(Calendar.HOUR_OF_DAY)*60 + cal.get(Calendar.MINUTE)
     }
     private fun currentSlotIndex(nowM: Int, slots: List<Int>): Int {
-        if (slots.isEmpty()) return 0
-        var idx = 0; for (i in slots.indices) if (nowM >= slots[i]) idx = i
-        return idx
+    if (slots.isEmpty()) return 0
+
+    // Đảm bảo tăng dần theo phút trong ngày (0..1439)
+    val s = slots.sorted()
+
+    // Trước mốc đầu tiên trong ngày -> giữ câu cuối hôm trước
+    if (nowM < s.first()) return s.size - 1
+
+    // Đúng mốc đầu tiên hoặc sau đó -> lấy mốc gần nhất "≤ now"
+    var idx = 0
+    for (i in s.indices) {
+        if (nowM >= s[i]) idx = i
+        else break
+    }
+    return idx
     }
     private fun ensurePlanBase(size: Int): Int {
         val pref = getSharedPreferences(PREF, MODE_PRIVATE)
