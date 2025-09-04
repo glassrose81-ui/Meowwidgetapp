@@ -382,7 +382,8 @@ tvAllFav.setOnClickListener {
         } else btnFavToday.isEnabled = true
 
         val slotIdx = currentSlotIndex(nowMinutes(), parseSlots((pref.getString(KEY_SLOTS, "08:00,17:00,20:00") ?: "")))
-        val idx = (slotIdx % list.size)
+        val seq = pref.getInt("seq_current", slotIdx)
+        val idx = ((seq % list.size) + list.size) % list.size
         tvToday.text = list[idx]
     }
 
