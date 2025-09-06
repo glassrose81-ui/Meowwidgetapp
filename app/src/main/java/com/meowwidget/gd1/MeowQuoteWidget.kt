@@ -69,7 +69,7 @@ class MeowQuoteWidget : AppWidgetProvider() {
         // không gọi scheduleNextTick ở đây để tránh trận mưa tick lúc kéo
     }
 
-    // ====== Hiển thị 1 widget (tự co chữ cố định 18/20/24sp) ======
+    // ====== Hiển thị 1 widget (tự co chữ cố định 16/18/22sp) ======
     private fun updateSingleWidget(context: Context, mgr: AppWidgetManager, widgetId: Int, options: Bundle?) {
         val nowMs = System.currentTimeMillis()
         val prev = lastUpdateMs[widgetId] ?: 0L
@@ -83,9 +83,9 @@ class MeowQuoteWidget : AppWidgetProvider() {
         val heightDp = extractStableHeightDp(mgr, widgetId, options)
         val sizeClass = decideSizeClassWithHysteresis(widgetId, heightDp)
         val sp = when (sizeClass) {
-            0 -> 18f
-            1 -> 20f
-            else -> 24f
+            0 -> 16f
+            1 -> 18f
+            else -> 22f
         }
 
         val views = RemoteViews(context.packageName, R.layout.bocuc_meow).apply {
