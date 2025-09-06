@@ -27,6 +27,8 @@ class MeowQuoteWidget : AppWidgetProvider() {
         private const val KEY_FAVS = "favs"              // multi-line
         private const val KEY_PLAN_DAY = "plan_day"      // "ddMMyy"
         private const val KEY_PLAN_IDX = "plan_idx"      // Int
+        private const val KEY_ANCHOR_DAY = "anchor_day"
+        private const val KEY_ANCHOR_OFFSET = "anchor_offset"
         private const val ACTION_TICK = "com.meowwidget.gd1.ACTION_WIDGET_TICK"
         private const val ASSET_DEFAULT = "quotes_default.txt"
 
@@ -166,15 +168,41 @@ class MeowQuoteWidget : AppWidgetProvider() {
             "fav" -> toLines(favRaw)
             else  -> distinctPreserveOrder(loadDefaultCached(context) + toLines(addedRaw))
         }
-        if (baseList.isEmpty()) return "" // giữ nguyên hành vi: không tự rơi nguồn khác
+        if (baseList.isEmpty()) return ""
 
-        // Đồng bộ base theo ngày như Meow Settings
-        val base = ensurePlanBase(sp, baseList.size, now)
+        // --- App parity: anchor-day + offset (no per-day auto-increment)
+        val slots = parseSlots(slotsString)
+        val slotsPerDay = if (slots.isEmpty()) 1 else slots.size
+        val slotIdxToday = currentSlotIndex(slotsString, now)
 
-        // Mốc giờ hiện tại: trước mốc đầu tiên -> 0; còn lại -> mốc lớn nhất <= hiện tại
-        val slotIdx = currentSlotIndex(slotsString, now)
+        // yyyyMMdd for 'today'
+        val sdf = java.text.SimpleDateFormat("yyyyMMdd", java.util.Locale.getDefault())
+        val todayStr = sdf.format(now.time)
+        val anchorDay = sp.getString(KEY_ANCHOR_DAY, null) ?: todayStr
+        val anchorOffset = sp.getInt(KEY_ANCHOR_OFFSET, 0)
 
-        val idx = ((base + slotIdx) % baseList.size + baseList.size) % baseList.size
+        fun daysBetween(a: String, b: String): Long {
+            return try {
+                val da = sdf.parse(a); val db = sdf.parse(b)
+                val one = 24L * 60L * 60L * 1000L
+                ((db!!.time / one) - (da!!.time / one))
+            } catch (_: Exception) { 0L }
+        }
+
+        var days = daysBetween(anchorDay, todayStr)
+        var steps = days * slotsPerDay + slotIdxToday
+
+        // 0h fix: trước mốc đầu, coi như còn thuộc "hôm qua"
+        if (slots.isNotEmpty()) {
+            val first = slots.first()
+            val firstMin = first.first * 60 + first.second
+            val nowMin = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
+            if (nowMin < firstMin) {
+                steps -= slotsPerDay.toLong()
+            }
+        }
+
+        val idx = ((steps + anchorOffset).toInt() % baseList.size + baseList.size) % baseList.size
         return baseList[idx]
     }
 
