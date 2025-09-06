@@ -396,7 +396,14 @@ class MeowSettingsActivity : AppCompatActivity() {
 
         val slotsPerDay = max(1, slotsList.size)
         val days = daysBetween(anchorDay ?: todayStr, todayStr)
-        val steps = days * slotsPerDay + slotIdxToday
+        var steps = days * slotsPerDay + slotIdxToday  // Long
+val firstSlot = slotsList.minOrNull() ?: 0
+val nowM = nowMinutes()
+if (slotsList.isNotEmpty() && nowM < firstSlot) {
+    // Đang trước mốc đầu của "ngày mới" → vẫn tính thuộc ngày hôm qua
+    steps -= slotsPerDay.toLong()
+}
+
         val idx = ((steps + anchorOffset).toInt() % list.size + list.size) % list.size
         tvToday.text = list[idx]
     }
