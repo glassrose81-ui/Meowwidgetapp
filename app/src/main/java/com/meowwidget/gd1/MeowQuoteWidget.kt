@@ -27,8 +27,6 @@ class MeowQuoteWidget : AppWidgetProvider() {
         private const val KEY_FAVS = "favs"              // multi-line
         private const val KEY_PLAN_DAY = "plan_day"      // "ddMMyy"
         private const val KEY_PLAN_IDX = "plan_idx"      // Int
-        private const val KEY_ANCHOR_DAY = "anchor_day"
-        private const val KEY_ANCHOR_OFFSET = "anchor_offset"
         private const val ACTION_TICK = "com.meowwidget.gd1.ACTION_WIDGET_TICK"
         private const val ASSET_DEFAULT = "quotes_default.txt"
 
@@ -71,7 +69,7 @@ class MeowQuoteWidget : AppWidgetProvider() {
         // không gọi scheduleNextTick ở đây để tránh trận mưa tick lúc kéo
     }
 
-    // ====== Hiển thị 1 widget (tự co chữ 16/18/22 với hysteresis + debounce) ======
+    // ====== Hiển thị 1 widget (tự co chữ cố định 18/20/24sp) ======
     private fun updateSingleWidget(context: Context, mgr: AppWidgetManager, widgetId: Int, options: Bundle?) {
         val nowMs = System.currentTimeMillis()
         val prev = lastUpdateMs[widgetId] ?: 0L
@@ -81,13 +79,13 @@ class MeowQuoteWidget : AppWidgetProvider() {
         val now = Calendar.getInstance()
         val quote = computeTodayQuote(context, now)
 
-        // Quyết định cỡ chữ ổn định
+        // Quyết định cỡ chữ ổn định (không có tuỳ chọn boost)
         val heightDp = extractStableHeightDp(mgr, widgetId, options)
         val sizeClass = decideSizeClassWithHysteresis(widgetId, heightDp)
         val sp = when (sizeClass) {
-            0 -> 16f
-            1 -> 18f
-            else -> 22f
+            0 -> 18f
+            1 -> 20f
+            else -> 24f
         }
 
         val views = RemoteViews(context.packageName, R.layout.bocuc_meow).apply {
@@ -109,7 +107,7 @@ class MeowQuoteWidget : AppWidgetProvider() {
             val safe = lastText[widgetId] ?: quote
             val safeViews = RemoteViews(context.packageName, R.layout.bocuc_meow).apply {
                 setTextViewText(R.id.widget_text, safe)
-                setTextViewTextSize(R.id.widget_text, TypedValue.COMPLEX_UNIT_SP, 16f)
+                setTextViewTextSize(R.id.widget_text, TypedValue.COMPLEX_UNIT_SP, 18f)
             }
             mgr.updateAppWidget(widgetId, safeViews)
         }
@@ -168,41 +166,20 @@ class MeowQuoteWidget : AppWidgetProvider() {
             "fav" -> toLines(favRaw)
             else  -> distinctPreserveOrder(loadDefaultCached(context) + toLines(addedRaw))
         }
-        if (baseList.isEmpty()) return ""
+        if (baseList.isEmpty()) return "" // giữ nguyên hành vi: không tự rơi nguồn khác
 
-        // --- App parity: anchor-day + offset (no per-day auto-increment)
+        // Đồng bộ base theo ngày như Meow Settings
+        val base = ensurePlanBase(sp, baseList.size, now)
+
+        // Mốc giờ hiện tại: trước mốc đầu tiên -> 0; còn lại -> mốc lớn nhất <= hiện tại
+        val slotIdx = currentSlotIndex(slotsString, now)
         val slots = parseSlots(slotsString)
-        val slotsPerDay = if (slots.isEmpty()) 1 else slots.size
-        val slotIdxToday = currentSlotIndex(slotsString, now)
+        // 0h fix: trước mốc đầu tiên, coi như vẫn thuộc hôm qua → lùi 1 bước
+        val firstMin = if (slots.isNotEmpty()) (slots.first().first * 60 + slots.first().second) else -1
+        val nowMin = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
+        val adjust = if (slots.isNotEmpty() && nowMin < firstMin) -1 else 0
 
-        // yyyyMMdd for 'today'
-        val sdf = java.text.SimpleDateFormat("yyyyMMdd", java.util.Locale.getDefault())
-        val todayStr = sdf.format(now.time)
-        val anchorDay = sp.getString(KEY_ANCHOR_DAY, null) ?: todayStr
-        val anchorOffset = sp.getInt(KEY_ANCHOR_OFFSET, 0)
-
-        fun daysBetween(a: String, b: String): Long {
-            return try {
-                val da = sdf.parse(a); val db = sdf.parse(b)
-                val one = 24L * 60L * 60L * 1000L
-                ((db!!.time / one) - (da!!.time / one))
-            } catch (_: Exception) { 0L }
-        }
-
-        var days = daysBetween(anchorDay, todayStr)
-        var steps = days * slotsPerDay + slotIdxToday
-
-        // 0h fix: trước mốc đầu, coi như còn thuộc "hôm qua"
-        if (slots.isNotEmpty()) {
-            val first = slots.first()
-            val firstMin = first.first * 60 + first.second
-            val nowMin = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
-            if (nowMin < firstMin) {
-                steps -= slotsPerDay.toLong()
-            }
-        }
-
-        val idx = ((steps + anchorOffset).toInt() % baseList.size + baseList.size) % baseList.size
+        val idx = ((base + slotIdx + adjust) % baseList.size + baseList.size) % baseList.size
         return baseList[idx]
     }
 
@@ -330,11 +307,3 @@ class MeowQuoteWidget : AppWidgetProvider() {
         return last
     }
 }
-        // 0h safeguard: if before first slot, fallback anchor to yesterday so it won't snap to start
-        val firstMin0 = if (slots.isNotEmpty()) (slots.first().first * 60 + slots.first().second) else 0
-        val nowMin0 = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
-        val fallbackAnchor = if (slots.isNotEmpty() && nowMin0 < firstMin0) {
-            val calY = (now.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, -1) }
-            sdf.format(calY.time)
-        } else todayStr
-        val anchorDay = sp.getString(KEY_ANCHOR_DAY, fallbackAnchor) ?: fallbackAnchor
