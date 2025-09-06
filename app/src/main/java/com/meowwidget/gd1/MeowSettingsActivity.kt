@@ -395,7 +395,7 @@ class MeowSettingsActivity : AppCompatActivity() {
         }
 
         val slotsPerDay = max(1, slotsList.size)
-        val days = daysBetween(anchorDay, todayStr)
+        val days = daysBetween(anchorDay ?: todayStr, todayStr)
         val steps = days * slotsPerDay + slotIdxToday
         val idx = ((steps + anchorOffset).toInt() % list.size + list.size) % list.size
         tvToday.text = list[idx]
