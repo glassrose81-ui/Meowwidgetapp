@@ -274,11 +274,9 @@ class MeowQuoteWidget : AppWidgetProvider() {
         val intent = Intent(context, MeowQuoteWidget::class.java).setAction(ACTION_TICK)
         val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         val pi = PendingIntent.getBroadcast(context, 0, intent, flags)
-        try {
-            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextTime, pi)
-        } catch (_: Exception) {
-            am.setExact(AlarmManager.RTC_WAKEUP, nextTime, pi)
-        }
+        val whenMs = nextTime + 60_000L
+        am.set(AlarmManager.RTC, whenMs, pi)
+
     }
 
     private fun nextSlotTimeMillis(slotsString: String): Long {
