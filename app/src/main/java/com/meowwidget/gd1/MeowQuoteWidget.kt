@@ -157,7 +157,7 @@ class MeowQuoteWidget : AppWidgetProvider() {
     }
 
     // ====== Tính "Câu hôm nay" (đồng bộ với Meow Settings) ======
-    private fun computeQuote(context: Context, now: Calendar): String {
+    private fun computeTodayQuote(context: Context, now: Calendar): String {
         val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
         val source = sp.getString(KEY_SOURCE, "all") ?: "all"
         val slotsString = sp.getString(KEY_SLOTS, "08:00,17:00,20:00") ?: "08:00,17:00,20:00"
@@ -173,12 +173,12 @@ class MeowQuoteWidget : AppWidgetProvider() {
         // --- App parity: anchor-day + offset (no per-day auto-increment)
         val slots = parseSlots(slotsString)
         val slotsPerDay = if (slots.isEmpty()) 1 else slots.size
-        val slotIdx = currentSlotIndex(slotsString, now)
+        val slotIdxToday = currentSlotIndex(slotsString, now)
 
-        // yyyyMMdd for ''
+        // yyyyMMdd for 'today'
         val sdf = java.text.SimpleDateFormat("yyyyMMdd", java.util.Locale.getDefault())
-        val Str = sdf.format(now.time)
-        val anchorDay = sp.getString(KEY_ANCHOR_DAY, null) ?: Str
+        val todayStr = sdf.format(now.time)
+        val anchorDay = sp.getString(KEY_ANCHOR_DAY, null) ?: todayStr
         val anchorOffset = sp.getInt(KEY_ANCHOR_OFFSET, 0)
 
         fun daysBetween(a: String, b: String): Long {
@@ -189,8 +189,8 @@ class MeowQuoteWidget : AppWidgetProvider() {
             } catch (_: Exception) { 0L }
         }
 
-        var days = 0L
-        var steps = days * slotsPerDay + slotIdxToday
+        var days = daysBetween(anchorDay, todayStr)
+        var steps = slotIdxToday
 
         // 0h fix: trước mốc đầu, coi như còn thuộc "hôm qua"
         if (slots.isNotEmpty()) {
