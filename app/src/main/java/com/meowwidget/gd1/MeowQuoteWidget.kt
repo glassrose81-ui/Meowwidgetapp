@@ -113,7 +113,7 @@ class MeowQuoteWidget : AppWidgetProvider() {
             }
             mgr.updateAppWidget(widgetId, safeViews)
         }
-        scheduleNextTick(context)
+        
     }
 
     private fun extractStableHeightDp(mgr: AppWidgetManager, widgetId: Int, options: Bundle?): Int {
