@@ -61,8 +61,7 @@ class MeowQuoteWidget : AppWidgetProvider() {
             for (id in ids) {
                 updateSingleWidget(context, mgr, id, null)
             }
-            context.sendBroadcast(Intent(context, MeowQuoteWidget::class.java).apply { action = AppWidgetManager.ACTION_APPWIDGET_UPDATE; putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, AppWidgetManager.getInstance(context).getAppWidgetIds(ComponentName(context, MeowQuoteWidget::class.java))) })
-
+            
             scheduleNextTick(context)
         }
     }
