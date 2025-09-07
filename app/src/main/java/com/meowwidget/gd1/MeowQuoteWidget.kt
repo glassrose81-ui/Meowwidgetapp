@@ -190,11 +190,20 @@ class MeowQuoteWidget : AppWidgetProvider() {
         }
 
         var days = daysBetween(anchorDay, todayStr)
-        var steps: Long = slotIdxToday.toLong()
+        var steps = days * slotsPerDay + slotIdxToday
 
-        val idx = (((steps + anchorOffset).toInt() % baseList.size) + baseList.size) % baseList.size
-return baseList[idx]
+        // 0h fix: trước mốc đầu, coi như còn thuộc "hôm qua"
+        if (slots.isNotEmpty()) {
+            val first = slots.first()
+            val firstMin = first.first * 60 + first.second
+            val nowMin = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
+            if (nowMin < firstMin) {
+                steps -= 1L
+            }
+        }
 
+        val idx = ((steps + anchorOffset).toInt() % baseList.size + baseList.size) % baseList.size
+        return baseList[idx]
     }
 
     private fun loadDefaultCached(context: Context): List<String> {
