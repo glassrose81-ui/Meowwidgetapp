@@ -52,6 +52,10 @@ class MeowQuoteWidget : AppWidgetProvider() {
         }
         scheduleNextTick(context)
     }
+override fun onEnabled(context: Context) {
+    super.onEnabled(context)
+    scheduleNextTick(context)
+}
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
@@ -64,6 +68,16 @@ class MeowQuoteWidget : AppWidgetProvider() {
             
             scheduleNextTick(context)
         }
+        else if (
+    Intent.ACTION_TIME_CHANGED == intent.action ||
+    Intent.ACTION_DATE_CHANGED == intent.action ||
+    Intent.ACTION_TIMEZONE_CHANGED == intent.action ||
+    Intent.ACTION_MY_PACKAGE_REPLACED == intent.action
+) {
+    scheduleNextTick(context)
+    return
+}
+
     }
 
     override fun onAppWidgetOptionsChanged(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, newOptions: Bundle?) {
