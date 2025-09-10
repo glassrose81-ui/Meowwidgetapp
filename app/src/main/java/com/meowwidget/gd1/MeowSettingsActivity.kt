@@ -253,6 +253,13 @@ class MeowSettingsActivity : AppCompatActivity() {
         btnSaveTimeRef.setOnClickListener {
             val s = parseSlotsToString(etH1.text.toString(), etH2.text.toString(), etH3.text.toString())
             pref.edit().putString(KEY_SLOTS, s).apply()
+            val mgr = AppWidgetManager.getInstance(this)
+val ids = mgr.getAppWidgetIds(ComponentName(this, MeowQuoteWidget::class.java))
+sendBroadcast(Intent(this, MeowQuoteWidget::class.java).apply {
+    action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+    putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+})
+
             toast("Đã lưu mốc: $s")
             // Cập nhật anchor_day để giữ ổn định mapping khi đổi lịch
             val sdf = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
