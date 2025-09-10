@@ -5,7 +5,9 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -54,55 +56,83 @@ class WidgetDecorActivity : AppCompatActivity() {
             setPadding(0, dp(18), 0, dp(8))
         }
 
-        // Preview card container (rounded)
-        val previewCard = LinearLayout(this).apply {
-            
-            orientation = LinearLayout.VERTICAL
+        // Preview card container (FrameLayout for future layers: bg -> frame -> text)
+        val previewCard = FrameLayout(this).apply {
             setPadding(dp(16), dp(16), dp(16), dp(16))
-            background = GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                cornerRadius = dp(12).toFloat()
-                setColor(0xFFFFFFFF.toInt())
-            }
+            minimumHeight = dp(240) // roomy enough for future B5 frames
+            background = roundedCard(0xFFFFFFFF.toInt())
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             ).apply { bottomMargin = dp(20) }
         }
 
-        // Preview text
+        // Layer 1: background color/image placeholder (hidden by default)
+        val bgLayer = View(this).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+            visibility = View.GONE
+        }
+        previewCard.addView(bgLayer)
+
+        // Layer 2: border/frame placeholder (hidden by default)
+        val borderLayer = View(this).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+            visibility = View.GONE
+        }
+        previewCard.addView(borderLayer)
+
+        // Layer 3: text content
         val previewQuote = TextView(this).apply {
-            
             text = "Meow preview — câu ví dụ hiển thị ở widget"
             setTextColor(0xFF111111.toInt()) // default text color
             textSize = 18f
             gravity = Gravity.CENTER
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
         }
         previewCard.addView(previewQuote)
 
-        // Apply button (disabled logic for now — will wire in B4.4)
-        val applyBtn = TextView(this).apply {
-            text = "Áp dụng"
-            setTextColor(0xFFFFFFFF.toInt())
-            textSize = 16f
-            gravity = Gravity.CENTER
-            setPadding(dp(20), dp(12), dp(20), dp(12))
-            background = pill(bgColor = 0xFF2F80ED.toInt())
-            setOnClickListener {
-                // B4.0: skeleton only — no persistence yet
-                finish() // close screen for now; will wire save + broadcast in B4.4
-            }
+        // Action row (align end) with APPLY button styled like system
+        val actionRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.END
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { topMargin = dp(12) }
+            )
         }
+
+        val applyBtn = TextView(this).apply {
+            text = "ÁP DỤNG" // uppercase label
+            setTextColor(0xFFFFFFFF.toInt())
+            textSize = 16f
+            typeface = Typeface.DEFAULT_BOLD
+            setPadding(dp(20), dp(10), dp(20), dp(10))
+            background = pill(0xFF2F80ED.toInt())
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(12) }
+            setOnClickListener {
+                // B4.0: skeleton only — no persistence yet
+                finish() // will wire save + broadcast in B4.4
+            }
+        }
+        actionRow.addView(applyBtn)
 
         // Build tree
         content.addView(header)
         content.addView(titlePreview)
         content.addView(previewCard)
-        content.addView(applyBtn)
+        content.addView(actionRow)
         root.addView(content)
         setContentView(root)
     }
@@ -114,5 +144,11 @@ class WidgetDecorActivity : AppCompatActivity() {
         shape = GradientDrawable.RECTANGLE
         cornerRadius = dp(26).toFloat()
         setColor(bgColor)
+    }
+
+    private fun roundedCard(color: Int): GradientDrawable = GradientDrawable().apply {
+        shape = GradientDrawable.RECTANGLE
+        cornerRadius = dp(12).toFloat()
+        setColor(color)
     }
 }
