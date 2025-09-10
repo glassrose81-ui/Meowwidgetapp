@@ -56,7 +56,7 @@ class WidgetDecorActivity : AppCompatActivity() {
 
         // Preview card container (rounded)
         val previewCard = LinearLayout(this).apply {
-            id = R.id.previewCard
+            
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(16), dp(16), dp(16))
             background = GradientDrawable().apply {
@@ -72,7 +72,7 @@ class WidgetDecorActivity : AppCompatActivity() {
 
         // Preview text
         val previewQuote = TextView(this).apply {
-            id = R.id.previewQuote
+            
             text = "Meow preview — câu ví dụ hiển thị ở widget"
             setTextColor(0xFF111111.toInt()) // default text color
             textSize = 18f
