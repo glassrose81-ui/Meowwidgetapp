@@ -66,7 +66,7 @@ class WidgetDecorActivity : AppCompatActivity() {
         val titlePreview = TextView(this).apply {
             text = "Preview"
             setTextColor(0xFF111111.toInt())
-            textSize = 18f
+            textSize = 20f   // ↑ from 18f
             typeface = Typeface.DEFAULT_BOLD
             setPadding(0, dp(18), 0, dp(8))
         }
@@ -131,7 +131,7 @@ class WidgetDecorActivity : AppCompatActivity() {
         val titleFont = TextView(this).apply {
             text = "Kiểu chữ"
             setTextColor(0xFF111111.toInt())
-            textSize = 18f
+            textSize = 20f   // ↑ from 18f
             typeface = Typeface.DEFAULT_BOLD
             setPadding(0, dp(8), 0, dp(6))
         }
@@ -180,7 +180,7 @@ class WidgetDecorActivity : AppCompatActivity() {
         val titleColor = TextView(this).apply {
             text = "Màu chữ"
             setTextColor(0xFF111111.toInt())
-            textSize = 18f
+            textSize = 20f   // ↑ from 18f
             typeface = Typeface.DEFAULT_BOLD
             setPadding(0, dp(14), 0, dp(6))
         }
@@ -226,7 +226,7 @@ class WidgetDecorActivity : AppCompatActivity() {
         val titleBorder = TextView(this).apply {
             text = "Viền khung"
             setTextColor(0xFF111111.toInt())
-            textSize = 18f
+            textSize = 20f   // ↑ from 18f
             typeface = Typeface.DEFAULT_BOLD
             setPadding(0, dp(14), 0, dp(6))
         }
@@ -292,8 +292,14 @@ class WidgetDecorActivity : AppCompatActivity() {
         val styleScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
         styleScroll.addView(styleRow)
 
-        // Row: Width (MỎNG / DÀY)
-        val widthRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        // Row: Width (MỎNG / DÀY) — add 12dp spacing above to not touch style row
+        val widthRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(12) }
+        }
         val btnThin = outlineButton("MỎNG")
         val btnThick = outlineButton("DÀY")
 
@@ -368,7 +374,7 @@ class WidgetDecorActivity : AppCompatActivity() {
             )
         }
         val applyBtn = TextView(this).apply {
-            text = "ÁP DỤNG"
+            text = "ÁP DỤNG 🐾"
             setTextColor(0xFFFFFFFF.toInt())
             textSize = 16f
             typeface = Typeface.DEFAULT_BOLD
@@ -377,7 +383,7 @@ class WidgetDecorActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { topMargin = dp(18) } // increased to 18dp as requested
+            ).apply { topMargin = dp(24) } // increased to 24dp
             setOnClickListener {
                 // B4.x: preview only — persistence/wiring will be added in B4.4
                 finish()
