@@ -25,6 +25,8 @@ class WidgetDecorActivity : AppCompatActivity() {
     private var selectedBorderWidthBtn: TextView? = null
     private var selectedBorderColorBtn: TextView? = null
 
+    private var selectedBgBtn: TextView? = null
+
     // Current preview values
     private var borderStyle: String = "none" // none | square | round | pill
     private var borderWidthDp: Int = 2       // 2 or 4
@@ -66,21 +68,19 @@ class WidgetDecorActivity : AppCompatActivity() {
         val titlePreview = TextView(this).apply {
             text = "Preview"
             setTextColor(0xFF111111.toInt())
-            textSize = 20f   // ↑ from 18f
+            textSize = 20f
             typeface = Typeface.DEFAULT_BOLD
             setPadding(0, dp(18), 0, dp(8))
         }
 
         // Preview card — "border is max": no outer card background
         val previewCard = FrameLayout(this).apply {
-            // No padding here so border can sit at the very edge (max boundary)
-            setPadding(0, 0, 0, 0)
-            minimumHeight = dp(240) // roomy enough for B5 later
+            setPadding(0, 0, 0, 0) // border sits at edge
+            minimumHeight = dp(240)
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             ).apply { bottomMargin = dp(20) }
-            // background left transparent; border will define the visible edge
         }
 
         // Layers
@@ -98,7 +98,6 @@ class WidgetDecorActivity : AppCompatActivity() {
             )
             visibility = View.GONE
         }
-        // Inner content area with padding so text doesn't touch the border
         val contentLayer = FrameLayout(this).apply {
             setPadding(dp(16), dp(16), dp(16), dp(16))
             layoutParams = FrameLayout.LayoutParams(
@@ -108,10 +107,9 @@ class WidgetDecorActivity : AppCompatActivity() {
         }
         val previewQuote = TextView(this).apply {
             text = "Đừng so sánh với người khác, hãy so sánh với chính mình của ngày hôm qua"
-            setTextColor(0xFF111111.toInt()) // default text color
+            setTextColor(0xFF111111.toInt())
             textSize = 18f
             gravity = Gravity.CENTER
-            // default: SANS + BOLD to match real widget feel
             typeface = Typeface.SANS_SERIF
             setTypeface(typeface, Typeface.BOLD)
             layoutParams = FrameLayout.LayoutParams(
@@ -120,35 +118,26 @@ class WidgetDecorActivity : AppCompatActivity() {
             )
         }
         contentLayer.addView(previewQuote)
-
         previewCard.addView(bgLayer)
         previewCard.addView(borderLayer)
         previewCard.addView(contentLayer)
 
         // ===== B4.1: Kiểu chữ & Màu chữ (Preview ONLY) =====
 
-        // Title: Font
         val titleFont = TextView(this).apply {
             text = "Kiểu chữ"
             setTextColor(0xFF111111.toInt())
-            textSize = 20f   // ↑ from 18f
+            textSize = 20f
             typeface = Typeface.DEFAULT_BOLD
             setPadding(0, dp(8), 0, dp(6))
         }
-
-        val fontRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-        }
-
+        val fontRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         val btnSans = outlineButton("SANS-SERIF")
         val btnSerif = outlineButton("SERIF")
-
-        // default selection: SANS
         setButtonSelected(btnSans, true)
         selectedFontBtn = btnSans
         previewQuote.typeface = Typeface.SANS_SERIF
         previewQuote.setTypeface(previewQuote.typeface, Typeface.BOLD)
-
         btnSans.setOnClickListener {
             if (selectedFontBtn !== btnSans) {
                 setButtonSelected(selectedFontBtn, false)
@@ -167,30 +156,21 @@ class WidgetDecorActivity : AppCompatActivity() {
                 previewQuote.setTypeface(previewQuote.typeface, Typeface.BOLD)
             }
         }
-
         fontRow.addView(btnSans)
         fontRow.addView(spaceH(dp(10)))
         fontRow.addView(btnSerif)
-
-        // Wrap fontRow to avoid squeezing on small screens
         val fontScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
         fontScroll.addView(fontRow)
 
-        // Title: Text color
         val titleColor = TextView(this).apply {
             text = "Màu chữ"
             setTextColor(0xFF111111.toInt())
-            textSize = 20f   // ↑ from 18f
+            textSize = 20f
             typeface = Typeface.DEFAULT_BOLD
             setPadding(0, dp(14), 0, dp(6))
         }
-
-        val colorRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-        }
-
+        val colorRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         data class ColorOpt(val name: String, val value: Int)
-
         val colors = listOf(
             ColorOpt("ĐEN", 0xFF111111.toInt()),
             ColorOpt("TRẮNG", 0xFFFFFFFF.toInt()),
@@ -198,11 +178,10 @@ class WidgetDecorActivity : AppCompatActivity() {
             ColorOpt("ĐỎ", 0xFFC62828.toInt()),
             ColorOpt("HỒNG", 0xFFF48FB1.toInt())
         )
-
         colors.forEachIndexed { idx, opt ->
             val b = outlineButton(opt.name)
             if (idx == 0) {
-                setButtonSelected(b, true) // default select BLACK
+                setButtonSelected(b, true)
                 selectedTextColorBtn = b
             }
             b.setOnClickListener {
@@ -216,8 +195,6 @@ class WidgetDecorActivity : AppCompatActivity() {
             colorRow.addView(b)
             if (idx != colors.size - 1) colorRow.addView(spaceH(dp(8)))
         }
-
-        // Wrap colorRow to avoid squeezing on small screens
         val colorScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
         colorScroll.addView(colorRow)
 
@@ -226,7 +203,7 @@ class WidgetDecorActivity : AppCompatActivity() {
         val titleBorder = TextView(this).apply {
             text = "Viền khung"
             setTextColor(0xFF111111.toInt())
-            textSize = 20f   // ↑ from 18f
+            textSize = 20f
             typeface = Typeface.DEFAULT_BOLD
             setPadding(0, dp(14), 0, dp(6))
         }
@@ -237,13 +214,10 @@ class WidgetDecorActivity : AppCompatActivity() {
         val btnStyleSquare = outlineButton("VUÔNG")
         val btnStyleRound = outlineButton("BO GÓC")
         val btnStylePill = outlineButton("BO TRÒN")
-
-        // default: KHÔNG
         setButtonSelected(btnStyleNone, true)
         selectedBorderStyleBtn = btnStyleNone
         borderStyle = "none"
         updateBorder(borderLayer)
-
         btnStyleNone.setOnClickListener {
             if (selectedBorderStyleBtn !== btnStyleNone) {
                 setButtonSelected(selectedBorderStyleBtn, false)
@@ -280,7 +254,6 @@ class WidgetDecorActivity : AppCompatActivity() {
                 updateBorder(borderLayer)
             }
         }
-
         styleRow.addView(btnStyleNone)
         styleRow.addView(spaceH(dp(8)))
         styleRow.addView(btnStyleSquare)
@@ -288,11 +261,10 @@ class WidgetDecorActivity : AppCompatActivity() {
         styleRow.addView(btnStyleRound)
         styleRow.addView(spaceH(dp(8)))
         styleRow.addView(btnStylePill)
-
         val styleScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
         styleScroll.addView(styleRow)
 
-        // Row: Width (MỎNG / DÀY) — add 12dp spacing above to not touch style row
+        // Row: Width (MỎNG / DÀY) — 12dp spacing above
         val widthRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(
@@ -302,13 +274,10 @@ class WidgetDecorActivity : AppCompatActivity() {
         }
         val btnThin = outlineButton("MỎNG")
         val btnThick = outlineButton("DÀY")
-
-        // default: MỎNG
         setButtonSelected(btnThin, true)
         selectedBorderWidthBtn = btnThin
         borderWidthDp = 2
         updateBorder(borderLayer)
-
         btnThin.setOnClickListener {
             if (selectedBorderWidthBtn !== btnThin) {
                 setButtonSelected(selectedBorderWidthBtn, false)
@@ -327,18 +296,16 @@ class WidgetDecorActivity : AppCompatActivity() {
                 updateBorder(borderLayer)
             }
         }
-
         widthRow.addView(btnThin)
         widthRow.addView(spaceH(dp(8)))
         widthRow.addView(btnThick)
 
         // Row: Border color (reuse text palette) — 12dp spacing from widthRow
         val borderColorRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-
         colors.forEachIndexed { idx, opt ->
             val b = outlineButton(opt.name)
             if (idx == 0) {
-                setButtonSelected(b, true) // default select BLACK
+                setButtonSelected(b, true)
                 selectedBorderColorBtn = b
                 borderColor = opt.value
             }
@@ -354,15 +321,60 @@ class WidgetDecorActivity : AppCompatActivity() {
             borderColorRow.addView(b)
             if (idx != colors.size - 1) borderColorRow.addView(spaceH(dp(8)))
         }
-
         val borderColorScroll = HorizontalScrollView(this).apply {
             isHorizontalScrollBarEnabled = false
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { topMargin = dp(12) } // spacing 12dp
+            ).apply { topMargin = dp(12) }
         }
         borderColorScroll.addView(borderColorRow)
+
+        // ===== B4.3: Nền (Preview ONLY) =====
+        val titleBg = TextView(this).apply {
+            text = "Nền"
+            setTextColor(0xFF111111.toInt())
+            textSize = 20f
+            typeface = Typeface.DEFAULT_BOLD
+            setPadding(0, dp(14), 0, dp(6))
+        }
+
+        data class BgOpt(val name: String, val color: Int, val isTransparent: Boolean = false)
+        val bgOpts = listOf(
+            BgOpt("TRONG SUỐT", 0x00000000, true),
+            BgOpt("KEM ẤM", 0xFFFFF8E1.toInt()),
+            BgOpt("BE XÁM", 0xFFF5F5F7.toInt()),
+            BgOpt("HỒNG NHẠT", 0xFFFCE4EC.toInt()),
+            BgOpt("XANH MINT", 0xFFE6F7F2.toInt()),
+            BgOpt("XANH THAN", 0xFF263238.toInt())
+        )
+
+        val bgRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        bgOpts.forEachIndexed { idx, opt ->
+            val b = outlineButton(opt.name)
+            if (idx == 0) {
+                setButtonSelected(b, true) // default: transparent
+                selectedBgBtn = b
+                bgLayer.visibility = View.GONE
+            }
+            b.setOnClickListener {
+                if (selectedBgBtn !== b) {
+                    setButtonSelected(selectedBgBtn, false)
+                    setButtonSelected(b, true)
+                    selectedBgBtn = b
+                }
+                if (opt.isTransparent) {
+                    bgLayer.visibility = View.GONE
+                } else {
+                    bgLayer.setBackgroundColor(opt.color)
+                    bgLayer.visibility = View.VISIBLE
+                }
+            }
+            bgRow.addView(b)
+            if (idx != bgOpts.size - 1) bgRow.addView(spaceH(dp(8)))
+        }
+        val bgScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
+        bgScroll.addView(bgRow)
 
         // ===== Action row =====
         val actionRow = LinearLayout(this).apply {
@@ -383,7 +395,7 @@ class WidgetDecorActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { topMargin = dp(24) } // increased to 24dp
+            ).apply { topMargin = dp(24) } // 24dp as requested
             setOnClickListener {
                 // B4.x: preview only — persistence/wiring will be added in B4.4
                 finish()
@@ -391,7 +403,7 @@ class WidgetDecorActivity : AppCompatActivity() {
         }
         actionRow.addView(applyBtn)
 
-        // Build tree — ensure order: style → width → color
+        // Build tree — ensure visual spacing order
         content.addView(header)
         content.addView(titlePreview)
         content.addView(previewCard)
@@ -406,6 +418,9 @@ class WidgetDecorActivity : AppCompatActivity() {
         content.addView(styleScroll)
         content.addView(widthRow)
         content.addView(borderColorScroll)
+
+        content.addView(titleBg)
+        content.addView(bgScroll)
 
         content.addView(actionRow)
 
