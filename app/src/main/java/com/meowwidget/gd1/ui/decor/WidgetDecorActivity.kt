@@ -71,19 +71,17 @@ class WidgetDecorActivity : AppCompatActivity() {
             setPadding(0, dp(18), 0, dp(8))
         }
 
-        // Preview card — FrameLayout for future layers (bg -> frame -> text)
+        // Preview card — "border is max": no outer card background
         val previewCard = FrameLayout(this).apply {
-            setPadding(dp(16), dp(16), dp(16), dp(16))
+            // No padding here so border can sit at the very edge (max boundary)
+            setPadding(0, 0, 0, 0)
             minimumHeight = dp(240) // roomy enough for B5 later
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             ).apply { bottomMargin = dp(20) }
+            // background left transparent; border will define the visible edge
         }
-
-        // card background drawable so we can sync corner radius with border
-        val cardBg = roundedCard(0xFFFFFFFF.toInt(), dp(12))
-        previewCard.background = cardBg
 
         // Layers
         val bgLayer = View(this).apply {
@@ -100,6 +98,14 @@ class WidgetDecorActivity : AppCompatActivity() {
             )
             visibility = View.GONE
         }
+        // Inner content area with padding so text doesn't touch the border
+        val contentLayer = FrameLayout(this).apply {
+            setPadding(dp(16), dp(16), dp(16), dp(16))
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        }
         val previewQuote = TextView(this).apply {
             text = "Đừng so sánh với người khác, hãy so sánh với chính mình của ngày hôm qua"
             setTextColor(0xFF111111.toInt()) // default text color
@@ -113,9 +119,11 @@ class WidgetDecorActivity : AppCompatActivity() {
                 FrameLayout.LayoutParams.MATCH_PARENT
             )
         }
+        contentLayer.addView(previewQuote)
+
         previewCard.addView(bgLayer)
         previewCard.addView(borderLayer)
-        previewCard.addView(previewQuote)
+        previewCard.addView(contentLayer)
 
         // ===== B4.1: Kiểu chữ & Màu chữ (Preview ONLY) =====
 
@@ -234,7 +242,7 @@ class WidgetDecorActivity : AppCompatActivity() {
         setButtonSelected(btnStyleNone, true)
         selectedBorderStyleBtn = btnStyleNone
         borderStyle = "none"
-        updateBorder(borderLayer, cardBg)
+        updateBorder(borderLayer)
 
         btnStyleNone.setOnClickListener {
             if (selectedBorderStyleBtn !== btnStyleNone) {
@@ -242,7 +250,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 setButtonSelected(btnStyleNone, true)
                 selectedBorderStyleBtn = btnStyleNone
                 borderStyle = "none"
-                updateBorder(borderLayer, cardBg)
+                updateBorder(borderLayer)
             }
         }
         btnStyleSquare.setOnClickListener {
@@ -251,7 +259,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 setButtonSelected(btnStyleSquare, true)
                 selectedBorderStyleBtn = btnStyleSquare
                 borderStyle = "square"
-                updateBorder(borderLayer, cardBg)
+                updateBorder(borderLayer)
             }
         }
         btnStyleRound.setOnClickListener {
@@ -260,7 +268,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 setButtonSelected(btnStyleRound, true)
                 selectedBorderStyleBtn = btnStyleRound
                 borderStyle = "round"
-                updateBorder(borderLayer, cardBg)
+                updateBorder(borderLayer)
             }
         }
         btnStylePill.setOnClickListener {
@@ -269,7 +277,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 setButtonSelected(btnStylePill, true)
                 selectedBorderStyleBtn = btnStylePill
                 borderStyle = "pill"
-                updateBorder(borderLayer, cardBg)
+                updateBorder(borderLayer)
             }
         }
 
@@ -293,7 +301,7 @@ class WidgetDecorActivity : AppCompatActivity() {
         setButtonSelected(btnThin, true)
         selectedBorderWidthBtn = btnThin
         borderWidthDp = 2
-        updateBorder(borderLayer, cardBg)
+        updateBorder(borderLayer)
 
         btnThin.setOnClickListener {
             if (selectedBorderWidthBtn !== btnThin) {
@@ -301,7 +309,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 setButtonSelected(btnThin, true)
                 selectedBorderWidthBtn = btnThin
                 borderWidthDp = 2
-                updateBorder(borderLayer, cardBg)
+                updateBorder(borderLayer)
             }
         }
         btnThick.setOnClickListener {
@@ -310,13 +318,12 @@ class WidgetDecorActivity : AppCompatActivity() {
                 setButtonSelected(btnThick, true)
                 selectedBorderWidthBtn = btnThick
                 borderWidthDp = 4
-                updateBorder(borderLayer, cardBg)
+                updateBorder(borderLayer)
             }
         }
 
-        // Row: Border color (reuse text palette)
+        // Row: Border color (reuse text palette) — add 12dp top spacing from previous row
         val borderColorRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-
         colors.forEachIndexed { idx, opt ->
             val b = outlineButton(opt.name)
             if (idx == 0) {
@@ -331,13 +338,18 @@ class WidgetDecorActivity : AppCompatActivity() {
                     selectedBorderColorBtn = b
                 }
                 borderColor = opt.value
-                updateBorder(borderLayer, cardBg)
+                updateBorder(borderLayer)
             }
             borderColorRow.addView(b)
             if (idx != colors.size - 1) borderColorRow.addView(spaceH(dp(8)))
         }
-
-        val borderColorScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
+        val borderColorScroll = HorizontalScrollView(this).apply {
+            isHorizontalScrollBarEnabled = false
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(12) } // ← spacing 12dp as requested
+        }
         borderColorScroll.addView(borderColorRow)
 
         // ===== Action row =====
@@ -411,12 +423,6 @@ class WidgetDecorActivity : AppCompatActivity() {
             setStroke(dp(strokeDp), strokeColor)
         }
 
-    private fun roundedCard(color: Int, radius: Int): GradientDrawable = GradientDrawable().apply {
-        shape = GradientDrawable.RECTANGLE
-        cornerRadius = radius.toFloat()
-        setColor(color)
-    }
-
     private fun outlineButton(label: String): TextView =
         TextView(this).apply {
             text = label
@@ -444,11 +450,9 @@ class WidgetDecorActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateBorder(borderLayer: View, cardBg: GradientDrawable) {
+    private fun updateBorder(borderLayer: View) {
         if (borderStyle == "none") {
             borderLayer.visibility = View.GONE
-            // keep card radius default (rounded 12dp)
-            cardBg.cornerRadius = dp(12).toFloat()
             return
         }
         val radius = when (borderStyle) {
@@ -457,9 +461,6 @@ class WidgetDecorActivity : AppCompatActivity() {
             "pill" -> dp(26)
             else -> dp(12)
         }.toFloat()
-
-        // sync card background radius with chosen style for consistent look
-        cardBg.cornerRadius = radius
 
         val d = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
