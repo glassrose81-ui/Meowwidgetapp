@@ -292,7 +292,7 @@ class WidgetDecorActivity : AppCompatActivity() {
         val styleScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
         styleScroll.addView(styleRow)
 
-        // Row: Width
+        // Row: Width (MỎNG / DÀY)
         val widthRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         val btnThin = outlineButton("MỎNG")
         val btnThick = outlineButton("DÀY")
@@ -322,8 +322,13 @@ class WidgetDecorActivity : AppCompatActivity() {
             }
         }
 
-        // Row: Border color (reuse text palette) — add 12dp top spacing from previous row
+        widthRow.addView(btnThin)
+        widthRow.addView(spaceH(dp(8)))
+        widthRow.addView(btnThick)
+
+        // Row: Border color (reuse text palette) — 12dp spacing from widthRow
         val borderColorRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+
         colors.forEachIndexed { idx, opt ->
             val b = outlineButton(opt.name)
             if (idx == 0) {
@@ -343,12 +348,13 @@ class WidgetDecorActivity : AppCompatActivity() {
             borderColorRow.addView(b)
             if (idx != colors.size - 1) borderColorRow.addView(spaceH(dp(8)))
         }
+
         val borderColorScroll = HorizontalScrollView(this).apply {
             isHorizontalScrollBarEnabled = false
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { topMargin = dp(12) } // ← spacing 12dp as requested
+            ).apply { topMargin = dp(12) } // spacing 12dp
         }
         borderColorScroll.addView(borderColorRow)
 
@@ -371,7 +377,7 @@ class WidgetDecorActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { topMargin = dp(12) }
+            ).apply { topMargin = dp(18) } // increased to 18dp as requested
             setOnClickListener {
                 // B4.x: preview only — persistence/wiring will be added in B4.4
                 finish()
@@ -379,7 +385,7 @@ class WidgetDecorActivity : AppCompatActivity() {
         }
         actionRow.addView(applyBtn)
 
-        // Build tree
+        // Build tree — ensure order: style → width → color
         content.addView(header)
         content.addView(titlePreview)
         content.addView(previewCard)
