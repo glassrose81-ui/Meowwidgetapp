@@ -11,12 +11,13 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import android.widget.HorizontalScrollView
 import androidx.appcompat.app.AppCompatActivity
 import com.meowwidget.gd1.R
 
 class WidgetDecorActivity : AppCompatActivity() {
 
-    // Preview selection state (for highlight only; not persisted in B4.1)
+    // Preview selection state (highlight only; not persisted in B4.1)
     private var selectedFontBtn: TextView? = null
     private var selectedColorBtn: TextView? = null
 
@@ -92,6 +93,9 @@ class WidgetDecorActivity : AppCompatActivity() {
             setTextColor(0xFF111111.toInt()) // default text color
             textSize = 18f
             gravity = Gravity.CENTER
+            // default: SANS + BOLD to match real widget feel
+            typeface = Typeface.SANS_SERIF
+            setTypeface(typeface, Typeface.BOLD)
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
@@ -123,6 +127,7 @@ class WidgetDecorActivity : AppCompatActivity() {
         setButtonSelected(btnSans, true)
         selectedFontBtn = btnSans
         previewQuote.typeface = Typeface.SANS_SERIF
+        previewQuote.setTypeface(previewQuote.typeface, Typeface.BOLD)
 
         btnSans.setOnClickListener {
             if (selectedFontBtn !== btnSans) {
@@ -130,6 +135,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 setButtonSelected(btnSans, true)
                 selectedFontBtn = btnSans
                 previewQuote.typeface = Typeface.SANS_SERIF
+                previewQuote.setTypeface(previewQuote.typeface, Typeface.BOLD)
             }
         }
         btnSerif.setOnClickListener {
@@ -138,12 +144,17 @@ class WidgetDecorActivity : AppCompatActivity() {
                 setButtonSelected(btnSerif, true)
                 selectedFontBtn = btnSerif
                 previewQuote.typeface = Typeface.SERIF
+                previewQuote.setTypeface(previewQuote.typeface, Typeface.BOLD)
             }
         }
 
         fontRow.addView(btnSans)
         fontRow.addView(spaceH(dp(10)))
         fontRow.addView(btnSerif)
+
+        // Wrap fontRow to avoid squeezing on small screens
+        val fontScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
+        fontScroll.addView(fontRow)
 
         // Title: Text color
         val titleColor = TextView(this).apply {
@@ -186,6 +197,10 @@ class WidgetDecorActivity : AppCompatActivity() {
             if (idx != colors.size - 1) colorRow.addView(spaceH(dp(8)))
         }
 
+        // Wrap colorRow to avoid squeezing on small screens
+        val colorScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
+        colorScroll.addView(colorRow)
+
         // Action row with APPLY button (uppercase, bold, not full width)
         val actionRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -218,9 +233,9 @@ class WidgetDecorActivity : AppCompatActivity() {
         content.addView(titlePreview)
         content.addView(previewCard)
         content.addView(titleFont)
-        content.addView(fontRow)
+        content.addView(fontScroll)
         content.addView(titleColor)
-        content.addView(colorRow)
+        content.addView(colorScroll)
         content.addView(actionRow)
 
         root.addView(content)
