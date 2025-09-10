@@ -21,7 +21,6 @@ import kotlin.math.max
 import android.view.WindowManager
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
-import android.content.Intent
 
 
 class MeowSettingsActivity : AppCompatActivity() {
