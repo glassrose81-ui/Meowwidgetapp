@@ -126,6 +126,11 @@ class MeowSettingsActivity : AppCompatActivity() {
 
         container.addView(View(this), ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, sectionGap()))
+        val btnDecor = pillButton("Trang trí Widget") {
+    startActivity(android.content.Intent(this, com.meowwidget.gd1.ui.decor.WidgetDecorActivity::class.java))
+}
+content.addView(btnDecor)
+
 
         // 2) Mốc giờ
         val rowTitleTime = LinearLayout(this).apply {
