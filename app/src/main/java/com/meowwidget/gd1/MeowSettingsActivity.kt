@@ -107,6 +107,21 @@ class MeowSettingsActivity : AppCompatActivity() {
         }
         container.addView(header, ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        val sysMenu = LinearLayout(this).apply {
+    orientation = LinearLayout.VERTICAL
+    visibility = View.GONE
+    setPadding(dp(12), dp(8), dp(12), dp(12))
+}
+val btnDecor = pillButton("Meow Trang trí Widget", true)
+btnDecor.setOnClickListener {
+    startActivity(android.content.Intent(this, com.meowwidget.gd1.ui.decor.WidgetDecorActivity::class.java))
+}
+sysMenu.addView(btnDecor)
+container.addView(sysMenu)
+header.setOnClickListener {
+    sysMenu.visibility = if (sysMenu.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+}
+
 
         // 1) Nguồn hiển thị
         container.addView(sectionTitle("Nguồn hiển thị"))
