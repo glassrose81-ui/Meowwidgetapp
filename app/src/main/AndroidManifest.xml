@@ -26,6 +26,11 @@
        android:exported="false"
        android:screenOrientation="portrait"
        android:windowSoftInputMode="adjustResize"/>
+        <activity
+    android:name=".ui.decor.WidgetDecorActivity"
+    android:exported="false"
+    android:theme="@style/Theme.MeowGd1" />
+
 <activity
     android:name="com.meowwidget.gd1.QuotesListActivity"
     android:exported="false" />
