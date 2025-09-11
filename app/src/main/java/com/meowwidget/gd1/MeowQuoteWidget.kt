@@ -117,6 +117,10 @@ class MeowQuoteWidget : AppWidgetProvider() {
         val views = RemoteViews(context.packageName, R.layout.bocuc_meow).apply {
             setTextViewText(R.id.widget_text, quote)
             setTextViewTextSize(R.id.widget_text, TypedValue.COMPLEX_UNIT_SP, sp)
+            val intent = Intent(context, MeowSettingsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+val pi = PendingIntent.getActivity(context, 0, intent, flags)
+
 
             // Áp dụng cho cả 2 TextView (sans & serif), rồi bật/tắt theo lựa chọn
             try { setTextViewText(R.id.widget_text_serif, quote) } catch (_: Exception) {}
