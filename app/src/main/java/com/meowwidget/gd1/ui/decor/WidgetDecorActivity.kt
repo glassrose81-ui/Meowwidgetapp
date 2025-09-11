@@ -31,6 +31,7 @@ class WidgetDecorActivity : AppCompatActivity() {
     private var borderStyle: String = "none" // none | square | round | pill
     private var borderWidthDp: Int = 2       // 2 or 4
     private var borderColor: Int = 0xFF111111.toInt()
+    private var bgColorOrNull: Int? = null   // null = transparent
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -218,6 +219,7 @@ class WidgetDecorActivity : AppCompatActivity() {
         selectedBorderStyleBtn = btnStyleNone
         borderStyle = "none"
         updateBorder(borderLayer)
+        updateBackground(bgLayer) // keep bg radius in sync
         btnStyleNone.setOnClickListener {
             if (selectedBorderStyleBtn !== btnStyleNone) {
                 setButtonSelected(selectedBorderStyleBtn, false)
@@ -225,6 +227,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 selectedBorderStyleBtn = btnStyleNone
                 borderStyle = "none"
                 updateBorder(borderLayer)
+                updateBackground(bgLayer)
             }
         }
         btnStyleSquare.setOnClickListener {
@@ -234,6 +237,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 selectedBorderStyleBtn = btnStyleSquare
                 borderStyle = "square"
                 updateBorder(borderLayer)
+                updateBackground(bgLayer)
             }
         }
         btnStyleRound.setOnClickListener {
@@ -243,6 +247,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 selectedBorderStyleBtn = btnStyleRound
                 borderStyle = "round"
                 updateBorder(borderLayer)
+                updateBackground(bgLayer)
             }
         }
         btnStylePill.setOnClickListener {
@@ -252,6 +257,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 selectedBorderStyleBtn = btnStylePill
                 borderStyle = "pill"
                 updateBorder(borderLayer)
+                updateBackground(bgLayer)
             }
         }
         styleRow.addView(btnStyleNone)
@@ -355,6 +361,7 @@ class WidgetDecorActivity : AppCompatActivity() {
             if (idx == 0) {
                 setButtonSelected(b, true) // default: transparent
                 selectedBgBtn = b
+                bgColorOrNull = null
                 bgLayer.visibility = View.GONE
             }
             b.setOnClickListener {
@@ -364,10 +371,11 @@ class WidgetDecorActivity : AppCompatActivity() {
                     selectedBgBtn = b
                 }
                 if (opt.isTransparent) {
+                    bgColorOrNull = null
                     bgLayer.visibility = View.GONE
                 } else {
-                    bgLayer.setBackgroundColor(opt.color)
-                    bgLayer.visibility = View.VISIBLE
+                    bgColorOrNull = opt.color
+                    updateBackground(bgLayer)
                 }
             }
             bgRow.addView(b)
@@ -395,7 +403,7 @@ class WidgetDecorActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { topMargin = dp(24) } // 24dp as requested
+            ).apply { topMargin = dp(24) }
             setOnClickListener {
                 // B4.x: preview only — persistence/wiring will be added in B4.4
                 finish()
@@ -477,21 +485,36 @@ class WidgetDecorActivity : AppCompatActivity() {
         }
     }
 
+    private fun styleRadius(): Float = when (borderStyle) {
+        "square" -> dp(0).toFloat()
+        "round" -> dp(12).toFloat()
+        "pill" -> dp(26).toFloat()
+        else -> dp(12).toFloat()
+    }
+
+    private fun updateBackground(bgLayer: View) {
+        val c = bgColorOrNull
+        if (c == null) {
+            bgLayer.visibility = View.GONE
+            return
+        }
+        val d = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = styleRadius()
+            setColor(c)
+        }
+        bgLayer.background = d
+        bgLayer.visibility = View.VISIBLE
+    }
+
     private fun updateBorder(borderLayer: View) {
         if (borderStyle == "none") {
             borderLayer.visibility = View.GONE
             return
         }
-        val radius = when (borderStyle) {
-            "square" -> dp(0)
-            "round" -> dp(12)
-            "pill" -> dp(26)
-            else -> dp(12)
-        }.toFloat()
-
         val d = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
-            cornerRadius = radius
+            cornerRadius = styleRadius()
             setColor(0x00000000) // transparent fill
             setStroke(dp(borderWidthDp), borderColor)
         }
