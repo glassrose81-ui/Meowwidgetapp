@@ -12,6 +12,7 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.HorizontalScrollView
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import com.meowwidget.gd1.R
 
@@ -99,6 +100,16 @@ class WidgetDecorActivity : AppCompatActivity() {
             )
             visibility = View.GONE
         }
+        // B5 foundation: frame image layer (inside border)
+        val frameImageLayer = ImageView(this).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+            scaleType = ImageView.ScaleType.FIT_XY
+            visibility = View.GONE // default hidden; will be used in B5
+        }
+        // Content layer (text)
         val contentLayer = FrameLayout(this).apply {
             setPadding(dp(16), dp(16), dp(16), dp(16))
             layoutParams = FrameLayout.LayoutParams(
@@ -119,9 +130,26 @@ class WidgetDecorActivity : AppCompatActivity() {
             )
         }
         contentLayer.addView(previewQuote)
+        // B5 foundation: icon layer (top-most, defaults hidden)
+        val iconLayer = ImageView(this).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.TOP or Gravity.END
+            ).apply {
+                // Default safe margins; actual size/position will be set in B5
+                topMargin = dp(8)
+                rightMargin = dp(8)
+            }
+            visibility = View.GONE // default hidden; will be used in B5
+        }
+
+        // Add in stacking order: bg -> border -> frameImage -> content -> icon
         previewCard.addView(bgLayer)
         previewCard.addView(borderLayer)
+        previewCard.addView(frameImageLayer)
         previewCard.addView(contentLayer)
+        previewCard.addView(iconLayer)
 
         // ===== B4.1: Kiểu chữ & Màu chữ (Preview ONLY) =====
 
