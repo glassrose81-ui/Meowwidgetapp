@@ -370,3 +370,57 @@ class MeowQuoteWidget : AppWidgetProvider() {
         return last
     }
 }
+
+// === B4.5 helper: vẽ bitmap nền + viền theo lựa chọn Trang trí ===
+private fun buildDecorBitmap(
+    context: android.content.Context,
+    widthPx: Int,
+    heightPx: Int,
+    borderStyle: String,
+    borderWidthDp: Int,
+    borderColor: Int,
+    bgColorOrNull: Int?
+): Bitmap {
+    val w = if (widthPx > 0) widthPx else 1
+    val h = if (heightPx > 0) heightPx else 1
+    val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bmp)
+
+    // Convert dp stroke to px
+    val strokePx = TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP, borderWidthDp.toFloat(), context.resources.displayMetrics
+    )
+
+    // Corner radius by style
+    val radius = when (borderStyle) {
+        "square" -> 0f
+        "round" -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, context.resources.displayMetrics)
+        "pill" -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 26f, context.resources.displayMetrics)
+        else -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, context.resources.displayMetrics)
+    }
+
+    val rect = RectF(0f, 0f, w.toFloat(), h.toFloat())
+
+    // Fill background (if any)
+    if (bgColorOrNull != null && bgColorOrNull != -1) {
+        val paintFill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.FILL
+            color = bgColorOrNull
+        }
+        canvas.drawRoundRect(rect, radius, radius, paintFill)
+    }
+
+    // Stroke border (if style != none)
+    if (borderStyle != "none") {
+        val half = strokePx / 2f
+        val rectStroke = RectF(half, half, w - half, h - half)
+        val paintStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = strokePx
+            color = borderColor
+        }
+        canvas.drawRoundRect(rectStroke, radius, radius, paintStroke)
+    }
+
+    return bmp
+}
