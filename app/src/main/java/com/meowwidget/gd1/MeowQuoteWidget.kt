@@ -16,11 +16,11 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.max
-import android.view.View
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
+import android.view.View
 
 class MeowQuoteWidget : AppWidgetProvider() {
 
@@ -57,6 +57,10 @@ class MeowQuoteWidget : AppWidgetProvider() {
         }
         scheduleNextTick(context)
     }
+override fun onEnabled(context: Context) {
+    super.onEnabled(context)
+    scheduleNextTick(context)
+}
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
@@ -66,8 +70,19 @@ class MeowQuoteWidget : AppWidgetProvider() {
             for (id in ids) {
                 updateSingleWidget(context, mgr, id, null)
             }
+            
             scheduleNextTick(context)
         }
+        else if (
+    Intent.ACTION_TIME_CHANGED == intent.action ||
+    Intent.ACTION_DATE_CHANGED == intent.action ||
+    Intent.ACTION_TIMEZONE_CHANGED == intent.action ||
+    Intent.ACTION_MY_PACKAGE_REPLACED == intent.action
+) {
+    scheduleNextTick(context)
+    return
+}
+
     }
 
     override fun onAppWidgetOptionsChanged(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, newOptions: Bundle?) {
@@ -94,21 +109,21 @@ class MeowQuoteWidget : AppWidgetProvider() {
             1 -> 18f
             else -> 22f
         }
-        // === B4.5: đọc lựa chọn trang trí + font ===
+        // === B4.5: đọc lựa chọn trang trí & ước lượng kích thước nền/viền ===
         val decorSp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-        val decorFont = decorSp.getString("decor_font", "sans") ?: "sans"
-        val isSerif = decorFont == "serif"
         val decorTextColor = decorSp.getInt("decor_text_color", 0xFF111111.toInt())
         val borderStyle = decorSp.getString("decor_border_style", "none") ?: "none"
         val borderWidthDp = decorSp.getInt("decor_border_width", 2)
         val borderColor = decorSp.getInt("decor_border_color", 0xFF111111.toInt())
         val decorBgColor = decorSp.getInt("decor_bg_color", -1)
         val bgOrNull: Int? = if (decorBgColor == -1) null else decorBgColor
+        val decorFont = decorSp.getString("decor_font", "sans") ?: "sans"
+        val isSerif = decorFont == "serif"
 
-        // Ước lượng kích thước bitmap viền/nền
+
         val opt = options ?: mgr.getAppWidgetOptions(widgetId)
         val minWdp = opt?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH) ?: 120
-        val minHdp = heightDp
+        val minHdp = heightDp // đã ổn định theo extractStableHeightDp(...)
         val density = context.resources.displayMetrics.density
         val wPx = (minWdp * density).toInt().coerceAtLeast(1)
         val hPx = (minHdp * density).toInt().coerceAtLeast(1)
@@ -117,35 +132,35 @@ class MeowQuoteWidget : AppWidgetProvider() {
         val views = RemoteViews(context.packageName, R.layout.bocuc_meow).apply {
             setTextViewText(R.id.widget_text, quote)
             setTextViewTextSize(R.id.widget_text, TypedValue.COMPLEX_UNIT_SP, sp)
-            val intent = Intent(context, MeowSettingsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-val pi = PendingIntent.getActivity(context, 0, intent, flags)
 
-
-            // Áp dụng cho cả 2 TextView (sans & serif), rồi bật/tắt theo lựa chọn
+            // Font: đồng bộ nội dung/size/màu cho TextView serif và bật/tắt theo lựa chọn
             try { setTextViewText(R.id.widget_text_serif, quote) } catch (_: Exception) {}
             try { setTextViewTextSize(R.id.widget_text_serif, TypedValue.COMPLEX_UNIT_SP, sp) } catch (_: Exception) {}
-            // Màu chữ an toàn (API chính thức)
             try { setTextColor(R.id.widget_text, decorTextColor) } catch (_: Exception) {}
             try { setTextColor(R.id.widget_text_serif, decorTextColor) } catch (_: Exception) {}
-            // Hiển thị 1 trong 2 TextView
             try { setViewVisibility(R.id.widget_text, if (isSerif) View.GONE else View.VISIBLE) } catch (_: Exception) {}
             try { setViewVisibility(R.id.widget_text_serif, if (isSerif) View.VISIBLE else View.GONE) } catch (_: Exception) {}
 
-            // OnClick: gán cho cả 2 để phòng layout cũ/mới
-            try { setOnClickPendingIntent(R.id.widget_text_serif, pi) } catch (_: Exception) {}
+            // Click: tạo 1 PendingIntent mở MeowSettingsActivity dùng chung cho sans & serif
+            val clickIntent = Intent(context, MeowSettingsActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+            val clickFlags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            val clickPi = PendingIntent.getActivity(context, 0, clickIntent, clickFlags)
+            try { setOnClickPendingIntent(R.id.widget_text, clickPi) } catch (_: Exception) {}
+            try { setOnClickPendingIntent(R.id.widget_text_serif, clickPi) } catch (_: Exception) {}
 
-            // Nền & viền (bitmap) hoặc fallback nền phẳng
+            // Áp màu chữ theo Trang trí
+            try { setTextColor(R.id.widget_text, decorTextColor) } catch (_: Exception) {}
+            // Áp bitmap nền/viền nếu có ImageView nền
             try {
                 val bmp = buildDecorBitmap(context, wPx, hPx, borderStyle, borderWidthDp, borderColor, bgOrNull)
                 setImageViewBitmap(R.id.widget_bg, bmp)
             } catch (_: Exception) {
+                // fallback: nếu thiếu widget_bg, chỉ áp nền phẳng (nếu có) lên TextView
                 if (decorBgColor != -1) {
                     try { setInt(R.id.widget_text, "setBackgroundColor", decorBgColor) } catch (_: Exception) {}
-                    try { setInt(R.id.widget_text_serif, "setBackgroundColor", decorBgColor) } catch (_: Exception) {}
                 } else {
                     try { setInt(R.id.widget_text, "setBackgroundColor", 0x00000000) } catch (_: Exception) {}
-                    try { setInt(R.id.widget_text_serif, "setBackgroundColor", 0x00000000) } catch (_: Exception) {}
                 }
             }
             // Chạm -> mở MeowSettingsActivity
@@ -168,6 +183,7 @@ val pi = PendingIntent.getActivity(context, 0, intent, flags)
             }
             mgr.updateAppWidget(widgetId, safeViews)
         }
+        
     }
 
     private fun extractStableHeightDp(mgr: AppWidgetManager, widgetId: Int, options: Bundle?): Int {
@@ -253,7 +269,7 @@ val pi = PendingIntent.getActivity(context, 0, intent, flags)
             val firstMin = first.first * 60 + first.second
             val nowMin = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
             if (nowMin < firstMin) {
-                steps -= slotsPerDay.toLong()
+                steps -= 1L
             }
         }
 
@@ -327,11 +343,9 @@ val pi = PendingIntent.getActivity(context, 0, intent, flags)
         val intent = Intent(context, MeowQuoteWidget::class.java).setAction(ACTION_TICK)
         val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         val pi = PendingIntent.getBroadcast(context, 0, intent, flags)
-        try {
-            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextTime, pi)
-        } catch (_: Exception) {
-            am.setExact(AlarmManager.RTC_WAKEUP, nextTime, pi)
-        }
+        val whenMs = nextTime + 60_000L
+        am.set(AlarmManager.RTC, whenMs, pi)
+
     }
 
     private fun nextSlotTimeMillis(slotsString: String): Long {
@@ -386,7 +400,6 @@ val pi = PendingIntent.getActivity(context, 0, intent, flags)
     }
 }
 
-
 // === B4.5 helper: vẽ bitmap nền + viền ===
 private fun buildDecorBitmap(
     context: Context,
@@ -402,10 +415,12 @@ private fun buildDecorBitmap(
     val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bmp)
 
+    // dp -> px cho độ dày viền
     val strokePx = TypedValue.applyDimension(
         TypedValue.COMPLEX_UNIT_DIP, borderWidthDp.toFloat(), context.resources.displayMetrics
     )
 
+    // bo góc theo kiểu viền
     val radius = when (borderStyle) {
         "square" -> 0f
         "round"  -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, context.resources.displayMetrics)
@@ -415,6 +430,7 @@ private fun buildDecorBitmap(
 
     val rect = RectF(0f, 0f, w.toFloat(), h.toFloat())
 
+    // tô nền (nếu có)
     if (bgColorOrNull != null) {
         val paintFill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.FILL
@@ -423,6 +439,7 @@ private fun buildDecorBitmap(
         canvas.drawRoundRect(rect, radius, radius, paintFill)
     }
 
+    // vẽ viền (nếu không phải "none")
     if (borderStyle != "none") {
         val half = strokePx / 2f
         val rectStroke = RectF(half, half, w - half, h - half)
