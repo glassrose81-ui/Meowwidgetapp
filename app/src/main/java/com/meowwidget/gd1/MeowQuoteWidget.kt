@@ -1,524 +1,346 @@
-package com.meowwidget.gd1.ui.decor
+package com.meowwidget.gd1
 
-import android.graphics.Typeface
-import android.graphics.drawable.GradientDrawable
-import android.os.Build
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.appwidget.AppWidgetManager
+import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
-import android.view.Gravity
-import android.view.View
-import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.LinearLayout
-import android.widget.ScrollView
-import android.widget.TextView
-import android.widget.HorizontalScrollView
-import androidx.appcompat.app.AppCompatActivity
-import com.meowwidget.gd1.R
+import android.util.TypedValue
+import android.widget.RemoteViews
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.util.Calendar
+import java.util.Locale
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.math.max
 
-class WidgetDecorActivity : AppCompatActivity() {
+class MeowQuoteWidget : AppWidgetProvider() {
 
-    // Preview selection state (highlight only; not persisted in B4.x)
-    private var selectedFontBtn: TextView? = null
-    private var selectedTextColorBtn: TextView? = null
+    companion object {
+        private const val PREF = "meow_settings"
+        private const val KEY_SOURCE = "source"          // "all" | "fav"
+        private const val KEY_SLOTS = "slots"            // "08:00,17:00,20:00"
+        private const val KEY_ADDED = "added_lines"      // multi-line
+        private const val KEY_FAVS = "favs"              // multi-line
+        private const val KEY_PLAN_DAY = "plan_day"      // "ddMMyy"
+        private const val KEY_PLAN_IDX = "plan_idx"      // Int
+        private const val KEY_ANCHOR_DAY = "anchor_day"
+        private const val KEY_ANCHOR_OFFSET = "anchor_offset"
+        private const val ACTION_TICK = "com.meowwidget.gd1.ACTION_WIDGET_TICK"
+        private const val ASSET_DEFAULT = "quotes_default.txt"
 
-    private var selectedBorderStyleBtn: TextView? = null
-    private var selectedBorderWidthBtn: TextView? = null
-    private var selectedBorderColorBtn: TextView? = null
+        private val DEFAULT_SLOTS = listOf(Pair(8, 0), Pair(17, 0), Pair(20, 0))
 
-    private var selectedBgBtn: TextView? = null
+        // Cache nhẹ giúp mượt khi resize/tick
+        @Volatile private var cachedDefault: List<String>? = null
 
-    // Current preview values
-    private var borderStyle: String = "none" // none | square | round | pill
-    private var borderWidthDp: Int = 2       // 2 or 4
-    private var borderColor: Int = 0xFF111111.toInt()
-    private var bgColorOrNull: Int? = null   // null = transparent
+        // Hysteresis & debounce theo từng widget
+        private val lastSizeClass = ConcurrentHashMap<Int, Int>() // 0=small,1=medium,2=large
+        private val lastUpdateMs = ConcurrentHashMap<Int, Long>()
+        private val lastText = ConcurrentHashMap<Int, String>()
+        private const val DEBOUNCE_MS = 400L
+        private const val MARGIN_DP = 20 // đệm chống nhảy qua lại
+    }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        // Root like the system screen
-        val root = ScrollView(this).apply {
-            setBackgroundResource(R.drawable.bg_settings_cotton)
+    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+        super.onUpdate(context, appWidgetManager, appWidgetIds)
+        for (id in appWidgetIds) {
+            updateSingleWidget(context, appWidgetManager, id, null)
         }
+        scheduleNextTick(context)
+    }
+override fun onEnabled(context: Context) {
+    super.onEnabled(context)
+    scheduleNextTick(context)
+}
 
-        val content = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(16), dp(16), dp(16), dp(16))
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-        }
-
-        // Header — same look/feel as system screen
-        val header = TextView(this).apply {
-            text = "Trang trí Widget"
-            setTextColor(0xFFFFFFFF.toInt())
-            setPadding(dp(16), dp(14), dp(16), dp(14))
-            textSize = 20f
-            typeface = Typeface.DEFAULT_BOLD
-            gravity = Gravity.START or Gravity.CENTER_VERTICAL
-            background = GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                setColor(0xFF2F80ED.toInt()) // system blue
+    override fun onReceive(context: Context, intent: Intent) {
+        super.onReceive(context, intent)
+        if (ACTION_TICK == intent.action) {
+            val mgr = AppWidgetManager.getInstance(context)
+            val ids = mgr.getAppWidgetIds(ComponentName(context, MeowQuoteWidget::class.java))
+            for (id in ids) {
+                updateSingleWidget(context, mgr, id, null)
             }
-            if (Build.VERSION.SDK_INT >= 21) elevation = dp(2).toFloat()
+            
+            scheduleNextTick(context)
+        }
+        else if (
+    Intent.ACTION_TIME_CHANGED == intent.action ||
+    Intent.ACTION_DATE_CHANGED == intent.action ||
+    Intent.ACTION_TIMEZONE_CHANGED == intent.action ||
+    Intent.ACTION_MY_PACKAGE_REPLACED == intent.action
+) {
+    scheduleNextTick(context)
+    return
+}
+
+    }
+
+    override fun onAppWidgetOptionsChanged(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, newOptions: Bundle?) {
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
+        updateSingleWidget(context, appWidgetManager, appWidgetId, newOptions)
+        // không gọi scheduleNextTick ở đây để tránh trận mưa tick lúc kéo
+    }
+
+    // ====== Hiển thị 1 widget (tự co chữ 16/18/22 với hysteresis + debounce) ======
+    private fun updateSingleWidget(context: Context, mgr: AppWidgetManager, widgetId: Int, options: Bundle?) {
+        val nowMs = System.currentTimeMillis()
+        val prev = lastUpdateMs[widgetId] ?: 0L
+        if (nowMs - prev < DEBOUNCE_MS) return
+        lastUpdateMs[widgetId] = nowMs
+
+        val now = Calendar.getInstance()
+        val quote = computeTodayQuote(context, now)
+
+        // Quyết định cỡ chữ ổn định
+        val heightDp = extractStableHeightDp(mgr, widgetId, options)
+        val sizeClass = decideSizeClassWithHysteresis(widgetId, heightDp)
+        val sp = when (sizeClass) {
+            0 -> 16f
+            1 -> 18f
+            else -> 22f
         }
 
-        // Section title: Preview
-        val titlePreview = TextView(this).apply {
-            text = "Preview"
-            setTextColor(0xFF111111.toInt())
-            textSize = 20f
-            typeface = Typeface.DEFAULT_BOLD
-            setPadding(0, dp(18), 0, dp(8))
+        val views = RemoteViews(context.packageName, R.layout.bocuc_meow).apply {
+            setTextViewText(R.id.widget_text, quote)
+            setTextViewTextSize(R.id.widget_text, TypedValue.COMPLEX_UNIT_SP, sp)
+            // Chạm -> mở MeowSettingsActivity
+            val intent = Intent(context, MeowSettingsActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+            val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            val pi = PendingIntent.getActivity(context, 0, intent, flags)
+            setOnClickPendingIntent(R.id.widget_text, pi)
         }
 
-        // Preview card — "border is max": no outer card background
-        val previewCard = FrameLayout(this).apply {
-            setPadding(0, 0, 0, 0) // border sits at edge
-            minimumHeight = dp(240)
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { bottomMargin = dp(20) }
+        try {
+            mgr.updateAppWidget(widgetId, views)
+            lastText[widgetId] = quote
+        } catch (_: Exception) {
+            // Fallback an toàn
+            val safe = lastText[widgetId] ?: quote
+            val safeViews = RemoteViews(context.packageName, R.layout.bocuc_meow).apply {
+                setTextViewText(R.id.widget_text, safe)
+                setTextViewTextSize(R.id.widget_text, TypedValue.COMPLEX_UNIT_SP, 16f)
+            }
+            mgr.updateAppWidget(widgetId, safeViews)
+        }
+        
+    }
+
+    private fun extractStableHeightDp(mgr: AppWidgetManager, widgetId: Int, options: Bundle?): Int {
+        val opt = options ?: mgr.getAppWidgetOptions(widgetId)
+        // Ưu tiên MIN_HEIGHT (ổn định hơn khi người dùng đang kéo)
+        val minH = opt?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT) ?: 0
+        return if (minH > 0) minH else 120
+    }
+
+    private fun decideSizeClassWithHysteresis(widgetId: Int, heightDp: Int): Int {
+        // base thresholds
+        val smallUp = 120
+        val largeDown = 200
+        val margin = MARGIN_DP
+
+        val last = lastSizeClass[widgetId]
+        val target = when {
+            heightDp < smallUp -> 0  // small
+            heightDp >= largeDown -> 2 // large
+            else -> 1 // medium
+        }
+        if (last == null) {
+            lastSizeClass[widgetId] = target
+            return target
+        }
+        // Áp hysteresis để không nhảy qua lại khi ở gần ranh
+        return when (last) {
+            0 -> { // từ small lên medium nếu vượt smallUp + margin
+                if (heightDp >= smallUp + margin) 1 else 0
+            }
+            1 -> {
+                if (heightDp >= largeDown + margin) 2
+                else if (heightDp < smallUp - margin) 0
+                else 1
+            }
+            else -> { // from large xuống medium nếu rơi dưới largeDown - margin
+                if (heightDp < largeDown - margin) 1 else 2
+            }
+        }.also { decided ->
+            lastSizeClass[widgetId] = decided
+        }
+    }
+
+    // ====== Tính "Câu hôm nay" (đồng bộ với Meow Settings) ======
+    private fun computeTodayQuote(context: Context, now: Calendar): String {
+        val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+        val source = sp.getString(KEY_SOURCE, "all") ?: "all"
+        val slotsString = sp.getString(KEY_SLOTS, "08:00,17:00,20:00") ?: "08:00,17:00,20:00"
+        val addedRaw = sp.getString(KEY_ADDED, "") ?: ""
+        val favRaw = sp.getString(KEY_FAVS, "") ?: ""
+
+        val baseList = when (source) {
+            "fav" -> toLines(favRaw)
+            else  -> distinctPreserveOrder(loadDefaultCached(context) + toLines(addedRaw))
+        }
+        if (baseList.isEmpty()) return ""
+
+        // --- App parity: anchor-day + offset (no per-day auto-increment)
+        val slots = parseSlots(slotsString)
+        val slotsPerDay = if (slots.isEmpty()) 1 else slots.size
+        val slotIdxToday = currentSlotIndex(slotsString, now)
+
+        // yyyyMMdd for 'today'
+        val sdf = java.text.SimpleDateFormat("yyyyMMdd", java.util.Locale.getDefault())
+        val todayStr = sdf.format(now.time)
+        val anchorDay = sp.getString(KEY_ANCHOR_DAY, null) ?: todayStr
+        val anchorOffset = sp.getInt(KEY_ANCHOR_OFFSET, 0)
+
+        fun daysBetween(a: String, b: String): Long {
+            return try {
+                val da = sdf.parse(a); val db = sdf.parse(b)
+                val one = 24L * 60L * 60L * 1000L
+                ((db!!.time / one) - (da!!.time / one))
+            } catch (_: Exception) { 0L }
         }
 
-        // Layers
-        val bgLayer = View(this).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-            visibility = View.GONE
-        }
-        val borderLayer = View(this).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-            visibility = View.GONE
-        }
-        val contentLayer = FrameLayout(this).apply {
-            setPadding(dp(16), dp(16), dp(16), dp(16))
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-        }
-        val previewQuote = TextView(this).apply {
-            text = "Đừng so sánh với người khác, hãy so sánh với chính mình của ngày hôm qua"
-            setTextColor(0xFF111111.toInt())
-            textSize = 18f
-            gravity = Gravity.CENTER
-            typeface = Typeface.SANS_SERIF
-            setTypeface(typeface, Typeface.BOLD)
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-        }
-        contentLayer.addView(previewQuote)
-        previewCard.addView(bgLayer)
-        previewCard.addView(borderLayer)
-        previewCard.addView(contentLayer)
+        var days = daysBetween(anchorDay, todayStr)
+        var steps = days * slotsPerDay + slotIdxToday
 
-        // ===== B4.1: Kiểu chữ & Màu chữ (Preview ONLY) =====
-
-        val titleFont = TextView(this).apply {
-            text = "Kiểu chữ"
-            setTextColor(0xFF111111.toInt())
-            textSize = 20f
-            typeface = Typeface.DEFAULT_BOLD
-            setPadding(0, dp(8), 0, dp(6))
-        }
-        val fontRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        val btnSans = outlineButton("SANS-SERIF")
-        val btnSerif = outlineButton("SERIF")
-        setButtonSelected(btnSans, true)
-        selectedFontBtn = btnSans
-        previewQuote.typeface = Typeface.SANS_SERIF
-        previewQuote.setTypeface(previewQuote.typeface, Typeface.BOLD)
-        btnSans.setOnClickListener {
-            if (selectedFontBtn !== btnSans) {
-                setButtonSelected(selectedFontBtn, false)
-                setButtonSelected(btnSans, true)
-                selectedFontBtn = btnSans
-                previewQuote.typeface = Typeface.SANS_SERIF
-                previewQuote.setTypeface(previewQuote.typeface, Typeface.BOLD)
+        // 0h fix: trước mốc đầu, coi như còn thuộc "hôm qua"
+        if (slots.isNotEmpty()) {
+            val first = slots.first()
+            val firstMin = first.first * 60 + first.second
+            val nowMin = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
+            if (nowMin < firstMin) {
+                steps -= 1L
             }
         }
-        btnSerif.setOnClickListener {
-            if (selectedFontBtn !== btnSerif) {
-                setButtonSelected(selectedFontBtn, false)
-                setButtonSelected(btnSerif, true)
-                selectedFontBtn = btnSerif
-                previewQuote.typeface = Typeface.SERIF
-                previewQuote.setTypeface(previewQuote.typeface, Typeface.BOLD)
-            }
-        }
-        fontRow.addView(btnSans)
-        fontRow.addView(spaceH(dp(10)))
-        fontRow.addView(btnSerif)
-        val fontScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
-        fontScroll.addView(fontRow)
 
-        val titleColor = TextView(this).apply {
-            text = "Màu chữ"
-            setTextColor(0xFF111111.toInt())
-            textSize = 20f
-            typeface = Typeface.DEFAULT_BOLD
-            setPadding(0, dp(14), 0, dp(6))
-        }
-        val colorRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        data class ColorOpt(val name: String, val value: Int)
-        val colors = listOf(
-            ColorOpt("ĐEN", 0xFF111111.toInt()),
-            ColorOpt("TRẮNG", 0xFFFFFFFF.toInt()),
-            ColorOpt("XANH", 0xFF1E88E5.toInt()),
-            ColorOpt("ĐỎ", 0xFFC62828.toInt()),
-            ColorOpt("HỒNG", 0xFFF48FB1.toInt())
-        )
-        colors.forEachIndexed { idx, opt ->
-            val b = outlineButton(opt.name)
-            if (idx == 0) {
-                setButtonSelected(b, true)
-                selectedTextColorBtn = b
-            }
-            b.setOnClickListener {
-                if (selectedTextColorBtn !== b) {
-                    setButtonSelected(selectedTextColorBtn, false)
-                    setButtonSelected(b, true)
-                    selectedTextColorBtn = b
+        val idx = ((steps + anchorOffset).toInt() % baseList.size + baseList.size) % baseList.size
+        return baseList[idx]
+    }
+
+    private fun loadDefaultCached(context: Context): List<String> {
+        val cached = cachedDefault
+        if (cached != null) return cached
+        synchronized(this) {
+            val again = cachedDefault
+            if (again != null) return again
+            val loaded = try {
+                context.assets.open(ASSET_DEFAULT).use { input ->
+                    BufferedReader(InputStreamReader(input)).readLines()
+                        .map { it.trim() }
+                        .filter { it.isNotEmpty() }
                 }
-                previewQuote.setTextColor(opt.value)
+            } catch (_: Exception) {
+                emptyList()
             }
-            colorRow.addView(b)
-            if (idx != colors.size - 1) colorRow.addView(spaceH(dp(8)))
+            cachedDefault = loaded
+            return loaded
         }
-        val colorScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
-        colorScroll.addView(colorRow)
+    }
 
-        // ===== B4.2: Viền khung (Preview ONLY) =====
+    private fun toLines(raw: String): List<String> =
+        raw.split('\n').map { it.trim() }.filter { it.isNotEmpty() }
 
-        val titleBorder = TextView(this).apply {
-            text = "Viền khung"
-            setTextColor(0xFF111111.toInt())
-            textSize = 20f
-            typeface = Typeface.DEFAULT_BOLD
-            setPadding(0, dp(14), 0, dp(6))
+    private fun distinctPreserveOrder(list: List<String>): List<String> {
+        val seen = LinkedHashSet<String>()
+        val out = ArrayList<String>(list.size)
+        for (s in list) {
+            val k = s.trim()
+            if (k.isNotEmpty() && !seen.contains(k)) {
+                seen.add(k)
+                out.add(s)
+            }
         }
+        return out
+    }
 
-        // Row: Style
-        val styleRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        val btnStyleNone = outlineButton("KHÔNG")
-        val btnStyleSquare = outlineButton("VUÔNG")
-        val btnStyleRound = outlineButton("BO GÓC")
-        val btnStylePill = outlineButton("BO TRÒN")
-        setButtonSelected(btnStyleNone, true)
-        selectedBorderStyleBtn = btnStyleNone
-        borderStyle = "none"
-        updateBorder(borderLayer)
-        updateBackground(bgLayer) // keep bg radius in sync
-        btnStyleNone.setOnClickListener {
-            if (selectedBorderStyleBtn !== btnStyleNone) {
-                setButtonSelected(selectedBorderStyleBtn, false)
-                setButtonSelected(btnStyleNone, true)
-                selectedBorderStyleBtn = btnStyleNone
-                borderStyle = "none"
-                updateBorder(borderLayer)
-                updateBackground(bgLayer)
-            }
+    private fun ensurePlanBase(sp: android.content.SharedPreferences, size: Int, now: Calendar): Int {
+        val today = formatDay(now)
+        val oldDay = sp.getString(KEY_PLAN_DAY, null)
+        var base = max(0, sp.getInt(KEY_PLAN_IDX, -1))
+        if (oldDay == null) {
+            base = 0
+        } else if (oldDay != today) {
+            base = (base + 1) % max(1, size)
         }
-        btnStyleSquare.setOnClickListener {
-            if (selectedBorderStyleBtn !== btnStyleSquare) {
-                setButtonSelected(selectedBorderStyleBtn, false)
-                setButtonSelected(btnStyleSquare, true)
-                selectedBorderStyleBtn = btnStyleSquare
-                borderStyle = "square"
-                updateBorder(borderLayer)
-                updateBackground(bgLayer)
-            }
-        }
-        btnStyleRound.setOnClickListener {
-            if (selectedBorderStyleBtn !== btnStyleRound) {
-                setButtonSelected(selectedBorderStyleBtn, false)
-                setButtonSelected(btnStyleRound, true)
-                selectedBorderStyleBtn = btnStyleRound
-                borderStyle = "round"
-                updateBorder(borderLayer)
-                updateBackground(bgLayer)
-            }
-        }
-        btnStylePill.setOnClickListener {
-            if (selectedBorderStyleBtn !== btnStylePill) {
-                setButtonSelected(selectedBorderStyleBtn, false)
-                setButtonSelected(btnStylePill, true)
-                selectedBorderStyleBtn = btnStylePill
-                borderStyle = "pill"
-                updateBorder(borderLayer)
-                updateBackground(bgLayer)
-            }
-        }
-        styleRow.addView(btnStyleNone)
-        styleRow.addView(spaceH(dp(8)))
-        styleRow.addView(btnStyleSquare)
-        styleRow.addView(spaceH(dp(8)))
-        styleRow.addView(btnStyleRound)
-        styleRow.addView(spaceH(dp(8)))
-        styleRow.addView(btnStylePill)
-        val styleScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
-        styleScroll.addView(styleRow)
+        sp.edit().putString(KEY_PLAN_DAY, today).putInt(KEY_PLAN_IDX, base).apply()
+        return base
+    }
 
-        // Row: Width (MỎNG / DÀY) — 12dp spacing above
-        val widthRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { topMargin = dp(12) }
-        }
-        val btnThin = outlineButton("MỎNG")
-        val btnThick = outlineButton("DÀY")
-        setButtonSelected(btnThin, true)
-        selectedBorderWidthBtn = btnThin
-        borderWidthDp = 2
-        updateBorder(borderLayer)
-        btnThin.setOnClickListener {
-            if (selectedBorderWidthBtn !== btnThin) {
-                setButtonSelected(selectedBorderWidthBtn, false)
-                setButtonSelected(btnThin, true)
-                selectedBorderWidthBtn = btnThin
-                borderWidthDp = 2
-                updateBorder(borderLayer)
-            }
-        }
-        btnThick.setOnClickListener {
-            if (selectedBorderWidthBtn !== btnThick) {
-                setButtonSelected(selectedBorderWidthBtn, false)
-                setButtonSelected(btnThick, true)
-                selectedBorderWidthBtn = btnThick
-                borderWidthDp = 4
-                updateBorder(borderLayer)
-            }
-        }
-        widthRow.addView(btnThin)
-        widthRow.addView(spaceH(dp(8)))
-        widthRow.addView(btnThick)
+    private fun formatDay(now: Calendar): String {
+        val d = now.get(Calendar.DAY_OF_MONTH)
+        val m = now.get(Calendar.MONTH) + 1
+        val y = now.get(Calendar.YEAR) % 100
+        return String.format(Locale.getDefault(), "%02d%02d%02d", d, m, y)
+    }
 
-        // Row: Border color (reuse text palette) — 12dp spacing from widthRow
-        val borderColorRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        colors.forEachIndexed { idx, opt ->
-            val b = outlineButton(opt.name)
-            if (idx == 0) {
-                setButtonSelected(b, true)
-                selectedBorderColorBtn = b
-                borderColor = opt.value
-            }
-            b.setOnClickListener {
-                if (selectedBorderColorBtn !== b) {
-                    setButtonSelected(selectedBorderColorBtn, false)
-                    setButtonSelected(b, true)
-                    selectedBorderColorBtn = b
-                }
-                borderColor = opt.value
-                updateBorder(borderLayer)
-            }
-            borderColorRow.addView(b)
-            if (idx != colors.size - 1) borderColorRow.addView(spaceH(dp(8)))
-        }
-        val borderColorScroll = HorizontalScrollView(this).apply {
-            isHorizontalScrollBarEnabled = false
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { topMargin = dp(12) }
-        }
-        borderColorScroll.addView(borderColorRow)
+    // ====== Hẹn giờ mốc kế tiếp (nhẹ) ======
+    private fun scheduleNextTick(context: Context) {
+        val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+        val nextTime = nextSlotTimeMillis(sp.getString(KEY_SLOTS, "08:00,17:00,20:00") ?: "08:00,17:00,20:00")
+        if (nextTime <= 0L) return
 
-        // ===== B4.3: Nền (Preview ONLY) =====
-        val titleBg = TextView(this).apply {
-            text = "Nền"
-            setTextColor(0xFF111111.toInt())
-            textSize = 20f
-            typeface = Typeface.DEFAULT_BOLD
-            setPadding(0, dp(14), 0, dp(6))
-        }
+        val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, MeowQuoteWidget::class.java).setAction(ACTION_TICK)
+        val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        val pi = PendingIntent.getBroadcast(context, 0, intent, flags)
+        val whenMs = nextTime + 60_000L
+        am.set(AlarmManager.RTC, whenMs, pi)
 
-        data class BgOpt(val name: String, val color: Int, val isTransparent: Boolean = false)
-        val bgOpts = listOf(
-            BgOpt("TRONG SUỐT", 0x00000000, true),
-            BgOpt("KEM ẤM", 0xFFFFF8E1.toInt()),
-            BgOpt("BE XÁM", 0xFFF5F5F7.toInt()),
-            BgOpt("HỒNG NHẠT", 0xFFFCE4EC.toInt()),
-            BgOpt("XANH MINT", 0xFFE6F7F2.toInt()),
-            BgOpt("XANH THAN", 0xFF263238.toInt())
-        )
+    }
 
-        val bgRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        bgOpts.forEachIndexed { idx, opt ->
-            val b = outlineButton(opt.name)
-            if (idx == 0) {
-                setButtonSelected(b, true) // default: transparent
-                selectedBgBtn = b
-                bgColorOrNull = null
-                bgLayer.visibility = View.GONE
+    private fun nextSlotTimeMillis(slotsString: String): Long {
+        val slots = parseSlots(slotsString)
+        if (slots.isEmpty()) return 0L
+
+        val now = Calendar.getInstance()
+        var best: Calendar? = null
+        for ((h, m) in slots) {
+            val cal = Calendar.getInstance().apply {
+                set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+                set(Calendar.HOUR_OF_DAY, h); set(Calendar.MINUTE, m)
             }
-            b.setOnClickListener {
-                if (selectedBgBtn !== b) {
-                    setButtonSelected(selectedBgBtn, false)
-                    setButtonSelected(b, true)
-                    selectedBgBtn = b
-                }
-                if (opt.isTransparent) {
-                    bgColorOrNull = null
-                    bgLayer.visibility = View.GONE
-                } else {
-                    bgColorOrNull = opt.color
-                    updateBackground(bgLayer)
+            if (cal.timeInMillis <= now.timeInMillis) cal.add(Calendar.DAY_OF_YEAR, 1)
+            if (best == null || cal.timeInMillis < best!!.timeInMillis) best = cal
+        }
+        return best?.timeInMillis ?: 0L
+    }
+
+    private fun parseSlots(slotsString: String): List<Pair<Int, Int>> {
+        val s = slotsString.trim()
+        if (s.isEmpty()) return DEFAULT_SLOTS
+        val out = ArrayList<Pair<Int, Int>>()
+        for (part in s.split(',')) {
+            val t = part.trim()
+            val hm = t.split(':')
+            if (hm.size == 2) {
+                val h = hm[0].toIntOrNull()
+                val m = hm[1].toIntOrNull()
+                if (h != null && m != null && h in 0..23 && m in 0..59) {
+                    out.add(Pair(h, m))
                 }
             }
-            bgRow.addView(b)
-            if (idx != bgOpts.size - 1) bgRow.addView(spaceH(dp(8)))
         }
-        val bgScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
-        bgScroll.addView(bgRow)
+        return if (out.isEmpty()) DEFAULT_SLOTS else out
+    }
 
-        // ===== Action row =====
-        val actionRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.END
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-        }
-        val applyBtn = TextView(this).apply {
-            text = "ÁP DỤNG 🐾"
-            setTextColor(0xFFFFFFFF.toInt())
-            textSize = 16f
-            typeface = Typeface.DEFAULT_BOLD
-            setPadding(dp(20), dp(10), dp(20), dp(10))
-            background = pill(0xFF2F80ED.toInt())
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { topMargin = dp(24) }
-            setOnClickListener {
-                // B4.x: preview only — persistence/wiring will be added in B4.4
-                finish()
+    // "trước mốc đầu tiên -> 0; còn lại -> mốc lớn nhất <= hiện tại"
+    private fun currentSlotIndex(slotsString: String, now: Calendar): Int {
+        val slots = parseSlots(slotsString)
+        if (slots.isEmpty()) return 0
+        var last = 0
+        for ((i, pair) in slots.withIndex()) {
+            val (h, m) = pair
+            val cal = Calendar.getInstance().apply {
+                set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+                set(Calendar.HOUR_OF_DAY, h); set(Calendar.MINUTE, m)
             }
+            if (now.timeInMillis >= cal.timeInMillis) last = i
         }
-        actionRow.addView(applyBtn)
-
-        // Build tree — ensure visual spacing order
-        content.addView(header)
-        content.addView(titlePreview)
-        content.addView(previewCard)
-
-        content.addView(titleFont)
-        content.addView(fontScroll)
-
-        content.addView(titleColor)
-        content.addView(colorScroll)
-
-        content.addView(titleBorder)
-        content.addView(styleScroll)
-        content.addView(widthRow)
-        content.addView(borderColorScroll)
-
-        content.addView(titleBg)
-        content.addView(bgScroll)
-
-        content.addView(actionRow)
-
-        root.addView(content)
-        setContentView(root)
-    }
-
-    // ===== Helpers =====
-
-    private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
-
-    private fun spaceH(w: Int): View = View(this).apply {
-        layoutParams = LinearLayout.LayoutParams(w, 1)
-    }
-
-    private fun pill(bgColor: Int): GradientDrawable = GradientDrawable().apply {
-        shape = GradientDrawable.RECTANGLE
-        cornerRadius = dp(26).toFloat()
-        setColor(bgColor)
-    }
-
-    private fun outline(bgColor: Int, strokeColor: Int, strokeDp: Int = 2): GradientDrawable =
-        GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = dp(26).toFloat()
-            setColor(bgColor)
-            setStroke(dp(strokeDp), strokeColor)
-        }
-
-    private fun outlineButton(label: String): TextView =
-        TextView(this).apply {
-            text = label
-            isAllCaps = true
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(0xFF2F80ED.toInt())
-            textSize = 14f
-            gravity = Gravity.CENTER
-            setPadding(dp(16), dp(8), dp(16), dp(8))
-            background = outline(0x00000000, 0xFF2F80ED.toInt())
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-        }
-
-    private fun setButtonSelected(btn: TextView?, selected: Boolean) {
-        btn ?: return
-        if (selected) {
-            btn.setTextColor(0xFFFFFFFF.toInt())
-            btn.background = pill(0xFF2F80ED.toInt())
-        } else {
-            btn.setTextColor(0xFF2F80ED.toInt())
-            btn.background = outline(0x00000000, 0xFF2F80ED.toInt())
-        }
-    }
-
-    private fun styleRadius(): Float = when (borderStyle) {
-        "square" -> dp(0).toFloat()
-        "round" -> dp(12).toFloat()
-        "pill" -> dp(26).toFloat()
-        else -> dp(12).toFloat()
-    }
-
-    private fun updateBackground(bgLayer: View) {
-        val c = bgColorOrNull
-        if (c == null) {
-            bgLayer.visibility = View.GONE
-            return
-        }
-        val d = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = styleRadius()
-            setColor(c)
-        }
-        bgLayer.background = d
-        bgLayer.visibility = View.VISIBLE
-    }
-
-    private fun updateBorder(borderLayer: View) {
-        if (borderStyle == "none") {
-            borderLayer.visibility = View.GONE
-            return
-        }
-        val d = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = styleRadius()
-            setColor(0x00000000) // transparent fill
-            setStroke(dp(borderWidthDp), borderColor)
-        }
-        borderLayer.background = d
-        borderLayer.visibility = View.VISIBLE
+        return last
     }
 }
