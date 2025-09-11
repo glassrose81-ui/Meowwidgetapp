@@ -1,5 +1,8 @@
 package com.meowwidget.gd1.ui.decor
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import android.content.Intent
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
@@ -13,10 +16,21 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.HorizontalScrollView
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.meowwidget.gd1.MeowQuoteWidget
 import com.meowwidget.gd1.R
 
 class WidgetDecorActivity : AppCompatActivity() {
+
+    // === SharedPreferences keys (same pref file as widget) ===
+    private val PREF = "meow_settings"
+    private val KEY_DECOR_FONT = "decor_font"                 // "sans" | "serif"
+    private val KEY_DECOR_TEXT_COLOR = "decor_text_color"     // Int (ARGB)
+    private val KEY_DECOR_BORDER_STYLE = "decor_border_style" // "none"|"square"|"round"|"pill"
+    private val KEY_DECOR_BORDER_WIDTH = "decor_border_width" // Int dp (2|4)
+    private val KEY_DECOR_BORDER_COLOR = "decor_border_color" // Int (ARGB)
+    private val KEY_DECOR_BG_COLOR = "decor_bg_color"         // Int (ARGB) or -1 = transparent
 
     // Preview selection state (highlight only; not persisted in B4.x)
     private var selectedFontBtn: TextView? = null
@@ -29,6 +43,8 @@ class WidgetDecorActivity : AppCompatActivity() {
     private var selectedBgBtn: TextView? = null
 
     // Current preview values
+    private var fontFamily: String = "sans"
+    private var textColor: Int = 0xFF111111.toInt()
     private var borderStyle: String = "none" // none | square | round | pill
     private var borderWidthDp: Int = 2       // 2 or 4
     private var borderColor: Int = 0xFF111111.toInt()
@@ -119,7 +135,7 @@ class WidgetDecorActivity : AppCompatActivity() {
         }
         val previewQuote = TextView(this).apply {
             text = "Đừng so sánh với người khác, hãy so sánh với chính mình của ngày hôm qua"
-            setTextColor(0xFF111111.toInt())
+            setTextColor(textColor)
             textSize = 18f
             gravity = Gravity.CENTER
             typeface = Typeface.SANS_SERIF
@@ -137,7 +153,6 @@ class WidgetDecorActivity : AppCompatActivity() {
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 Gravity.TOP or Gravity.END
             ).apply {
-                // Default safe margins; actual size/position will be set in B5
                 topMargin = dp(8)
                 rightMargin = dp(8)
             }
@@ -167,6 +182,7 @@ class WidgetDecorActivity : AppCompatActivity() {
         selectedFontBtn = btnSans
         previewQuote.typeface = Typeface.SANS_SERIF
         previewQuote.setTypeface(previewQuote.typeface, Typeface.BOLD)
+        fontFamily = "sans"
         btnSans.setOnClickListener {
             if (selectedFontBtn !== btnSans) {
                 setButtonSelected(selectedFontBtn, false)
@@ -174,6 +190,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 selectedFontBtn = btnSans
                 previewQuote.typeface = Typeface.SANS_SERIF
                 previewQuote.setTypeface(previewQuote.typeface, Typeface.BOLD)
+                fontFamily = "sans"
             }
         }
         btnSerif.setOnClickListener {
@@ -183,6 +200,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 selectedFontBtn = btnSerif
                 previewQuote.typeface = Typeface.SERIF
                 previewQuote.setTypeface(previewQuote.typeface, Typeface.BOLD)
+                fontFamily = "serif"
             }
         }
         fontRow.addView(btnSans)
@@ -219,7 +237,8 @@ class WidgetDecorActivity : AppCompatActivity() {
                     setButtonSelected(b, true)
                     selectedTextColorBtn = b
                 }
-                previewQuote.setTextColor(opt.value)
+                textColor = opt.value
+                previewQuote.setTextColor(textColor)
             }
             colorRow.addView(b)
             if (idx != colors.size - 1) colorRow.addView(spaceH(dp(8)))
@@ -433,8 +452,29 @@ class WidgetDecorActivity : AppCompatActivity() {
                 ViewGroup.LayoutParams.WRAP_CONTENT
             ).apply { topMargin = dp(24) }
             setOnClickListener {
-                // B4.x: preview only — persistence/wiring will be added in B4.4
-                finish()
+                // === B4.4: Save selections & broadcast update, stay on screen ===
+                val sp = getSharedPreferences(PREF, MODE_PRIVATE)
+                sp.edit()
+                    .putString(KEY_DECOR_FONT, fontFamily)
+                    .putInt(KEY_DECOR_TEXT_COLOR, textColor)
+                    .putString(KEY_DECOR_BORDER_STYLE, borderStyle)
+                    .putInt(KEY_DECOR_BORDER_WIDTH, borderWidthDp)
+                    .putInt(KEY_DECOR_BORDER_COLOR, borderColor)
+                    .putInt(KEY_DECOR_BG_COLOR, bgColorOrNull ?: -1) // -1 = transparent
+                    .apply()
+
+                // Broadcast widget update
+                val mgr = AppWidgetManager.getInstance(this@WidgetDecorActivity)
+                val ids = mgr.getAppWidgetIds(
+                    ComponentName(this@WidgetDecorActivity, MeowQuoteWidget::class.java)
+                )
+                sendBroadcast(Intent(this@WidgetDecorActivity, MeowQuoteWidget::class.java).apply {
+                    action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+                })
+
+                // Toast and remain on this screen
+                Toast.makeText(this@WidgetDecorActivity, "Widget đã hoàn thành", Toast.LENGTH_SHORT).show()
             }
         }
         actionRow.addView(applyBtn)
