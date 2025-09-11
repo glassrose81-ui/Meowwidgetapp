@@ -84,25 +84,22 @@ class MeowQuoteWidget : AppWidgetProvider() {
 
         val now = Calendar.getInstance()
         val quote = computeTodayQuote(context, now)
-
         // === B4.5: đọc lựa chọn trang trí đã lưu ===
-        val decorSp = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
-        val decorTextColor = decorSp.getInt("decor_text_color", 0xFF111111.toInt())
-        val decorBgColor = decorSp.getInt("decor_bg_color", -1) // -1 = trong suốt
-        val decorBorderStyle = decorSp.getString("decor_border_style", "none") ?: "none"
-        val decorBorderWidthDp = decorSp.getInt("decor_border_width", 2) // 2|4
-        val decorBorderColor = decorSp.getInt("decor_border_color", 0xFF111111.toInt())
-        // radius theo style
-        val radiusDp = when (decorBorderStyle) {
-            "square" -> 0
-            "round" -> 12
-            "pill" -> 26
-            else -> 12
-        }
-        val density = context.resources.displayMetrics.density
-        val radiusPx = radiusDp * density
-        val strokePx = decorBorderWidthDp * density
+        val spDecor = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+        val decorTextColor = spDecor.getInt("decor_text_color", 0xFF111111.toInt())
+        val decorBorderStyle = spDecor.getString("decor_border_style", "none") ?: "none"
+        val decorBorderWidth = spDecor.getInt("decor_border_width", 2)
+        val decorBorderColor = spDecor.getInt("decor_border_color", 0xFF111111.toInt())
+        val decorBgRaw = spDecor.getInt("decor_bg_color", -1) // -1 = trong suốt
+        val decorBgOrNull: Int? = if (decorBgRaw == -1) null else decorBgRaw
 
+        // Kích thước ước lượng để vẽ bitmap viền/nền (dựa trên min width/height dp)
+        val opt = options ?: mgr.getAppWidgetOptions(widgetId)
+        val minWidthDp = opt?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH) ?: 240
+        val minHeightDp = heightDp
+        val widthPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, minWidthDp.toFloat(), context.resources.displayMetrics).toInt()
+        val heightPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, minHeightDp.toFloat(), context.resources.displayMetrics).toInt()
+    
 
         // Quyết định cỡ chữ ổn định
         val heightDp = extractStableHeightDp(mgr, widgetId, options)
@@ -117,23 +114,29 @@ class MeowQuoteWidget : AppWidgetProvider() {
             setTextViewText(R.id.widget_text, quote)
             setTextViewTextSize(R.id.widget_text, TypedValue.COMPLEX_UNIT_SP, sp)
 
-            // Áp dụng màu chữ
-            try { setInt(R.id.widget_text, "setTextColor", decorTextColor) } catch (_: Exception) {}
-            // Ưu tiên vẽ nền + viền bằng bitmap vào ImageView nền (sẽ có trong layout)
+            // Áp màu chữ
             try {
-                val bmp = buildDecorBitmap(800, 400, radiusPx, strokePx, decorBorderColor, if (decorBgColor == -1) null else decorBgColor)
-                setImageViewBitmap(R.id.widget_bg, bmp)
-                // làm nền TextView trong suốt để lộ viền
-                setInt(R.id.widget_text, "setBackgroundColor", 0x00000000)
+                setInt(R.id.widget_text, "setTextColor", decorTextColor)
+            } catch (_: Exception) { }
+            // Áp nền/viền
+            try {
+                if (decorBorderStyle != "none" || decorBgOrNull != null) {
+                    val bmp = buildDecorBitmap(context, widthPx, heightPx, decorBorderStyle, decorBorderWidth, decorBorderColor, decorBgOrNull)
+                    setImageViewBitmap(R.id.widget_bg, bmp)
+                    setInt(R.id.widget_text, "setBackgroundColor", 0x00000000)
+                } else {
+                    // nền trong suốt
+                    setInt(R.id.widget_text, "setBackgroundColor", 0x00000000)
+                }
             } catch (_: Exception) {
-                // fallback khi chưa có R.id.widget_bg trong layout: đặt nền ngay trên TextView
-                if (decorBgColor != -1) {
-                    try { setInt(R.id.widget_text, "setBackgroundColor", decorBgColor) } catch (_: Exception) {}
+                // nếu thiếu widget_bg, giữ nền theo TextView
+                if (decorBgOrNull != null) {
+                    try { setInt(R.id.widget_text, "setBackgroundColor", decorBgOrNull) } catch (_: Exception) {}
                 } else {
                     try { setInt(R.id.widget_text, "setBackgroundColor", 0x00000000) } catch (_: Exception) {}
                 }
             }
-            // Chạm -> mở MeowSettingsActivity
+                    // Chạm -> mở MeowSettingsActivity
             val intent = Intent(context, MeowSettingsActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
             val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
@@ -150,7 +153,14 @@ class MeowQuoteWidget : AppWidgetProvider() {
             val safeViews = RemoteViews(context.packageName, R.layout.bocuc_meow).apply {
                 setTextViewText(R.id.widget_text, safe)
                 setTextViewTextSize(R.id.widget_text, TypedValue.COMPLEX_UNIT_SP, 16f)
-            }
+
+                // Áp màu & nền (fallback)
+                try { setInt(R.id.widget_text, "setTextColor", decorTextColor) } catch (_: Exception) { }
+                try {
+                    if (decorBgOrNull != null) setInt(R.id.widget_text, "setBackgroundColor", decorBgOrNull)
+                    else setInt(R.id.widget_text, "setBackgroundColor", 0x00000000)
+                } catch (_: Exception) { }
+                    }
             mgr.updateAppWidget(widgetId, safeViews)
         }
     }
@@ -373,7 +383,7 @@ class MeowQuoteWidget : AppWidgetProvider() {
 
 // === B4.5 helper: vẽ bitmap nền + viền theo lựa chọn Trang trí ===
 private fun buildDecorBitmap(
-    context: android.content.Context,
+    context: Context,
     widthPx: Int,
     heightPx: Int,
     borderStyle: String,
@@ -386,23 +396,23 @@ private fun buildDecorBitmap(
     val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bmp)
 
-    // Convert dp stroke to px
+    // dp -> px cho độ dày viền
     val strokePx = TypedValue.applyDimension(
         TypedValue.COMPLEX_UNIT_DIP, borderWidthDp.toFloat(), context.resources.displayMetrics
     )
 
-    // Corner radius by style
+    // bo góc theo kiểu viền
     val radius = when (borderStyle) {
         "square" -> 0f
-        "round" -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, context.resources.displayMetrics)
-        "pill" -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 26f, context.resources.displayMetrics)
-        else -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, context.resources.displayMetrics)
+        "round"  -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, context.resources.displayMetrics)
+        "pill"   -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 26f, context.resources.displayMetrics)
+        else     -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, context.resources.displayMetrics)
     }
 
     val rect = RectF(0f, 0f, w.toFloat(), h.toFloat())
 
-    // Fill background (if any)
-    if (bgColorOrNull != null && bgColorOrNull != -1) {
+    // tô nền (nếu có)
+    if (bgColorOrNull != null) {
         val paintFill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.FILL
             color = bgColorOrNull
@@ -410,7 +420,7 @@ private fun buildDecorBitmap(
         canvas.drawRoundRect(rect, radius, radius, paintFill)
     }
 
-    // Stroke border (if style != none)
+    // vẽ viền (nếu không phải "none")
     if (borderStyle != "none") {
         val half = strokePx / 2f
         val rectStroke = RectF(half, half, w - half, h - half)
