@@ -16,6 +16,10 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.max
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.RectF
 
 class MeowQuoteWidget : AppWidgetProvider() {
 
@@ -52,10 +56,6 @@ class MeowQuoteWidget : AppWidgetProvider() {
         }
         scheduleNextTick(context)
     }
-override fun onEnabled(context: Context) {
-    super.onEnabled(context)
-    scheduleNextTick(context)
-}
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
@@ -65,19 +65,8 @@ override fun onEnabled(context: Context) {
             for (id in ids) {
                 updateSingleWidget(context, mgr, id, null)
             }
-            
             scheduleNextTick(context)
         }
-        else if (
-    Intent.ACTION_TIME_CHANGED == intent.action ||
-    Intent.ACTION_DATE_CHANGED == intent.action ||
-    Intent.ACTION_TIMEZONE_CHANGED == intent.action ||
-    Intent.ACTION_MY_PACKAGE_REPLACED == intent.action
-) {
-    scheduleNextTick(context)
-    return
-}
-
     }
 
     override fun onAppWidgetOptionsChanged(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, newOptions: Bundle?) {
@@ -96,6 +85,25 @@ override fun onEnabled(context: Context) {
         val now = Calendar.getInstance()
         val quote = computeTodayQuote(context, now)
 
+        // === B4.5: đọc lựa chọn trang trí đã lưu ===
+        val decorSp = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
+        val decorTextColor = decorSp.getInt("decor_text_color", 0xFF111111.toInt())
+        val decorBgColor = decorSp.getInt("decor_bg_color", -1) // -1 = trong suốt
+        val decorBorderStyle = decorSp.getString("decor_border_style", "none") ?: "none"
+        val decorBorderWidthDp = decorSp.getInt("decor_border_width", 2) // 2|4
+        val decorBorderColor = decorSp.getInt("decor_border_color", 0xFF111111.toInt())
+        // radius theo style
+        val radiusDp = when (decorBorderStyle) {
+            "square" -> 0
+            "round" -> 12
+            "pill" -> 26
+            else -> 12
+        }
+        val density = context.resources.displayMetrics.density
+        val radiusPx = radiusDp * density
+        val strokePx = decorBorderWidthDp * density
+
+
         // Quyết định cỡ chữ ổn định
         val heightDp = extractStableHeightDp(mgr, widgetId, options)
         val sizeClass = decideSizeClassWithHysteresis(widgetId, heightDp)
@@ -108,6 +116,23 @@ override fun onEnabled(context: Context) {
         val views = RemoteViews(context.packageName, R.layout.bocuc_meow).apply {
             setTextViewText(R.id.widget_text, quote)
             setTextViewTextSize(R.id.widget_text, TypedValue.COMPLEX_UNIT_SP, sp)
+
+            // Áp dụng màu chữ
+            try { setInt(R.id.widget_text, "setTextColor", decorTextColor) } catch (_: Exception) {}
+            // Ưu tiên vẽ nền + viền bằng bitmap vào ImageView nền (sẽ có trong layout)
+            try {
+                val bmp = buildDecorBitmap(800, 400, radiusPx, strokePx, decorBorderColor, if (decorBgColor == -1) null else decorBgColor)
+                setImageViewBitmap(R.id.widget_bg, bmp)
+                // làm nền TextView trong suốt để lộ viền
+                setInt(R.id.widget_text, "setBackgroundColor", 0x00000000)
+            } catch (_: Exception) {
+                // fallback khi chưa có R.id.widget_bg trong layout: đặt nền ngay trên TextView
+                if (decorBgColor != -1) {
+                    try { setInt(R.id.widget_text, "setBackgroundColor", decorBgColor) } catch (_: Exception) {}
+                } else {
+                    try { setInt(R.id.widget_text, "setBackgroundColor", 0x00000000) } catch (_: Exception) {}
+                }
+            }
             // Chạm -> mở MeowSettingsActivity
             val intent = Intent(context, MeowSettingsActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -128,7 +153,6 @@ override fun onEnabled(context: Context) {
             }
             mgr.updateAppWidget(widgetId, safeViews)
         }
-        
     }
 
     private fun extractStableHeightDp(mgr: AppWidgetManager, widgetId: Int, options: Bundle?): Int {
@@ -214,7 +238,7 @@ override fun onEnabled(context: Context) {
             val firstMin = first.first * 60 + first.second
             val nowMin = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
             if (nowMin < firstMin) {
-                steps -= 1L
+                steps -= slotsPerDay.toLong()
             }
         }
 
@@ -288,9 +312,11 @@ override fun onEnabled(context: Context) {
         val intent = Intent(context, MeowQuoteWidget::class.java).setAction(ACTION_TICK)
         val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         val pi = PendingIntent.getBroadcast(context, 0, intent, flags)
-        val whenMs = nextTime + 60_000L
-        am.set(AlarmManager.RTC, whenMs, pi)
-
+        try {
+            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextTime, pi)
+        } catch (_: Exception) {
+            am.setExact(AlarmManager.RTC_WAKEUP, nextTime, pi)
+        }
     }
 
     private fun nextSlotTimeMillis(slotsString: String): Long {
