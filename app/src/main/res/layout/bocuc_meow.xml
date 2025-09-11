@@ -4,6 +4,15 @@
     android:layout_height="match_parent"
     android:padding="8dp">
 
+    <!-- B4.5: Layer nền để nhận bitmap viền/nền từ MeowQuoteWidget -->
+    <ImageView
+        android:id="@+id/widget_bg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:scaleType="fitXY"
+        android:contentDescription="@null" />
+
     <TextView
         android:id="@+id/widget_text"
         android:layout_width="match_parent"
