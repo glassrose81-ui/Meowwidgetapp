@@ -4,7 +4,6 @@
     android:layout_height="match_parent"
     android:padding="8dp">
 
-    <!-- B4.5: Layer nền để nhận bitmap viền/nền từ MeowQuoteWidget -->
     <ImageView
         android:id="@+id/widget_bg"
         android:layout_width="match_parent"
@@ -13,15 +12,31 @@
         android:scaleType="fitXY"
         android:contentDescription="@null" />
 
+    <!-- Sans-serif -->
     <TextView
         android:id="@+id/widget_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:gravity="center"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
         android:textColor="@android:color/black"
         android:textSize="16sp"
-        android:textStyle="bold" 
+        android:textStyle="bold" />
+
+    <!-- Serif (ẩn mặc định, bật khi chọn SERIF) -->
+    <TextView
+        android:id="@+id/widget_text_serif"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
         android:paddingStart="4dp"
-        android:paddingEnd="4dp"/>
+        android:paddingEnd="4dp"
+        android:fontFamily="serif"
+        android:textColor="@android:color/black"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
 </FrameLayout>
