@@ -37,7 +37,7 @@ class WidgetDecorActivity : AppCompatActivity() {
 
     // B5 preview state (thumbnail highlight + chosen key)
     private var selectedBgKey: String? = null
-    private var selectedBgThumb: ImageView? = null_PLACEHOLDER
+    private var selectedBgThumb: ImageView? = null
 
     // Preview selection state (highlight only; not persisted in B4.x)
     private var selectedFontBtn: TextView? = null
@@ -549,11 +549,12 @@ class WidgetDecorActivity : AppCompatActivity() {
                     background = outline(0x00000000, 0xFFBDBDBD.toInt(), 1)
                     setOnClickListener {
                         // Bỏ viền cũ
+                        val self = it as ImageView
                         selectedBgThumb?.background = outline(0x00000000, 0xFFBDBDBD.toInt(), 1)
                         // Chọn mới
-                        selectedBgThumb = thumbView
+                        selectedBgThumb = self
                         selectedBgKey = key
-                        thumbView.background = outline(0x00000000, 0xFF2F80ED.toInt(), 2)
+                        self.background = outline(0x00000000, 0xFF2F80ED.toInt(), 2)
                         // Đổi xem trước bằng ảnh full
                         if (fullId != 0) {
                             frameImageLayer.setImageResource(fullId)
