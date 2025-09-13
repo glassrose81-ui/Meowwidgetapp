@@ -32,6 +32,22 @@ class WidgetDecorActivity : AppCompatActivity() {
     private val KEY_DECOR_BORDER_COLOR = "decor_border_color" // Int (ARGB)
     private val KEY_DECOR_BG_COLOR = "decor_bg_color"         // Int (ARGB) or -1 = transparent
 
+    // ===== B5: Nền ảnh - keys & resources =====
+    private val KEY_DECOR_BG_MODE  = "decor_bg_mode"   // "none" | "image"
+    private val KEY_DECOR_BG_IMAGE = "decor_bg_image"  // "bg_01".."bg_11"
+
+    // Danh sách thumbnail & key tương ứng
+    private val bgThumbIds = intArrayOf(
+        R.drawable.bg_01_thumb, R.drawable.bg_02_thumb, R.drawable.bg_03_thumb,
+        R.drawable.bg_04_thumb, R.drawable.bg_05_thumb, R.drawable.bg_06_thumb,
+        R.drawable.bg_07_thumb, R.drawable.bg_08_thumb, R.drawable.bg_09_thumb,
+        R.drawable.bg_10_thumb, R.drawable.bg_11_thumb
+    )
+    private val bgKeys = arrayOf(
+        "bg_01","bg_02","bg_03","bg_04","bg_05","bg_06",
+        "bg_07","bg_08","bg_09","bg_10","bg_11"
+    )
+
     // Preview selection state (highlight only; not persisted in B4.x)
     private var selectedFontBtn: TextView? = null
     private var selectedTextColorBtn: TextView? = null
@@ -42,6 +58,10 @@ class WidgetDecorActivity : AppCompatActivity() {
 
     private var selectedBgBtn: TextView? = null
 
+
+    // B5: Trạng thái chọn nền ảnh (Preview)
+    private var selectedBgKey: String? = null
+    private var selectedBgThumb: ImageView? = null
     // Current preview values
     private var fontFamily: String = "sans"
     private var textColor: Int = 0xFF111111.toInt()
@@ -431,7 +451,71 @@ class WidgetDecorActivity : AppCompatActivity() {
         val bgScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
         bgScroll.addView(bgRow)
 
-        // ===== Action row =====
+        
+
+        // ===== B5: Nền ảnh (Preview ONLY) =====
+        val titleBgImage = TextView(this).apply {
+            text = "Nền ảnh"
+            setTextColor(0xFF111111.toInt())
+            textSize = 20f
+            typeface = Typeface.DEFAULT_BOLD
+            setPadding(0, dp(8), 0, dp(6))
+        }
+
+        val imgRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        // Nút \"KHÔNG ẢNH\" để bỏ nền ảnh (chỉ dùng màu nền ở trên)
+        val btnNoImage = outlineButton("KHÔNG ẢNH").apply {
+            setOnClickListener {
+                // Bỏ chọn thumbnail đang chọn
+                selectedBgThumb?.background = outline(0x00000000, 0xFFBDBDBD.toInt(), 1)
+                selectedBgThumb = null
+                selectedBgKey = null
+                // Ẩn lớp frameImage trong Preview
+                frameImageLayer.setImageDrawable(null)
+                frameImageLayer.visibility = View.GONE
+            }
+        }
+        imgRow.addView(btnNoImage)
+        imgRow.addView(spaceH(dp(8)))
+
+        // Dải thumbnail ảnh nền
+        bgThumbIds.forEachIndexed { idx, resId ->
+            val iv = ImageView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(dp(56), dp(56)).apply { rightMargin = dp(8) }
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                setImageResource(resId)
+                // viền mảnh mặc định
+                background = outline(0x00000000, 0xFFBDBDBD.toInt(), 1)
+                setOnClickListener {
+                    // bỏ viền cũ
+                    selectedBgThumb?.background = outline(0x00000000, 0xFFBDBDBD.toInt(), 1)
+                    // đánh dấu chọn mới
+                    selectedBgThumb = iv
+                    selectedBgKey = bgKeys[idx]
+                    // viền highlight
+                    iv.background = outline(0x00000000, 0xFF2F80ED.toInt(), 2)
+                    // set ảnh full vào lớp khung
+                    val fullName = "${bgKeys[idx]}_full"
+                    val fullId = resources.getIdentifier(fullName, "drawable", packageName)
+                    if (fullId != 0) {
+                        frameImageLayer.setImageResource(fullId)
+                        frameImageLayer.visibility = View.VISIBLE
+                    }
+                }
+            }
+            imgRow.addView(iv)
+        }
+
+        val imgScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
+        imgScroll.addView(imgRow)
+// ===== Action row =====
         val actionRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.END
@@ -497,6 +581,9 @@ class WidgetDecorActivity : AppCompatActivity() {
 
         content.addView(titleBg)
         content.addView(bgScroll)
+
+        content.addView(titleBgImage)
+        content.addView(imgScroll)
 
         content.addView(actionRow)
 
