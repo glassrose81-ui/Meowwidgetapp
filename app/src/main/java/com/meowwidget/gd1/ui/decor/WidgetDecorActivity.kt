@@ -171,8 +171,8 @@ class WidgetDecorActivity : AppCompatActivity() {
 
         // Add in stacking order: bg -> border -> frameImage -> content -> icon
         previewCard.addView(bgLayer)
-        previewCard.addView(borderLayer)
         previewCard.addView(frameImageLayer)
+        previewCard.addView(borderLayer)
         previewCard.addView(contentLayer)
         previewCard.addView(iconLayer)
 
@@ -662,6 +662,15 @@ class WidgetDecorActivity : AppCompatActivity() {
 
     // ===== B5: Clip ảnh theo bán kính viền (Decor Preview) =====
     private fun updateFrameImageClip(frameImageLayer: ImageView) {
+        if (borderStyle == "none") {
+            // Không viền: trả ảnh về góc vuông nguyên gốc
+            frameImageLayer.background = null
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                frameImageLayer.clipToOutline = false
+            }
+            return
+        }
+        // Có viền: bo góc ảnh theo bán kính của viền
         val d = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
             cornerRadius = styleRadius()
