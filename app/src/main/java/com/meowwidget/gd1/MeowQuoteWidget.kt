@@ -119,8 +119,6 @@ override fun onEnabled(context: Context) {
         val borderWidthDp = decorSp.getInt("decor_border_width", 2)
         val borderColor = decorSp.getInt("decor_border_color", 0xFF111111.toInt())
         val decorBgColor = decorSp.getInt("decor_bg_color", -1)
-        val decorBgMode = decorSp.getString("decor_bg_mode", "none") ?: "none"
-        val decorBgImageKey = decorSp.getString("decor_bg_image", null)
         val bgOrNull: Int? = if (decorBgColor == -1) null else decorBgColor
         val decorFont = decorSp.getString("decor_font", "sans") ?: "sans"
         val isSerif = decorFont == "serif"
@@ -158,7 +156,7 @@ override fun onEnabled(context: Context) {
             try { setTextColor(R.id.widget_text, decorTextColor) } catch (_: Exception) {}
             // Áp bitmap nền/viền nếu có ImageView nền
             try {
-                val bmp = buildDecorBitmap(context, wPx, hPx, borderStyle, borderWidthDp, borderColor, bgOrNull, decorBgMode, decorBgImageKey)
+                val bmp = buildDecorBitmap(context, wPx, hPx, borderStyle, borderWidthDp, borderColor, bgOrNull)
                 setImageViewBitmap(R.id.widget_bg, bmp)
             } catch (_: Exception) {
                 // fallback: nếu thiếu widget_bg, chỉ áp nền phẳng (nếu có) lên TextView
@@ -443,37 +441,45 @@ private fun buildDecorBitmap(
         }
         canvas.drawRoundRect(rect, radius, radius, paintFill)
     }
-    // vẽ nền ảnh nếu bật 'image' và có key hợp lệ (CENTER_CROP)
-    if (bgMode == "image" && !bgKey.isNullOrBlank()) {
-        val resName = bgKey + "_full"
-        val resId = context.resources.getIdentifier(resName, "drawable", context.packageName)
-        if (resId != 0) {
-            BitmapFactory.decodeResource(context.resources, resId)?.let { src ->
-                val destRatio = w.toFloat() / h.toFloat()
-                val srcRatio = src.width.toFloat() / src.height.toFloat()
-                var srcLeft = 0; var srcTop = 0; var srcRight = src.width; var srcBottom = src.height
-                if (srcRatio > destRatio) {
-                    val newW = (src.height * destRatio).toInt()
-                    val dx = (src.width - newW) / 2
-                    srcLeft = dx; srcRight = dx + newW
-                } else {
-                    val newH = (src.width / destRatio).toInt()
-                    val dy = (src.height - newH) / 2
-                    srcTop = dy; srcBottom = dy + newH
+
+    // ===== B5: nền ảnh (center-crop) + bo theo viền khi có viền =====
+    run {
+        val sp = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
+        val bgMode = sp.getString("decor_bg_mode", "none") ?: "none"
+        val bgKey = sp.getString("decor_bg_image", null)
+        if (bgMode == "image" && !bgKey.isNullOrBlank()) {
+            val resName = bgKey + "_full"
+            val resId = context.resources.getIdentifier(resName, "drawable", context.packageName)
+            if (resId != 0) {
+                val src = BitmapFactory.decodeResource(context.resources, resId)
+                if (src != null) {
+                    val destRatio = w.toFloat() / h.toFloat()
+                    val srcRatio = src.width.toFloat() / src.height.toFloat()
+                    var srcLeft = 0; var srcTop = 0; var srcRight = src.width; var srcBottom = src.height
+                    if (srcRatio > destRatio) {
+                        val newW = (src.height * destRatio).toInt()
+                        val dx = (src.width - newW) / 2
+                        srcLeft = dx; srcRight = dx + newW
+                    } else {
+                        val newH = (src.width / destRatio).toInt()
+                        val dy = (src.height - newH) / 2
+                        srcTop = dy; srcBottom = dy + newH
+                    }
+                    val srcRect = Rect(srcLeft, srcTop, srcRight, srcBottom)
+                    val dstRect = RectF(0f, 0f, w.toFloat(), h.toFloat())
+                    val needClip = borderStyle != "none"
+                    if (needClip) {
+                        val path = Path().apply { addRoundRect(dstRect, radius, radius, Path.Direction.CW) }
+                        canvas.save(); canvas.clipPath(path)
+                    }
+                    canvas.drawBitmap(src, srcRect, dstRect, null)
+                    if (needClip) canvas.restore()
+                    src.recycle()
                 }
-                val srcRect = Rect(srcLeft, srcTop, srcRight, srcBottom)
-                val dstRect = RectF(0f, 0f, w.toFloat(), h.toFloat())
-                val needClip = borderStyle != "none"
-                if (needClip) {
-                    val path = Path().apply { addRoundRect(dstRect, radius, radius, Path.Direction.CW) }
-                    canvas.save(); canvas.clipPath(path)
-                }
-                canvas.drawBitmap(src, srcRect, dstRect, null)
-                if (needClip) canvas.restore()
-                src.recycle()
             }
         }
     }
+
 
     // vẽ viền (nếu không phải "none")
     if (borderStyle != "none") {
