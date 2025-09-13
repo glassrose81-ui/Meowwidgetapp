@@ -31,13 +31,6 @@ class WidgetDecorActivity : AppCompatActivity() {
     private val KEY_DECOR_BORDER_WIDTH = "decor_border_width" // Int dp (2|4)
     private val KEY_DECOR_BORDER_COLOR = "decor_border_color" // Int (ARGB)
     private val KEY_DECOR_BG_COLOR = "decor_bg_color"         // Int (ARGB) or -1 = transparent
-    // ===== B5 keys (preview only in bước 1; not persisted here) =====
-    private val KEY_DECOR_BG_MODE  = "decor_bg_mode"   // "none" | "image"
-    private val KEY_DECOR_BG_IMAGE = "decor_bg_image"  // "bg_01".."bg_11"
-
-    // B5 preview state (thumbnail highlight + chosen key)
-    private var selectedBgKey: String? = null
-    private var selectedBgThumb: ImageView? = null
 
     // Preview selection state (highlight only; not persisted in B4.x)
     private var selectedFontBtn: TextView? = null
@@ -132,6 +125,7 @@ class WidgetDecorActivity : AppCompatActivity() {
             scaleType = ImageView.ScaleType.FIT_XY
             visibility = View.GONE // default hidden; will be used in B5
         }
+        updateFrameImageClip(frameImageLayer)
         // Content layer (text)
         val contentLayer = FrameLayout(this).apply {
             setPadding(dp(16), dp(16), dp(16), dp(16))
@@ -265,22 +259,24 @@ class WidgetDecorActivity : AppCompatActivity() {
 
         // Row: Style
         val styleRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        val btnStylenull = outlineButton("KHÔNG")
+        val btnStyleNone = outlineButton("KHÔNG")
         val btnStyleSquare = outlineButton("VUÔNG")
         val btnStyleRound = outlineButton("BO GÓC")
         val btnStylePill = outlineButton("BO TRÒN")
-        setButtonSelected(btnStylenull, true)
-        selectedBorderStyleBtn = btnStylenull
+        setButtonSelected(btnStyleNone, true)
+        selectedBorderStyleBtn = btnStyleNone
         borderStyle = "none"
         updateBorder(borderLayer)
+                updateFrameImageClip(frameImageLayer)
         updateBackground(bgLayer) // keep bg radius in sync
-        btnStylenull.setOnClickListener {
-            if (selectedBorderStyleBtn !== btnStylenull) {
+        btnStyleNone.setOnClickListener {
+            if (selectedBorderStyleBtn !== btnStyleNone) {
                 setButtonSelected(selectedBorderStyleBtn, false)
-                setButtonSelected(btnStylenull, true)
-                selectedBorderStyleBtn = btnStylenull
+                setButtonSelected(btnStyleNone, true)
+                selectedBorderStyleBtn = btnStyleNone
                 borderStyle = "none"
                 updateBorder(borderLayer)
+                updateFrameImageClip(frameImageLayer)
                 updateBackground(bgLayer)
             }
         }
@@ -291,6 +287,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 selectedBorderStyleBtn = btnStyleSquare
                 borderStyle = "square"
                 updateBorder(borderLayer)
+                updateFrameImageClip(frameImageLayer)
                 updateBackground(bgLayer)
             }
         }
@@ -301,6 +298,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 selectedBorderStyleBtn = btnStyleRound
                 borderStyle = "round"
                 updateBorder(borderLayer)
+                updateFrameImageClip(frameImageLayer)
                 updateBackground(bgLayer)
             }
         }
@@ -311,10 +309,11 @@ class WidgetDecorActivity : AppCompatActivity() {
                 selectedBorderStyleBtn = btnStylePill
                 borderStyle = "pill"
                 updateBorder(borderLayer)
+                updateFrameImageClip(frameImageLayer)
                 updateBackground(bgLayer)
             }
         }
-        styleRow.addView(btnStylenull)
+        styleRow.addView(btnStyleNone)
         styleRow.addView(spaceH(dp(8)))
         styleRow.addView(btnStyleSquare)
         styleRow.addView(spaceH(dp(8)))
@@ -338,6 +337,7 @@ class WidgetDecorActivity : AppCompatActivity() {
         selectedBorderWidthBtn = btnThin
         borderWidthDp = 2
         updateBorder(borderLayer)
+                updateFrameImageClip(frameImageLayer)
         btnThin.setOnClickListener {
             if (selectedBorderWidthBtn !== btnThin) {
                 setButtonSelected(selectedBorderWidthBtn, false)
@@ -345,6 +345,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 selectedBorderWidthBtn = btnThin
                 borderWidthDp = 2
                 updateBorder(borderLayer)
+                updateFrameImageClip(frameImageLayer)
             }
         }
         btnThick.setOnClickListener {
@@ -354,6 +355,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 selectedBorderWidthBtn = btnThick
                 borderWidthDp = 4
                 updateBorder(borderLayer)
+                updateFrameImageClip(frameImageLayer)
             }
         }
         widthRow.addView(btnThin)
@@ -377,6 +379,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 }
                 borderColor = opt.value
                 updateBorder(borderLayer)
+                updateFrameImageClip(frameImageLayer)
             }
             borderColorRow.addView(b)
             if (idx != colors.size - 1) borderColorRow.addView(spaceH(dp(8)))
@@ -505,73 +508,6 @@ class WidgetDecorActivity : AppCompatActivity() {
         content.addView(titleBg)
         content.addView(bgScroll)
 
-        // ===== B5.1: Nền ảnh (Preview ONLY) =====
-        val titleBgImage = TextView(this).apply {
-            text = "Nền ảnh"
-            setTextColor(0xFF111111.toInt())
-            textSize = 20f
-            typeface = Typeface.DEFAULT_BOLD
-            setPadding(0, dp(14), 0, dp(6))
-        }
-        val thumbScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
-        val thumbRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-        }
-        // Nút KHÔNG ẢNH: bỏ nền ảnh, chỉ dùng nền phẳng ở trên
-        val btnNoImage = outlineButton("KHÔNG ẢNH").apply {
-            setOnClickListener {
-                selectedBgThumb?.background = outline(0x00000000, 0xFFBDBDBD.toInt(), 1)
-                selectedBgThumb = null
-                selectedBgKey = null
-                frameImageLayer.setImageDrawable(null)
-                frameImageLayer.visibility = View.GONE
-            }
-        }
-        thumbRow.addView(btnNoImage)
-        thumbRow.addView(spaceH(dp(8)))
-
-        // Tạo 11 thumbnail theo mẫu tên "bg_01_thumb" .. "bg_11_thumb"
-        for (i in 1..11) {
-            val key = "bg_%02d".format(i)
-            val thumbName = key + "_thumb"
-            val fullName = key + "_full"
-            val thumbId = resources.getIdentifier(thumbName, "drawable", packageName)
-            val fullId = resources.getIdentifier(fullName, "drawable", packageName)
-            if (thumbId != 0) {
-                val thumbView = ImageView(this).apply {
-                    layoutParams = LinearLayout.LayoutParams(dp(56), dp(56)).apply { rightMargin = dp(8) }
-                    scaleType = ImageView.ScaleType.CENTER_CROP
-                    setImageResource(thumbId)
-                    background = outline(0x00000000, 0xFFBDBDBD.toInt(), 1)
-                    setOnClickListener {
-                        // Bỏ viền cũ
-                        val self = it as ImageView
-                        selectedBgThumb?.background = outline(0x00000000, 0xFFBDBDBD.toInt(), 1)
-                        // Chọn mới
-                        selectedBgThumb = self
-                        selectedBgKey = key
-                        self.background = outline(0x00000000, 0xFF2F80ED.toInt(), 2)
-                        // Đổi xem trước bằng ảnh full
-                        if (fullId != 0) {
-                            frameImageLayer.setImageResource(fullId)
-                            frameImageLayer.scaleType = ImageView.ScaleType.CENTER_CROP
-                            frameImageLayer.visibility = View.VISIBLE
-                        }
-                    }
-                }
-                thumbRow.addView(thumbView)
-            }
-        }
-        thumbScroll.addView(thumbRow)
-
-        content.addView(titleBgImage)
-        content.addView(thumbScroll)
-
-
         content.addView(actionRow)
 
         root.addView(content)
@@ -649,6 +585,21 @@ class WidgetDecorActivity : AppCompatActivity() {
         bgLayer.visibility = View.VISIBLE
     }
 
+    
+    // ===== B5: clip ảnh theo viền (Preview) =====
+    private fun updateFrameImageClip(frameImageLayer: ImageView) {
+        // Tạo nền bo góc trong suốt để View có Outline, rồi clip theo Outline
+        val d = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = styleRadius()
+            setColor(0x00000000) // transparent
+        }
+        frameImageLayer.background = d
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            frameImageLayer.clipToOutline = true
+        }
+    }
+    
     private fun updateBorder(borderLayer: View) {
         if (borderStyle == "none") {
             borderLayer.visibility = View.GONE
