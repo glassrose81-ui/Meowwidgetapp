@@ -276,6 +276,7 @@ class WidgetDecorActivity : AppCompatActivity() {
         selectedBorderStyleBtn = btnStyleNone
         borderStyle = "none"
         updateBorder(borderLayer)
+        updateFrameImageClip(frameImageLayer)
         updateBackground(bgLayer) // keep bg radius in sync
         btnStyleNone.setOnClickListener {
             if (selectedBorderStyleBtn !== btnStyleNone) {
@@ -284,6 +285,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 selectedBorderStyleBtn = btnStyleNone
                 borderStyle = "none"
                 updateBorder(borderLayer)
+        updateFrameImageClip(frameImageLayer)
                 updateBackground(bgLayer)
             }
         }
@@ -294,6 +296,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 selectedBorderStyleBtn = btnStyleSquare
                 borderStyle = "square"
                 updateBorder(borderLayer)
+        updateFrameImageClip(frameImageLayer)
                 updateBackground(bgLayer)
             }
         }
@@ -304,6 +307,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 selectedBorderStyleBtn = btnStyleRound
                 borderStyle = "round"
                 updateBorder(borderLayer)
+        updateFrameImageClip(frameImageLayer)
                 updateBackground(bgLayer)
             }
         }
@@ -314,6 +318,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 selectedBorderStyleBtn = btnStylePill
                 borderStyle = "pill"
                 updateBorder(borderLayer)
+        updateFrameImageClip(frameImageLayer)
                 updateBackground(bgLayer)
             }
         }
@@ -341,6 +346,7 @@ class WidgetDecorActivity : AppCompatActivity() {
         selectedBorderWidthBtn = btnThin
         borderWidthDp = 2
         updateBorder(borderLayer)
+        updateFrameImageClip(frameImageLayer)
         btnThin.setOnClickListener {
             if (selectedBorderWidthBtn !== btnThin) {
                 setButtonSelected(selectedBorderWidthBtn, false)
@@ -348,6 +354,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 selectedBorderWidthBtn = btnThin
                 borderWidthDp = 2
                 updateBorder(borderLayer)
+        updateFrameImageClip(frameImageLayer)
             }
         }
         btnThick.setOnClickListener {
@@ -357,6 +364,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 selectedBorderWidthBtn = btnThick
                 borderWidthDp = 4
                 updateBorder(borderLayer)
+        updateFrameImageClip(frameImageLayer)
             }
         }
         widthRow.addView(btnThin)
@@ -380,6 +388,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 }
                 borderColor = opt.value
                 updateBorder(borderLayer)
+        updateFrameImageClip(frameImageLayer)
             }
             borderColorRow.addView(b)
             if (idx != colors.size - 1) borderColorRow.addView(spaceH(dp(8)))
@@ -538,6 +547,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                 selectedBgKey = null
                 frameImageLayer.setImageDrawable(null)
                 frameImageLayer.visibility = View.GONE
+                updateFrameImageClip(frameImageLayer)
             }
         }
         thumbRow.addView(btnNoImage)
