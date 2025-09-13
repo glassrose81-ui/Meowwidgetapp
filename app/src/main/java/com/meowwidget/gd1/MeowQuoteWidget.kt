@@ -23,6 +23,7 @@ import android.graphics.RectF
 import android.view.View
 import android.graphics.BitmapFactory
 import android.graphics.Path
+import android.graphics.Rect
 
 class MeowQuoteWidget : AppWidgetProvider() {
 
@@ -442,41 +443,30 @@ private fun buildDecorBitmap(
         }
         canvas.drawRoundRect(rect, radius, radius, paintFill)
     }
-    // vẽ nền ảnh nếu bật chế độ 'image' và có key hợp lệ
+    // vẽ nền ảnh nếu bật 'image' và có key hợp lệ (CENTER_CROP)
     if (bgMode == "image" && !bgKey.isNullOrBlank()) {
         val resName = bgKey + "_full"
         val resId = context.resources.getIdentifier(resName, "drawable", context.packageName)
         if (resId != 0) {
-            val src = BitmapFactory.decodeResource(context.resources, resId)
-            if (src != null) {
-                // CENTER_CROP: tính vùng cắt nguồn theo tỉ lệ widget
+            BitmapFactory.decodeResource(context.resources, resId)?.let { src ->
                 val destRatio = w.toFloat() / h.toFloat()
                 val srcRatio = src.width.toFloat() / src.height.toFloat()
-                var srcLeft = 0
-                var srcTop = 0
-                var srcRight = src.width
-                var srcBottom = src.height
+                var srcLeft = 0; var srcTop = 0; var srcRight = src.width; var srcBottom = src.height
                 if (srcRatio > destRatio) {
-                    // ảnh rộng hơn: cắt bớt hai bên
                     val newW = (src.height * destRatio).toInt()
                     val dx = (src.width - newW) / 2
-                    srcLeft = dx
-                    srcRight = dx + newW
+                    srcLeft = dx; srcRight = dx + newW
                 } else {
-                    // ảnh cao hơn: cắt bớt trên/dưới
                     val newH = (src.width / destRatio).toInt()
                     val dy = (src.height - newH) / 2
-                    srcTop = dy
-                    srcBottom = dy + newH
+                    srcTop = dy; srcBottom = dy + newH
                 }
                 val srcRect = Rect(srcLeft, srcTop, srcRight, srcBottom)
                 val dstRect = RectF(0f, 0f, w.toFloat(), h.toFloat())
-                // Clip bo góc nếu có viền (giống Decor: khi không viền thì ảnh góc vuông)
                 val needClip = borderStyle != "none"
                 if (needClip) {
                     val path = Path().apply { addRoundRect(dstRect, radius, radius, Path.Direction.CW) }
-                    canvas.save()
-                    canvas.clipPath(path)
+                    canvas.save(); canvas.clipPath(path)
                 }
                 canvas.drawBitmap(src, srcRect, dstRect, null)
                 if (needClip) canvas.restore()
