@@ -473,14 +473,27 @@ class WidgetDecorActivity : AppCompatActivity() {
             setOnClickListener {
                 // === B4.4: Save selections & broadcast update, stay on screen ===
                 val sp = getSharedPreferences(PREF, MODE_PRIVATE)
-                sp.edit()
+                val editor = sp.edit()
                     .putString(KEY_DECOR_FONT, fontFamily)
                     .putInt(KEY_DECOR_TEXT_COLOR, textColor)
                     .putString(KEY_DECOR_BORDER_STYLE, borderStyle)
                     .putInt(KEY_DECOR_BORDER_WIDTH, borderWidthDp)
                     .putInt(KEY_DECOR_BORDER_COLOR, borderColor)
                     .putInt(KEY_DECOR_BG_COLOR, bgColorOrNull ?: -1) // -1 = transparent
-                    .apply()
+                // B5: Lưu nền ảnh theo trạng thái + fallback
+                run {
+                    val currentKey = sp.getString(KEY_DECOR_BG_IMAGE, null)
+                    val mode = if (frameImageLayer.visibility == View.VISIBLE) "image" else "none"
+                    val keyToSave = selectedBgKey ?: currentKey
+                    if (mode == "image" && keyToSave != null) {
+                        editor.putString(KEY_DECOR_BG_MODE, "image")
+                        editor.putString(KEY_DECOR_BG_IMAGE, keyToSave)
+                    } else {
+                        editor.putString(KEY_DECOR_BG_MODE, "none")
+                        editor.remove(KEY_DECOR_BG_IMAGE)
+                    }
+                }
+                editor.apply()
 
                 // Broadcast widget update
                 val mgr = AppWidgetManager.getInstance(this@WidgetDecorActivity)
