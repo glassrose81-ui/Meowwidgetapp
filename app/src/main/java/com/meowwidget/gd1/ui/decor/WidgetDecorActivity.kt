@@ -473,27 +473,14 @@ class WidgetDecorActivity : AppCompatActivity() {
             setOnClickListener {
                 // === B4.4: Save selections & broadcast update, stay on screen ===
                 val sp = getSharedPreferences(PREF, MODE_PRIVATE)
-                val editor = sp.edit()
+                sp.edit()
                     .putString(KEY_DECOR_FONT, fontFamily)
                     .putInt(KEY_DECOR_TEXT_COLOR, textColor)
                     .putString(KEY_DECOR_BORDER_STYLE, borderStyle)
                     .putInt(KEY_DECOR_BORDER_WIDTH, borderWidthDp)
                     .putInt(KEY_DECOR_BORDER_COLOR, borderColor)
                     .putInt(KEY_DECOR_BG_COLOR, bgColorOrNull ?: -1) // -1 = transparent
-                // B5: Lưu nền ảnh theo trạng thái + fallback
-                run {
-                    val currentKey = sp.getString(KEY_DECOR_BG_IMAGE, null)
-                    val mode = if (frameImageLayer.visibility == View.VISIBLE) "image" else "none"
-                    val keyToSave = selectedBgKey ?: currentKey
-                    if (mode == "image" && keyToSave != null) {
-                        editor.putString(KEY_DECOR_BG_MODE, "image")
-                        editor.putString(KEY_DECOR_BG_IMAGE, keyToSave)
-                    } else {
-                        editor.putString(KEY_DECOR_BG_MODE, "none")
-                        editor.remove(KEY_DECOR_BG_IMAGE)
-                    }
-                }
-                editor.apply()
+                    .apply()
 
                 // Broadcast widget update
                 val mgr = AppWidgetManager.getInstance(this@WidgetDecorActivity)
@@ -567,13 +554,16 @@ class WidgetDecorActivity : AppCompatActivity() {
         thumbRow.addView(spaceH(dp(8)))
 
         // Tạo 11 thumbnail theo mẫu tên "bg_01_thumb" .. "bg_11_thumb"; preview dùng "bg_XX_full"
-        for (i in 1..11) {
-            val key = "bg_%02d".format(i)
-            val thumbName = key + "_thumb"
-            val fullName = key + "_full"
-            val thumbId = resources.getIdentifier(thumbName, "drawable", packageName)
-            val fullId = resources.getIdentifier(fullName, "drawable", packageName)
-            if (thumbId != 0) {
+        // B5-auto: tự nhận số lượng thumbnail bg_XX_thumb liền mạch từ 01
+        run {
+            var i = 1
+            while (true) {
+                val key = "bg_%02d".format(i)
+                val thumbName = key + "_thumb"
+                val fullName = key + "_full"
+                val thumbId = resources.getIdentifier(thumbName, "drawable", packageName)
+                val fullId = resources.getIdentifier(fullName, "drawable", packageName)
+                if (thumbId == 0) break
                 val iv = ImageView(this).apply {
                     layoutParams = LinearLayout.LayoutParams(dp(56), dp(56)).apply { rightMargin = dp(8) }
                     scaleType = ImageView.ScaleType.CENTER_CROP
@@ -581,13 +571,10 @@ class WidgetDecorActivity : AppCompatActivity() {
                     background = outline(0x00000000, 0xFFBDBDBD.toInt(), 1)
                     setOnClickListener { v ->
                         val self = v as ImageView
-                        // Bỏ viền cũ
                         selectedBgThumb?.background = outline(0x00000000, 0xFFBDBDBD.toInt(), 1)
-                        // Chọn mới
                         selectedBgThumb = self
                         selectedBgKey = key
                         self.background = outline(0x00000000, 0xFF2F80ED.toInt(), 2)
-                        // Đổi xem trước bằng ảnh full
                         if (fullId != 0) {
                             frameImageLayer.setImageResource(fullId)
                             frameImageLayer.scaleType = ImageView.ScaleType.CENTER_CROP
@@ -597,6 +584,7 @@ class WidgetDecorActivity : AppCompatActivity() {
                     }
                 }
                 thumbRow.addView(iv)
+                i++
             }
         }
         thumbScroll.addView(thumbRow)
