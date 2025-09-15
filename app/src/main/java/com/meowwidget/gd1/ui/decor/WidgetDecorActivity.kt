@@ -40,6 +40,14 @@ class WidgetDecorActivity : AppCompatActivity() {
     private var selectedBgKey: String? = null
     private var selectedBgThumb: ImageView? = null
 
+    // ===== B5.2 (Icon Preview ONLY; chưa lưu) =====
+    private val KEY_DECOR_ICON_MODE  = "decor_icon_mode"   // "none" | "image"
+    private val KEY_DECOR_ICON_IMAGE = "decor_icon_image"  // "icon_01".."icon_99"
+
+    // Trạng thái chọn icon (chỉ preview)
+    private var selectedIconKey: String? = null
+    private var selectedIconThumb: ImageView? = null
+
 
     // Preview selection state (highlight only; not persisted in B4.x)
     private var selectedFontBtn: TextView? = null
@@ -159,13 +167,15 @@ class WidgetDecorActivity : AppCompatActivity() {
         // B5 foundation: icon layer (top-most, defaults hidden)
         val iconLayer = ImageView(this).apply {
             layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT,
+                dp(24), dp(24),
                 Gravity.TOP or Gravity.END
             ).apply {
-                topMargin = dp(8)
-                rightMargin = dp(8)
+                topMargin = dp(12) // "mái" 12dp
+                rightMargin = dp(12)
             }
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+            visibility = View.GONE // default hidden; will be used in B5.2/B5.3
+        }
             visibility = View.GONE // default hidden; will be used in B5
         }
 
@@ -609,7 +619,82 @@ class WidgetDecorActivity : AppCompatActivity() {
         content.addView(thumbScroll)
 
 
-        content.addView(actionRow)
+        
+        // ===== B5.2: Icon trang trí (Preview ONLY; chưa lưu) =====
+        val titleIcon = TextView(this).apply {
+            text = "Icon trang trí"
+            setTextColor(0xFF111111.toInt())
+            textSize = 20f
+            typeface = Typeface.DEFAULT_BOLD
+            setPadding(0, dp(14), 0, dp(6))
+        }
+        val iconScroll = HorizontalScrollView(this).apply {
+            isHorizontalScrollBarEnabled = false
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        }
+        val iconRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        }
+        // Nút KHÔNG ICON: ẩn icon trong preview
+        val btnNoIcon = outlineButton("KHÔNG ICON").apply {
+            setOnClickListener {
+                selectedIconThumb?.background = outline(0x00000000, 0xFFBDBDBD.toInt(), 1)
+                selectedIconThumb = null
+                selectedIconKey = null
+                iconLayer.setImageDrawable(null)
+                iconLayer.visibility = View.GONE
+            }
+        }
+        iconRow.addView(btnNoIcon)
+        iconRow.addView(spaceH(dp(8)))
+
+        // B5.2-auto: tự nhận thumbnail "icon_XX_thumb" liền mạch từ 01; preview dùng "icon_XX"
+        run {
+            var i = 1
+            while (true) {
+                val key = "icon_%02d".format(i)
+                val thumbName = key + "_thumb"
+                val fullName = key
+                val thumbId = resources.getIdentifier(thumbName, "drawable", packageName)
+                val fullId = resources.getIdentifier(fullName, "drawable", packageName)
+                if (thumbId == 0) break
+                val iv = ImageView(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(dp(56), dp(56)).apply { rightMargin = dp(8) }
+                    scaleType = ImageView.ScaleType.CENTER_CROP
+                    setImageResource(thumbId)
+                    background = outline(0x00000000, 0xFFBDBDBD.toInt(), 1)
+                    setOnClickListener { v ->
+                        val self = v as ImageView
+                        // Bỏ viền cũ
+                        selectedIconThumb?.background = outline(0x00000000, 0xFFBDBDBD.toInt(), 1)
+                        // Chọn mới
+                        selectedIconThumb = self
+                        selectedIconKey = key
+                        self.background = outline(0x00000000, 0xFF2F80ED.toInt(), 2)
+                        // Đổi xem trước bằng icon thật (24dp, góc trên–phải)
+                        if (fullId != 0) {
+                            iconLayer.setImageResource(fullId)
+                            iconLayer.visibility = View.VISIBLE
+                        }
+                    }
+                }
+                iconRow.addView(iv)
+                i++
+            }
+        }
+        iconScroll.addView(iconRow)
+
+        content.addView(titleIcon)
+        content.addView(iconScroll)
+
+content.addView(actionRow)
 
         root.addView(content)
         setContentView(root)
