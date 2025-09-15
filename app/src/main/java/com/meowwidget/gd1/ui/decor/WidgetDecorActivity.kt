@@ -40,13 +40,10 @@ class WidgetDecorActivity : AppCompatActivity() {
     private var selectedBgKey: String? = null
     private var selectedBgThumb: ImageView? = null
 
-    // ===== B5.2 (Icon Preview ONLY; chưa lưu) =====
-    private val KEY_DECOR_ICON_MODE  = "decor_icon_mode"   // "none" | "image"
-    private val KEY_DECOR_ICON_IMAGE = "decor_icon_image"  // "icon_01".."icon_99"
-
-    // Trạng thái chọn icon (chỉ preview)
+    // ===== B5.2: Icon (preview only; chưa lưu) =====
     private var selectedIconKey: String? = null
     private var selectedIconThumb: ImageView? = null
+
 
 
     // Preview selection state (highlight only; not persisted in B4.x)
@@ -655,7 +652,7 @@ class WidgetDecorActivity : AppCompatActivity() {
         iconRow.addView(btnNoIcon)
         iconRow.addView(spaceH(dp(8)))
 
-        // B5.2-auto: tự nhận thumbnail "icon_XX_thumb" liền mạch từ 01; preview dùng "icon_XX"
+        // Auto: quét icon_XX_thumb -> hiển thị preview bằng icon_XX
         run {
             var i = 1
             while (true) {
@@ -672,13 +669,10 @@ class WidgetDecorActivity : AppCompatActivity() {
                     background = outline(0x00000000, 0xFFBDBDBD.toInt(), 1)
                     setOnClickListener { v ->
                         val self = v as ImageView
-                        // Bỏ viền cũ
                         selectedIconThumb?.background = outline(0x00000000, 0xFFBDBDBD.toInt(), 1)
-                        // Chọn mới
                         selectedIconThumb = self
                         selectedIconKey = key
                         self.background = outline(0x00000000, 0xFF2F80ED.toInt(), 2)
-                        // Đổi xem trước bằng icon thật (24dp, góc trên–phải)
                         if (fullId != 0) {
                             iconLayer.setImageResource(fullId)
                             iconLayer.visibility = View.VISIBLE
