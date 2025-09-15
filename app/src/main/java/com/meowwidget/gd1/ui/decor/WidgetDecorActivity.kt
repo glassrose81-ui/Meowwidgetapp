@@ -164,15 +164,13 @@ class WidgetDecorActivity : AppCompatActivity() {
         // B5 foundation: icon layer (top-most, defaults hidden)
         val iconLayer = ImageView(this).apply {
             layoutParams = FrameLayout.LayoutParams(
-                dp(24), dp(24),
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
                 Gravity.TOP or Gravity.END
             ).apply {
-                topMargin = dp(12) // "mái" 12dp
-                rightMargin = dp(12)
+                topMargin = dp(8)
+                rightMargin = dp(8)
             }
-            scaleType = ImageView.ScaleType.CENTER_INSIDE
-            visibility = View.GONE // default hidden; will be used in B5.2/B5.3
-        }
             visibility = View.GONE // default hidden; will be used in B5
         }
 
