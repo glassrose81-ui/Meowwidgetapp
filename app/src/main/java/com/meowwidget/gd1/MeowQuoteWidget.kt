@@ -28,6 +28,7 @@ import android.graphics.Rect
 class MeowQuoteWidget : AppWidgetProvider() {
 
     companion object {
+        private const val KEY_DECOR_ICON = "decor_icon_key"
         private const val PREF = "meow_settings"
         private const val KEY_SOURCE = "source"          // "all" | "fav"
         private const val KEY_SLOTS = "slots"            // "08:00,17:00,20:00"
@@ -135,18 +136,20 @@ override fun onEnabled(context: Context) {
         val views = RemoteViews(context.packageName, R.layout.bocuc_meow).apply {
             setTextViewText(R.id.widget_text, quote)
             setTextViewTextSize(R.id.widget_text, TypedValue.COMPLEX_UNIT_SP, sp)
-            // Đẩy khối chữ xuống để không chạm icon khi CÓ icon
-val hasIcon = !context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
-    .getString("decor_icon_key", null).isNullOrBlank()
-if (hasIcon) {
-    val side = (12f * density).toInt()
-    val padTop = (48f * density).toInt() // = icon(72) - mái(24)
-    setViewPadding(R.id.widget_text, side, padTop, side, side)
-    try { setViewPadding(R.id.widget_text_serif, side, padTop, side, side) } catch (_: Exception) {}
-}
 
 
-            // Font: đồng bộ nội dung/size/màu cho TextView serif và bật/tắt theo lựa chọn
+            // B5: conditional top padding for text when icon is present
+            try {
+                val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+                val iconKey = sp.getString(KEY_DECOR_ICON, null)
+                if (!iconKey.isNullOrBlank()) {
+                    val side = (4f * density).toInt()
+                    val padTop = (8f * density).toInt()
+                    try { setViewPadding(R.id.widget_text, side, padTop, side, side) } catch (_: Exception) {}
+                    try { setViewPadding(R.id.widget_text_serif, side, padTop, side, side) } catch (_: Exception) {}
+                }
+            } catch (_: Exception) {}
+                    // Font: đồng bộ nội dung/size/màu cho TextView serif và bật/tắt theo lựa chọn
             try { setTextViewText(R.id.widget_text_serif, quote) } catch (_: Exception) {}
             try { setTextViewTextSize(R.id.widget_text_serif, TypedValue.COMPLEX_UNIT_SP, sp) } catch (_: Exception) {}
             try { setTextColor(R.id.widget_text, decorTextColor) } catch (_: Exception) {}
@@ -423,12 +426,17 @@ private fun buildDecorBitmap(
     borderColor: Int,
     bgColorOrNull: Int?
 ): Bitmap {
+    // Icon roof & key
+    val spIcon = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+    val iconKeyForRoof = spIcon.getString(KEY_DECOR_ICON, null)
+    val roofPx = if (!iconKeyForRoof.isNullOrBlank()) {
+        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32f, context.resources.displayMetrics).toInt()
+    } else 0
+
     val w = if (widthPx > 0) widthPx else 1
     val h = if (heightPx > 0) heightPx else 1
     val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bmp)
-    val density = context.resources.displayMetrics.density
-    val roofPx = (24f * density)
 
     // dp -> px cho độ dày viền
     val strokePx = TypedValue.applyDimension(
@@ -443,7 +451,7 @@ private fun buildDecorBitmap(
         else     -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, context.resources.displayMetrics)
     }
 
-    val rect = RectF(0f, roofPx, w.toFloat(), h.toFloat())
+    val rect = RectF(0f, 0f, w.toFloat(), h.toFloat())
 
     // tô nền (nếu có)
     if (bgColorOrNull != null) {
@@ -478,7 +486,7 @@ private fun buildDecorBitmap(
                         srcTop = dy; srcBottom = dy + newH
                     }
                     val srcRect = Rect(srcLeft, srcTop, srcRight, srcBottom)
-                    val dstRect = RectF(0f, roofPx, w.toFloat(), h.toFloat())
+                    val dstRect = RectF(0f, 0f, w.toFloat(), h.toFloat())
                     val needClip = borderStyle != "none"
                     if (needClip) {
                         val path = Path().apply { addRoundRect(dstRect, radius, radius, Path.Direction.CW) }
@@ -503,32 +511,35 @@ private fun buildDecorBitmap(
             color = borderColor
         }
         canvas.drawRoundRect(rectStroke, radius, radius, paintStroke)
-    // ===== B5.3: overlay icon (chim đậu trên mái) =====
+    }
+
+    return bmp
+
+    // Draw icon overlay TOP|END if present
     run {
-        val sp = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
-        val iconKey = sp.getString("decor_icon_key", null)
+        val iconKey = iconKeyForRoof
         if (!iconKey.isNullOrBlank()) {
             val resId = context.resources.getIdentifier(iconKey, "drawable", context.packageName)
             if (resId != 0) {
                 val src = BitmapFactory.decodeResource(context.resources, resId)
                 if (src != null) {
-                    val sizePx = (72f * density)
-                    val rightPx = (16f * density)
-                    // CENTER_INSIDE semantics: do not upscale if smaller
-                    val scale = kotlin.math.min(1f, kotlin.math.min(sizePx / src.width, sizePx / src.height))
-                    val dstW = src.width * scale
-                    val dstH = src.height * scale
-                    val left = w - rightPx - dstW
-                    val top = 0f // chạm mái
-                    val dstRectIcon = RectF(left, top, left + dstW, top + dstH)
-                    canvas.drawBitmap(src, null, dstRectIcon, null)
-                    src.recycle()
+                    val density = context.resources.displayMetrics.density
+                    val target = (64f * density) // H = 64dp
+                    val rightMargin = (16f * density)
+                    val srcW = src.width.toFloat()
+                    val srcH = src.height.toFloat()
+                    val scale = if (srcW > target || srcH > target) {
+                        minOf(target / srcW, target / srcH)
+                    } else 1f
+                    val drawW = srcW * scale
+                    val drawH = srcH * scale
+                    val left = (w - rightMargin - drawW).toInt().toFloat()
+                    val top = 0f // stick to top; roof area lets it "peek"
+                    val dst = RectF(left, top, left + drawW, top + drawH)
+                    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+                    canvas.drawBitmap(src, null, dst, paint)
                 }
             }
         }
     }
-
-    }
-
-    return bmp
 }
