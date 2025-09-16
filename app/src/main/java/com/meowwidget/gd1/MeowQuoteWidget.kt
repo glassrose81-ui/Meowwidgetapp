@@ -427,8 +427,8 @@ private fun buildDecorBitmap(
     bgColorOrNull: Int?
 ): Bitmap {
     // Icon roof & key
-    val spIcon = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-    val iconKeyForRoof = spIcon.getString(KEY_DECOR_ICON, null)
+    val spIcon = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
+    val iconKeyForRoof = spIcon.getString("decor_icon_key", null)
     val roofPx = if (!iconKeyForRoof.isNullOrBlank()) {
         TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32f, context.resources.displayMetrics).toInt()
     } else 0
