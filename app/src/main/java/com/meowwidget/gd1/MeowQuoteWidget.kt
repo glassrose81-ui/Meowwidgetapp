@@ -456,10 +456,7 @@ private fun buildDecorBitmap(
     val canvas = Canvas(bmp)
     // Overlay icon config (no roof)
     val sp = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
-    val iconKey = sp.getString("decor_icon_key", null)
     val hasIcon = !iconKey.isNullOrBlank()
-    val density = context.resources.displayMetrics.density
-    val roofPx = 0
     val iconSizePx = (60f * density).toInt()
     val iconRightPx = (16f * density).toInt()
 
@@ -547,7 +544,7 @@ private fun buildDecorBitmap(
                 val left = (w - iconRightPx - iconSizePx).toFloat()
                 val top = 0f
                 val dst = RectF(left, top, left + iconSizePx, top + iconSizePx)
-                val paint = Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG)
+                val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
                 canvas.drawBitmap(iconSrc, null, dst, paint)
                 iconSrc.recycle()
             }
@@ -558,30 +555,5 @@ private fun buildDecorBitmap(
     return bmp
 
     // Draw icon overlay TOP|END if present
-    run {
-        val iconKey = iconKeyForRoof
-        if (!iconKey.isNullOrBlank()) {
-            val resId = context.resources.getIdentifier(iconKey, "drawable", context.packageName)
-            if (resId != 0) {
-                val src = BitmapFactory.decodeResource(context.resources, resId)
-                if (src != null) {
-                    val density = context.resources.displayMetrics.density
-                    val target = (64f * density) // H = 64dp
-                    val rightMargin = (16f * density)
-                    val srcW = src.width.toFloat()
-                    val srcH = src.height.toFloat()
-                    val scale = if (srcW > target || srcH > target) {
-                        minOf(target / srcW, target / srcH)
-                    } else 1f
-                    val drawW = srcW * scale
-                    val drawH = srcH * scale
-                    val left = (w - rightMargin - drawW).toInt().toFloat()
-                    val top = 0f // stick to top; roof area lets it "peek"
-                    val dst = RectF(left, top, left + drawW, top + drawH)
-                    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-                    canvas.drawBitmap(src, null, dst, paint)
-                }
-            }
-        }
-    }
+    
 }
