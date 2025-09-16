@@ -28,7 +28,7 @@ import android.graphics.Rect
 class MeowQuoteWidget : AppWidgetProvider() {
 
     companion object {
-        private const val KEY_DECOR_ICON = "decor_icon_key"
+        private const val "decor_icon_key" = "decor_icon_key"
         private const val PREF = "meow_settings"
         private const val KEY_SOURCE = "source"          // "all" | "fav"
         private const val KEY_SLOTS = "slots"            // "08:00,17:00,20:00"
@@ -114,7 +114,7 @@ override fun onEnabled(context: Context) {
             else -> 22f
         }
         // === B4.5: đọc lựa chọn trang trí & ước lượng kích thước nền/viền ===
-        val decorSp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+        val decorSp = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
         val decorTextColor = decorSp.getInt("decor_text_color", 0xFF111111.toInt())
         val borderStyle = decorSp.getString("decor_border_style", "none") ?: "none"
         val borderWidthDp = decorSp.getInt("decor_border_width", 2)
@@ -140,8 +140,8 @@ override fun onEnabled(context: Context) {
 
             // B5: conditional top padding for text when icon is present
             try {
-                val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-                val iconKey = sp.getString(KEY_DECOR_ICON, null)
+                val sp = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
+                val iconKey = sp.getString("decor_icon_key", null)
                 if (!iconKey.isNullOrBlank()) {
                     val side = (4f * density).toInt()
                     val padTop = (8f * density).toInt()
@@ -245,7 +245,7 @@ override fun onEnabled(context: Context) {
 
     // ====== Tính "Câu hôm nay" (đồng bộ với Meow Settings) ======
     private fun computeTodayQuote(context: Context, now: Calendar): String {
-        val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+        val sp = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
         val source = sp.getString(KEY_SOURCE, "all") ?: "all"
         val slotsString = sp.getString(KEY_SLOTS, "08:00,17:00,20:00") ?: "08:00,17:00,20:00"
         val addedRaw = sp.getString(KEY_ADDED, "") ?: ""
@@ -351,7 +351,7 @@ override fun onEnabled(context: Context) {
 
     // ====== Hẹn giờ mốc kế tiếp (nhẹ) ======
     private fun scheduleNextTick(context: Context) {
-        val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+        val sp = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
         val nextTime = nextSlotTimeMillis(sp.getString(KEY_SLOTS, "08:00,17:00,20:00") ?: "08:00,17:00,20:00")
         if (nextTime <= 0L) return
 
@@ -513,7 +513,7 @@ private fun buildDecorBitmap(
         canvas.drawRoundRect(rectStroke, radius, radius, paintStroke)
     }
 
-    return bmp
+
 
     // Draw icon overlay TOP|END if present
     run {
@@ -542,4 +542,6 @@ private fun buildDecorBitmap(
             }
         }
     }
-}
+
+
+    return bmp}
