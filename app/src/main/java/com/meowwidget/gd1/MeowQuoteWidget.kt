@@ -439,12 +439,7 @@ private fun buildDecorBitmap(
     bgColorOrNull: Int?
 ): Bitmap {
     // Icon roof & key
-    val spIcon = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
-    val iconKeyForRoof = spIcon.getString("decor_icon_key", null)
-    val roofPx = if (!iconKeyForRoof.isNullOrBlank()) {
-        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32f, context.resources.displayMetrics).toInt()
-    } else 0
-
+    
     val w = if (widthPx > 0) widthPx else 1
     val h = if (heightPx > 0) heightPx else 1
     val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
@@ -553,30 +548,5 @@ private fun buildDecorBitmap(
     return bmp
 
     // Draw icon overlay TOP|END if present
-    run {
-        val iconKey = iconKeyForRoof
-        if (!iconKey.isNullOrBlank()) {
-            val resId = context.resources.getIdentifier(iconKey, "drawable", context.packageName)
-            if (resId != 0) {
-                val src = BitmapFactory.decodeResource(context.resources, resId)
-                if (src != null) {
-                    val density = context.resources.displayMetrics.density
-                    val target = (64f * density) // H = 64dp
-                    val rightMargin = (16f * density)
-                    val srcW = src.width.toFloat()
-                    val srcH = src.height.toFloat()
-                    val scale = if (srcW > target || srcH > target) {
-                        minOf(target / srcW, target / srcH)
-                    } else 1f
-                    val drawW = srcW * scale
-                    val drawH = srcH * scale
-                    val left = (w - rightMargin - drawW).toInt().toFloat()
-                    val top = 0f // stick to top; roof area lets it "peek"
-                    val dst = RectF(left, top, left + drawW, top + drawH)
-                    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-                    canvas.drawBitmap(src, null, dst, paint)
-                }
-            }
-        }
-    }
+    
 }
