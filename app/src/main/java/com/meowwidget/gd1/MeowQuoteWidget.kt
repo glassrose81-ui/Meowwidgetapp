@@ -417,6 +417,8 @@ private fun buildDecorBitmap(
     val h = if (heightPx > 0) heightPx else 1
     val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bmp)
+    val density = context.resources.displayMetrics.density
+    val roofPx = (12f * density)
 
     // dp -> px cho độ dày viền
     val strokePx = TypedValue.applyDimension(
@@ -431,7 +433,7 @@ private fun buildDecorBitmap(
         else     -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, context.resources.displayMetrics)
     }
 
-    val rect = RectF(0f, 0f, w.toFloat(), h.toFloat())
+    val rect = RectF(0f, roofPx, w.toFloat(), h.toFloat())
 
     // tô nền (nếu có)
     if (bgColorOrNull != null) {
@@ -466,7 +468,7 @@ private fun buildDecorBitmap(
                         srcTop = dy; srcBottom = dy + newH
                     }
                     val srcRect = Rect(srcLeft, srcTop, srcRight, srcBottom)
-                    val dstRect = RectF(0f, 0f, w.toFloat(), h.toFloat())
+                    val dstRect = RectF(0f, roofPx, w.toFloat(), h.toFloat())
                     val needClip = borderStyle != "none"
                     if (needClip) {
                         val path = Path().apply { addRoundRect(dstRect, radius, radius, Path.Direction.CW) }
@@ -484,13 +486,38 @@ private fun buildDecorBitmap(
     // vẽ viền (nếu không phải "none")
     if (borderStyle != "none") {
         val half = strokePx / 2f
-        val rectStroke = RectF(half, half, w - half, h - half)
+        val rectStroke = RectF(half, roofPx + half, w - half, h - half)
         val paintStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
             strokeWidth = strokePx
             color = borderColor
         }
         canvas.drawRoundRect(rectStroke, radius, radius, paintStroke)
+    // ===== B5.3: overlay icon (chim đậu trên mái) =====
+    run {
+        val sp = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
+        val iconKey = sp.getString("decor_icon_key", null)
+        if (!iconKey.isNullOrBlank()) {
+            val resId = context.resources.getIdentifier(iconKey, "drawable", context.packageName)
+            if (resId != 0) {
+                val src = BitmapFactory.decodeResource(context.resources, resId)
+                if (src != null) {
+                    val sizePx = (32f * density)
+                    val rightPx = (16f * density)
+                    // CENTER_INSIDE semantics: do not upscale if smaller
+                    val scale = kotlin.math.min(1f, kotlin.math.min(sizePx / src.width, sizePx / src.height))
+                    val dstW = src.width * scale
+                    val dstH = src.height * scale
+                    val left = w - rightPx - dstW
+                    val top = 0f // chạm mái
+                    val dstRectIcon = RectF(left, top, left + dstW, top + dstH)
+                    canvas.drawBitmap(src, null, dstRectIcon, null)
+                    src.recycle()
+                }
+            }
+        }
+    }
+
     }
 
     return bmp
