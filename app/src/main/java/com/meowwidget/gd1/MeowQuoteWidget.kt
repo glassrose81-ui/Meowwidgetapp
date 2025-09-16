@@ -135,6 +135,16 @@ override fun onEnabled(context: Context) {
         val views = RemoteViews(context.packageName, R.layout.bocuc_meow).apply {
             setTextViewText(R.id.widget_text, quote)
             setTextViewTextSize(R.id.widget_text, TypedValue.COMPLEX_UNIT_SP, sp)
+            // Đẩy khối chữ xuống để không chạm icon khi CÓ icon
+val hasIcon = !context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
+    .getString("decor_icon_key", null).isNullOrBlank()
+if (hasIcon) {
+    val side = (12f * density).toInt()
+    val padTop = (48f * density).toInt() // = icon(72) - mái(24)
+    setViewPadding(R.id.widget_text, side, padTop, side, side)
+    try { setViewPadding(R.id.widget_text_serif, side, padTop, side, side) } catch (_: Exception) {}
+}
+
 
             // Font: đồng bộ nội dung/size/màu cho TextView serif và bật/tắt theo lựa chọn
             try { setTextViewText(R.id.widget_text_serif, quote) } catch (_: Exception) {}
