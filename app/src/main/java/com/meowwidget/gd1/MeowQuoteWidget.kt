@@ -134,15 +134,20 @@ override fun onEnabled(context: Context) {
 
 
         val views = RemoteViews(context.packageName, R.layout.bocuc_meow).apply {
-        // Adjust top padding for text only when icon is present
+        // Adjust text padding only when icon present (overlay)
         try {
             val sp2 = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
             val hasIconNow = !sp2.getString("decor_icon_key", null).isNullOrBlank()
             if (hasIconNow) {
-                val pad = (8f * context.resources.displayMetrics.density).toInt()
-                val side = (12f * context.resources.displayMetrics.density).toInt()
-                setViewPadding(R.id.widget_text, side, pad, side, side)
-                try { setViewPadding(R.id.widget_text_serif, side, pad, side, side) } catch (_: Exception) {}
+                val padTop = (8f * context.resources.displayMetrics.density).toInt()
+                val padSide = (12f * context.resources.displayMetrics.density).toInt()
+                val padEnd = (80f * context.resources.displayMetrics.density).toInt()
+                setViewPadding(R.id.widget_text, padSide, padTop, padEnd, padSide)
+                try { setViewPadding(R.id.widget_text_serif, padSide, padTop, padEnd, padSide) } catch (_: Exception) {}
+            } else {
+                val side = (4f * context.resources.displayMetrics.density).toInt()
+                setViewPadding(R.id.widget_text, side, 0, side, side)
+                try { setViewPadding(R.id.widget_text_serif, side, 0, side, side) } catch (_: Exception) {}
             }
         } catch (_: Exception) {}
 
@@ -439,18 +444,23 @@ private fun buildDecorBitmap(
     bgColorOrNull: Int?
 ): Bitmap {
     // Icon roof & key
-    
+    val spIcon = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
+    val iconKeyForRoof = spIcon.getString("decor_icon_key", null)
+    val roofPx = if (!iconKeyForRoof.isNullOrBlank()) {
+        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32f, context.resources.displayMetrics).toInt()
+    } else 0
+
     val w = if (widthPx > 0) widthPx else 1
     val h = if (heightPx > 0) heightPx else 1
     val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bmp)
-    // B5.2: Conditional roof & icon config
+    // Overlay icon config (no roof)
     val sp = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
     val iconKey = sp.getString("decor_icon_key", null)
     val hasIcon = !iconKey.isNullOrBlank()
     val density = context.resources.displayMetrics.density
-    val roofPx = if (hasIcon) (32f * density).toInt() else 0
-    val iconSizePx = (64f * density).toInt()
+    val roofPx = 0
+    val iconSizePx = (60f * density).toInt()
     val iconRightPx = (16f * density).toInt()
 
 
@@ -528,7 +538,7 @@ private fun buildDecorBitmap(
         }
         canvas.drawRoundRect(rectStroke, radius, radius, paintStroke)
     }
-    // Draw icon overlay if present
+    // Draw icon overlay if present (H=60dp, right=16dp)
     if (hasIcon) {
         val resIdIcon = context.resources.getIdentifier(iconKey, "drawable", context.packageName)
         if (resIdIcon != 0) {
@@ -537,7 +547,7 @@ private fun buildDecorBitmap(
                 val left = (w - iconRightPx - iconSizePx).toFloat()
                 val top = 0f
                 val dst = RectF(left, top, left + iconSizePx, top + iconSizePx)
-                val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+                val paint = Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG)
                 canvas.drawBitmap(iconSrc, null, dst, paint)
                 iconSrc.recycle()
             }
@@ -548,5 +558,30 @@ private fun buildDecorBitmap(
     return bmp
 
     // Draw icon overlay TOP|END if present
-    
+    run {
+        val iconKey = iconKeyForRoof
+        if (!iconKey.isNullOrBlank()) {
+            val resId = context.resources.getIdentifier(iconKey, "drawable", context.packageName)
+            if (resId != 0) {
+                val src = BitmapFactory.decodeResource(context.resources, resId)
+                if (src != null) {
+                    val density = context.resources.displayMetrics.density
+                    val target = (64f * density) // H = 64dp
+                    val rightMargin = (16f * density)
+                    val srcW = src.width.toFloat()
+                    val srcH = src.height.toFloat()
+                    val scale = if (srcW > target || srcH > target) {
+                        minOf(target / srcW, target / srcH)
+                    } else 1f
+                    val drawW = srcW * scale
+                    val drawH = srcH * scale
+                    val left = (w - rightMargin - drawW).toInt().toFloat()
+                    val top = 0f // stick to top; roof area lets it "peek"
+                    val dst = RectF(left, top, left + drawW, top + drawH)
+                    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+                    canvas.drawBitmap(src, null, dst, paint)
+                }
+            }
+        }
+    }
 }
