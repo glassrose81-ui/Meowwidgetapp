@@ -502,7 +502,7 @@ private fun buildDecorBitmap(
             if (resId != 0) {
                 val src = BitmapFactory.decodeResource(context.resources, resId)
                 if (src != null) {
-                    val sizePx = (32f * density)
+                    val sizePx = (36f * density)
                     val rightPx = (16f * density)
                     // CENTER_INSIDE semantics: do not upscale if smaller
                     val scale = kotlin.math.min(1f, kotlin.math.min(sizePx / src.width, sizePx / src.height))
