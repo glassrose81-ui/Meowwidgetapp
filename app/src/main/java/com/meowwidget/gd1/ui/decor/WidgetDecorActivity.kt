@@ -31,6 +31,7 @@ class WidgetDecorActivity : AppCompatActivity() {
     private val KEY_DECOR_BORDER_WIDTH = "decor_border_width" // Int dp (2|4)
     private val KEY_DECOR_BORDER_COLOR = "decor_border_color" // Int (ARGB)
     private val KEY_DECOR_BG_COLOR = "decor_bg_color"         // Int (ARGB) or -1 = transparent
+    private val KEY_DECOR_ICON = "decor_icon_key"
 
     // ===== B5 (Decor Preview only in bước 1) =====
     private val KEY_DECOR_BG_MODE  = "decor_bg_mode"   // "none" | "image"
@@ -495,6 +496,14 @@ class WidgetDecorActivity : AppCompatActivity() {
                     } else {
                         editor.putString(KEY_DECOR_BG_MODE, "none")
                         editor.remove(KEY_DECOR_BG_IMAGE)
+                    }
+                }
+                run {
+                    // B5.3: Save icon key if selected; remove if KHÔNG ICON
+                    if (selectedIconKey != null) {
+                        editor.putString(KEY_DECOR_ICON, selectedIconKey)
+                    } else {
+                        editor.remove(KEY_DECOR_ICON)
                     }
                 }
                 editor.apply()
