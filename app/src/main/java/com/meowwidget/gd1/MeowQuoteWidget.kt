@@ -28,7 +28,7 @@ import android.graphics.Rect
 class MeowQuoteWidget : AppWidgetProvider() {
 
     companion object {
-        private const val "decor_icon_key" = "decor_icon_key"
+        private const val KEY_DECOR_ICON = "decor_icon_key"
         private const val PREF = "meow_settings"
         private const val KEY_SOURCE = "source"          // "all" | "fav"
         private const val KEY_SLOTS = "slots"            // "08:00,17:00,20:00"
@@ -134,6 +134,18 @@ override fun onEnabled(context: Context) {
 
 
         val views = RemoteViews(context.packageName, R.layout.bocuc_meow).apply {
+        // Adjust top padding for text only when icon is present
+        try {
+            val sp2 = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
+            val hasIconNow = !sp2.getString("decor_icon_key", null).isNullOrBlank()
+            if (hasIconNow) {
+                val pad = (8f * context.resources.displayMetrics.density).toInt()
+                val side = (12f * context.resources.displayMetrics.density).toInt()
+                setViewPadding(R.id.widget_text, side, pad, side, side)
+                try { setViewPadding(R.id.widget_text_serif, side, pad, side, side) } catch (_: Exception) {}
+            }
+        } catch (_: Exception) {}
+
             setTextViewText(R.id.widget_text, quote)
             setTextViewTextSize(R.id.widget_text, TypedValue.COMPLEX_UNIT_SP, sp)
 
@@ -437,6 +449,15 @@ private fun buildDecorBitmap(
     val h = if (heightPx > 0) heightPx else 1
     val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bmp)
+    // B5.2: Conditional roof & icon config
+    val sp = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
+    val iconKey = sp.getString("decor_icon_key", null)
+    val hasIcon = !iconKey.isNullOrBlank()
+    val density = context.resources.displayMetrics.density
+    val roofPx = if (hasIcon) (32f * density).toInt() else 0
+    val iconSizePx = (64f * density).toInt()
+    val iconRightPx = (16f * density).toInt()
+
 
     // dp -> px cho độ dày viền
     val strokePx = TypedValue.applyDimension(
@@ -451,7 +472,7 @@ private fun buildDecorBitmap(
         else     -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, context.resources.displayMetrics)
     }
 
-    val rect = RectF(0f, 0f, w.toFloat(), h.toFloat())
+    val rect = RectF(0f, roofPx.toFloat(), w.toFloat(), h.toFloat())
 
     // tô nền (nếu có)
     if (bgColorOrNull != null) {
@@ -486,7 +507,7 @@ private fun buildDecorBitmap(
                         srcTop = dy; srcBottom = dy + newH
                     }
                     val srcRect = Rect(srcLeft, srcTop, srcRight, srcBottom)
-                    val dstRect = RectF(0f, 0f, w.toFloat(), h.toFloat())
+                    val dstRect = RectF(0f, roofPx.toFloat(), w.toFloat(), h.toFloat())
                     val needClip = borderStyle != "none"
                     if (needClip) {
                         val path = Path().apply { addRoundRect(dstRect, radius, radius, Path.Direction.CW) }
@@ -512,8 +533,24 @@ private fun buildDecorBitmap(
         }
         canvas.drawRoundRect(rectStroke, radius, radius, paintStroke)
     }
+    // Draw icon overlay if present
+    if (hasIcon) {
+        val resIdIcon = context.resources.getIdentifier(iconKey, "drawable", context.packageName)
+        if (resIdIcon != 0) {
+            val iconSrc = BitmapFactory.decodeResource(context.resources, resIdIcon)
+            if (iconSrc != null) {
+                val left = (w - iconRightPx - iconSizePx).toFloat()
+                val top = 0f
+                val dst = RectF(left, top, left + iconSizePx, top + iconSizePx)
+                val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+                canvas.drawBitmap(iconSrc, null, dst, paint)
+                iconSrc.recycle()
+            }
+        }
+    }
 
 
+    return bmp
 
     // Draw icon overlay TOP|END if present
     run {
@@ -542,6 +579,4 @@ private fun buildDecorBitmap(
             }
         }
     }
-
-
-    return bmp}
+}
