@@ -165,7 +165,7 @@ class WidgetDecorActivity : AppCompatActivity() {
         contentLayer.addView(previewQuote)
         // B5 foundation: icon layer (top-most, defaults hidden)
         val iconLayer = ImageView(this).apply {
-            layoutParams = FrameLayout.LayoutParams(dp(36), dp(36), Gravity.TOP or Gravity.END
+            layoutParams = FrameLayout.LayoutParams(dp(72), dp(72), Gravity.TOP or Gravity.END
             ).apply {
                 topMargin = dp(0)
                 rightMargin = dp(16)
