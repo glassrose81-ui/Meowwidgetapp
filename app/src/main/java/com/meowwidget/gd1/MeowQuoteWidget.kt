@@ -418,7 +418,7 @@ private fun buildDecorBitmap(
     val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bmp)
     val density = context.resources.displayMetrics.density
-    val roofPx = (12f * density)
+    val roofPx = (24f * density)
 
     // dp -> px cho độ dày viền
     val strokePx = TypedValue.applyDimension(
@@ -502,7 +502,7 @@ private fun buildDecorBitmap(
             if (resId != 0) {
                 val src = BitmapFactory.decodeResource(context.resources, resId)
                 if (src != null) {
-                    val sizePx = (36f * density)
+                    val sizePx = (72f * density)
                     val rightPx = (16f * density)
                     // CENTER_INSIDE semantics: do not upscale if smaller
                     val scale = kotlin.math.min(1f, kotlin.math.min(sizePx / src.width, sizePx / src.height))
