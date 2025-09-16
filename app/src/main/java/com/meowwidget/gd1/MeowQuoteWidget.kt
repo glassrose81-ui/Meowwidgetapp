@@ -134,36 +134,31 @@ override fun onEnabled(context: Context) {
 
 
         val views = RemoteViews(context.packageName, R.layout.bocuc_meow).apply {
-        // Adjust text padding only when icon present (overlay)
-        try {
-            val sp2 = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
-            val hasIconNow = !sp2.getString("decor_icon_key", null).isNullOrBlank()
-            if (hasIconNow) {
-                val padTop = (8f * context.resources.displayMetrics.density).toInt()
-                val padSide = (12f * context.resources.displayMetrics.density).toInt()
-                val padEnd = (80f * context.resources.displayMetrics.density).toInt()
-                setViewPadding(R.id.widget_text, padSide, padTop, padEnd, padSide)
-                try { setViewPadding(R.id.widget_text_serif, padSide, padTop, padEnd, padSide) } catch (_: Exception) {}
-            } else {
-                val side = (4f * context.resources.displayMetrics.density).toInt()
-                setViewPadding(R.id.widget_text, side, 0, side, side)
-                try { setViewPadding(R.id.widget_text_serif, side, 0, side, side) } catch (_: Exception) {}
-            }
+        }
         } catch (_: Exception) {}
 
             setTextViewText(R.id.widget_text, quote)
             setTextViewTextSize(R.id.widget_text, TypedValue.COMPLEX_UNIT_SP, sp)
 
 
-            // B5: conditional top padding for text when icon is present
+            // B5: conditional padding for text when icon is present (overlay)
             try {
                 val sp = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
                 val iconKey = sp.getString("decor_icon_key", null)
-                if (!iconKey.isNullOrBlank()) {
-                    val side = (4f * density).toInt()
+                val hasIconNow = !iconKey.isNullOrBlank()
+                if (hasIconNow) {
+                    val padSide = (12f * density).toInt()
                     val padTop = (8f * density).toInt()
-                    try { setViewPadding(R.id.widget_text, side, padTop, side, side) } catch (_: Exception) {}
-                    try { setViewPadding(R.id.widget_text_serif, side, padTop, side, side) } catch (_: Exception) {}
+                    val padEnd = (80f * density).toInt()
+                    try { setViewPadding(R.id.widget_text, padSide, padTop, padEnd, padSide) } catch (_: Exception) {}
+                    try { setViewPadding(R.id.widget_text_serif, padSide, padTop, padEnd, padSide) } catch (_: Exception) {}
+                } else {
+                    val side = (4f * density).toInt()
+                    try { setViewPadding(R.id.widget_text, side, 0, side, side) } catch (_: Exception) {}
+                    try { setViewPadding(R.id.widget_text_serif, side, 0, side, side) } catch (_: Exception) {}
+                }
+            } catch (_: Exception) {}
+try { setViewPadding(R.id.widget_text_serif, side, padTop, side, side) } catch (_: Exception) {}
                 }
             } catch (_: Exception) {}
                     // Font: đồng bộ nội dung/size/màu cho TextView serif và bật/tắt theo lựa chọn
@@ -444,19 +439,17 @@ private fun buildDecorBitmap(
     bgColorOrNull: Int?
 ): Bitmap {
     // Icon roof & key
-    val spIcon = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
-    val iconKeyForRoof = spIcon.getString("decor_icon_key", null)
-    val roofPx = if (!iconKeyForRoof.isNullOrBlank()) {
-        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32f, context.resources.displayMetrics).toInt()
-    } else 0
-
+    
     val w = if (widthPx > 0) widthPx else 1
     val h = if (heightPx > 0) heightPx else 1
     val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bmp)
-    // Overlay icon config (no roof)
+    // B5.2: Conditional roof & icon config
     val sp = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
+    val iconKey = sp.getString("decor_icon_key", null)
     val hasIcon = !iconKey.isNullOrBlank()
+    val density = context.resources.displayMetrics.density
+    val roofPx = 0
     val iconSizePx = (60f * density).toInt()
     val iconRightPx = (16f * density).toInt()
 
@@ -535,7 +528,7 @@ private fun buildDecorBitmap(
         }
         canvas.drawRoundRect(rectStroke, radius, radius, paintStroke)
     }
-    // Draw icon overlay if present (H=60dp, right=16dp)
+    // Draw icon overlay if present
     if (hasIcon) {
         val resIdIcon = context.resources.getIdentifier(iconKey, "drawable", context.packageName)
         if (resIdIcon != 0) {
