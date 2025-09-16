@@ -165,7 +165,7 @@ class WidgetDecorActivity : AppCompatActivity() {
         contentLayer.addView(previewQuote)
         // B5 foundation: icon layer (top-most, defaults hidden)
         val iconLayer = ImageView(this).apply {
-            layoutParams = FrameLayout.LayoutParams(dp(72), dp(72), Gravity.TOP or Gravity.END
+            layoutParams = FrameLayout.LayoutParams(dp(32), dp(32), Gravity.TOP or Gravity.END
             ).apply {
                 topMargin = dp(0)
                 rightMargin = dp(16)
@@ -498,15 +498,13 @@ class WidgetDecorActivity : AppCompatActivity() {
                         editor.remove(KEY_DECOR_BG_IMAGE)
                     }
                 }
-                run {
-                    // B5.3: Save icon key if selected; remove if KHÔNG ICON
-                    if (selectedIconKey != null) {
-                        editor.putString(KEY_DECOR_ICON, selectedIconKey)
-                    } else {
-                        editor.remove(KEY_DECOR_ICON)
-                    }
+                                // B5.X: persist icon key for widget
+                if (selectedIconKey != null) {
+                    editor.putString(KEY_DECOR_ICON, selectedIconKey)
+                } else {
+                    editor.remove(KEY_DECOR_ICON)
                 }
-                editor.apply()
+editor.apply()
 
                 // Broadcast widget update
                 val mgr = AppWidgetManager.getInstance(this@WidgetDecorActivity)
