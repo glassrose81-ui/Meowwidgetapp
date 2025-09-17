@@ -152,7 +152,7 @@ override fun onEnabled(context: Context) {
                     val d = context.resources.displayMetrics.density
                     val padSide = (12f * d).toInt()
                     val padTop = (8f * d).toInt()
-                    val padEnd = (78f * d).toInt()
+                    val padEnd = (86f * d).toInt()
                     try { setViewPadding(R.id.widget_text, padSide, padTop, padEnd, padSide) } catch (_: Exception) {}
                     try { setViewPadding(R.id.widget_text_serif, padSide, padTop, padEnd, padSide) } catch (_: Exception) {}
                 } else {
@@ -442,7 +442,7 @@ private fun buildDecorBitmap(
     val iconKey = spIcon.getString("decor_icon_key", null)
     val hasIcon = !iconKey.isNullOrBlank()
     val density = context.resources.displayMetrics.density
-    val iconSizePx = (64f * density).toInt()
+    val iconSizePx = (70f * density).toInt()
     val iconRightPx = (12f * density).toInt()
 
 
