@@ -28,7 +28,6 @@ import android.graphics.Rect
 class MeowQuoteWidget : AppWidgetProvider() {
 
     companion object {
-        private const val KEY_DECOR_ICON = "decor_icon_key"
         private const val PREF = "meow_settings"
         private const val KEY_SOURCE = "source"          // "all" | "fav"
         private const val KEY_SLOTS = "slots"            // "08:00,17:00,20:00"
@@ -114,7 +113,7 @@ override fun onEnabled(context: Context) {
             else -> 22f
         }
         // === B4.5: đọc lựa chọn trang trí & ước lượng kích thước nền/viền ===
-        val decorSp = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
+        val decorSp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
         val decorTextColor = decorSp.getInt("decor_text_color", 0xFF111111.toInt())
         val borderStyle = decorSp.getString("decor_border_style", "none") ?: "none"
         val borderWidthDp = decorSp.getInt("decor_border_width", 2)
@@ -134,40 +133,36 @@ override fun onEnabled(context: Context) {
 
 
         val views = RemoteViews(context.packageName, R.layout.bocuc_meow).apply {
-        }
-        } catch (_: Exception) {}
-
             setTextViewText(R.id.widget_text, quote)
             setTextViewTextSize(R.id.widget_text, TypedValue.COMPLEX_UNIT_SP, sp)
 
-
-            // B5: conditional padding for text when icon is present (overlay)
-            try {
-                val sp = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
-                val iconKey = sp.getString("decor_icon_key", null)
-                val hasIconNow = !iconKey.isNullOrBlank()
-                if (hasIconNow) {
-                    val padSide = (12f * density).toInt()
-                    val padTop = (8f * density).toInt()
-                    val padEnd = (80f * density).toInt()
-                    try { setViewPadding(R.id.widget_text, padSide, padTop, padEnd, padSide) } catch (_: Exception) {}
-                    try { setViewPadding(R.id.widget_text_serif, padSide, padTop, padEnd, padSide) } catch (_: Exception) {}
-                } else {
-                    val side = (4f * density).toInt()
-                    try { setViewPadding(R.id.widget_text, side, 0, side, side) } catch (_: Exception) {}
-                    try { setViewPadding(R.id.widget_text_serif, side, 0, side, side) } catch (_: Exception) {}
-                }
-            } catch (_: Exception) {}
-try { setViewPadding(R.id.widget_text_serif, side, padTop, side, side) } catch (_: Exception) {}
-                }
-            } catch (_: Exception) {}
-                    // Font: đồng bộ nội dung/size/màu cho TextView serif và bật/tắt theo lựa chọn
+            // Font: đồng bộ nội dung/size/màu cho TextView serif và bật/tắt theo lựa chọn
             try { setTextViewText(R.id.widget_text_serif, quote) } catch (_: Exception) {}
             try { setTextViewTextSize(R.id.widget_text_serif, TypedValue.COMPLEX_UNIT_SP, sp) } catch (_: Exception) {}
             try { setTextColor(R.id.widget_text, decorTextColor) } catch (_: Exception) {}
             try { setTextColor(R.id.widget_text_serif, decorTextColor) } catch (_: Exception) {}
             try { setViewVisibility(R.id.widget_text, if (isSerif) View.GONE else View.VISIBLE) } catch (_: Exception) {}
             try { setViewVisibility(R.id.widget_text_serif, if (isSerif) View.VISIBLE else View.GONE) } catch (_: Exception) {}
+
+            // === Padding to avoid overlay icon (only when icon present) ===
+            try {
+                val spPad = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
+                val hasIconNow = !spPad.getString("decor_icon_key", null).isNullOrBlank()
+                if (hasIconNow) {
+                    val d = context.resources.displayMetrics.density
+                    val padSide = (12f * d).toInt()
+                    val padTop = (8f * d).toInt()
+                    val padEnd = (80f * d).toInt()
+                    try { setViewPadding(R.id.widget_text, padSide, padTop, padEnd, padSide) } catch (_: Exception) {}
+                    try { setViewPadding(R.id.widget_text_serif, padSide, padTop, padEnd, padSide) } catch (_: Exception) {}
+                } else {
+                    val d = context.resources.displayMetrics.density
+                    val side = (4f * d).toInt()
+                    try { setViewPadding(R.id.widget_text, side, 0, side, side) } catch (_: Exception) {}
+                    try { setViewPadding(R.id.widget_text_serif, side, 0, side, side) } catch (_: Exception) {}
+                }
+            } catch (_: Exception) {}
+
 
             // Click: tạo 1 PendingIntent mở MeowSettingsActivity dùng chung cho sans & serif
             val clickIntent = Intent(context, MeowSettingsActivity::class.java)
@@ -257,7 +252,7 @@ try { setViewPadding(R.id.widget_text_serif, side, padTop, side, side) } catch (
 
     // ====== Tính "Câu hôm nay" (đồng bộ với Meow Settings) ======
     private fun computeTodayQuote(context: Context, now: Calendar): String {
-        val sp = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
+        val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
         val source = sp.getString(KEY_SOURCE, "all") ?: "all"
         val slotsString = sp.getString(KEY_SLOTS, "08:00,17:00,20:00") ?: "08:00,17:00,20:00"
         val addedRaw = sp.getString(KEY_ADDED, "") ?: ""
@@ -363,7 +358,7 @@ try { setViewPadding(R.id.widget_text_serif, side, padTop, side, side) } catch (
 
     // ====== Hẹn giờ mốc kế tiếp (nhẹ) ======
     private fun scheduleNextTick(context: Context) {
-        val sp = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
+        val sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
         val nextTime = nextSlotTimeMillis(sp.getString(KEY_SLOTS, "08:00,17:00,20:00") ?: "08:00,17:00,20:00")
         if (nextTime <= 0L) return
 
@@ -438,18 +433,15 @@ private fun buildDecorBitmap(
     borderColor: Int,
     bgColorOrNull: Int?
 ): Bitmap {
-    // Icon roof & key
-    
     val w = if (widthPx > 0) widthPx else 1
     val h = if (heightPx > 0) heightPx else 1
     val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bmp)
-    // B5.2: Conditional roof & icon config
-    val sp = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
-    val iconKey = sp.getString("decor_icon_key", null)
+    // === Overlay icon config (no roof) ===
+    val spIcon = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
+    val iconKey = spIcon.getString("decor_icon_key", null)
     val hasIcon = !iconKey.isNullOrBlank()
     val density = context.resources.displayMetrics.density
-    val roofPx = 0
     val iconSizePx = (60f * density).toInt()
     val iconRightPx = (16f * density).toInt()
 
@@ -467,7 +459,7 @@ private fun buildDecorBitmap(
         else     -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, context.resources.displayMetrics)
     }
 
-    val rect = RectF(0f, roofPx.toFloat(), w.toFloat(), h.toFloat())
+    val rect = RectF(0f, 0f, w.toFloat(), h.toFloat())
 
     // tô nền (nếu có)
     if (bgColorOrNull != null) {
@@ -502,7 +494,7 @@ private fun buildDecorBitmap(
                         srcTop = dy; srcBottom = dy + newH
                     }
                     val srcRect = Rect(srcLeft, srcTop, srcRight, srcBottom)
-                    val dstRect = RectF(0f, roofPx.toFloat(), w.toFloat(), h.toFloat())
+                    val dstRect = RectF(0f, 0f, w.toFloat(), h.toFloat())
                     val needClip = borderStyle != "none"
                     if (needClip) {
                         val path = Path().apply { addRoundRect(dstRect, radius, radius, Path.Direction.CW) }
@@ -520,7 +512,7 @@ private fun buildDecorBitmap(
     // vẽ viền (nếu không phải "none")
     if (borderStyle != "none") {
         val half = strokePx / 2f
-        val rectStroke = RectF(half, roofPx + half, w - half, h - half)
+        val rectStroke = RectF(half, half, w - half, h - half)
         val paintStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
             strokeWidth = strokePx
@@ -528,7 +520,9 @@ private fun buildDecorBitmap(
         }
         canvas.drawRoundRect(rectStroke, radius, radius, paintStroke)
     }
-    // Draw icon overlay if present
+
+    
+    // Draw icon overlay (TOP|END) if present
     if (hasIcon) {
         val resIdIcon = context.resources.getIdentifier(iconKey, "drawable", context.packageName)
         if (resIdIcon != 0) {
@@ -539,14 +533,9 @@ private fun buildDecorBitmap(
                 val dst = RectF(left, top, left + iconSizePx, top + iconSizePx)
                 val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
                 canvas.drawBitmap(iconSrc, null, dst, paint)
-                iconSrc.recycle()
+                try { iconSrc.recycle() } catch (_: Exception) {}
             }
         }
     }
-
-
-    return bmp
-
-    // Draw icon overlay TOP|END if present
-    
+return bmp
 }
