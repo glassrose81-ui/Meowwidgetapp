@@ -280,10 +280,7 @@ sendBroadcast(Intent(this, MeowQuoteWidget::class.java).apply {
 })
 
             toast("Đã lưu mốc: $s")
-            // Cập nhật anchor_day để giữ ổn định mapping khi đổi lịch
-            val sdf = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
-            val todayStr = sdf.format(Date())
-            pref.edit().putString(KEY_ANCHOR_DAY, todayStr).apply()
+
             refreshCountsAndToday()
         }
 
