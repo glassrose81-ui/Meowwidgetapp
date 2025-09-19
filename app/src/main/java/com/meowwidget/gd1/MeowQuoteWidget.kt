@@ -283,8 +283,8 @@ override fun onEnabled(context: Context) {
             } catch (_: Exception) { 0L }
         }
 
-        
-        var steps = ensurePlanBase(sp, baseList.size, now).toLong() * slotsPerDay + slotIdxToday.toLong()
+        var days = daysBetween(anchorDay, todayStr)
+        var steps = days * slotsPerDay + slotIdxToday
 
         // 0h fix: trước mốc đầu, coi như còn thuộc "hôm qua"
         if (slots.isNotEmpty()) {
