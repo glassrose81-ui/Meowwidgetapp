@@ -203,13 +203,14 @@ try {
             // Áp bitmap nền/viền nếu có ImageView nền
             try {
                 val bmp = buildDecorBitmap(context, wPx, hPx, borderStyle, borderWidthDp, borderColor, bgOrNull)
+                val bmpMut = bmp.copy(Bitmap.Config.ARGB_8888, true)
                 setImageViewBitmap(R.id.widget_bg, bmp)
 
                 // [MEOW_FRAME] START — overlay khung hình (nếu có) lên bitmap nền
 try {
-    overlayFrameIfAny(context, bmp, wPx, hPx)
+    overlayFrameIfAny(context, bmpMut, wPx, hPx)
     // vẽ lại vào widget_bg (ghi đè bức nền vừa set)
-    setImageViewBitmap(R.id.widget_bg, bmp)
+    setImageViewBitmap(R.id.widget_bg, bmpMut)
 } catch (_: Exception) { /* an toàn: bỏ qua nếu thiếu tài nguyên */ }
             } catch (_: Exception) {
                 // fallback: nếu thiếu widget_bg, chỉ áp nền phẳng (nếu có) lên TextView
