@@ -687,7 +687,7 @@ run {
 run {
     val slugs = scanFrameSlugs()
     slugs.forEach { slug ->
-        val thumbName = "frame_${'$'}slug" + "_thumb"
+        val thumbName = "frame_${slug}" + "_thumb"
         val thumbId = resources.getIdentifier(thumbName, "drawable", packageName)
         if (thumbId != 0) {
             val iv = ImageView(this).apply {
@@ -918,7 +918,7 @@ private fun scanFrameSlugs(): List<String> {
             if (name.startsWith("frame_") && name.endsWith("_thumb")) {
                 val slug = name.removePrefix("frame_").removeSuffix("_thumb")
                 // xác minh có file 9‑patch tương ứng
-                val idFull = resources.getIdentifier("frame_${'$'}slug", "drawable", packageName)
+                val idFull = resources.getIdentifier("frame_${slug}", "drawable", packageName)
                 if (idFull != 0) out.add(slug)
             }
         }
@@ -928,7 +928,7 @@ private fun scanFrameSlugs(): List<String> {
 
 /** Tính padding theo content area của 9‑patch, scale theo kích thước previewCard hiện tại. */
 private fun computeFramePaddingPx(slug: String, outW: Int, outH: Int): Rect? {
-    val resId = resources.getIdentifier("frame_${'$'}slug", "drawable", packageName)
+    val resId = resources.getIdentifier("frame_${slug}", "drawable", packageName)
     if (resId == 0) return null
     val dr = try { resources.getDrawable(resId, null) } catch (_: Exception) { null }
     if (dr !is NinePatchDrawable) return null
@@ -949,7 +949,7 @@ private fun computeFramePaddingPx(slug: String, outW: Int, outH: Int): Rect? {
 
 /** Áp dụng khung hình vào preview: set background 9‑patch + padding cho content. */
 private fun applyFrameSelection(frameOverlayLayer: View, contentLayer: FrameLayout, slug: String) {
-    val resId = resources.getIdentifier("frame_${'$'}slug", "drawable", packageName)
+    val resId = resources.getIdentifier("frame_${slug}", "drawable", packageName)
     if (resId == 0) return
     // set background 9‑patch để vẽ đúng stretch
     try { frameOverlayLayer.setBackgroundResource(resId) } catch (_: Exception) { return }
