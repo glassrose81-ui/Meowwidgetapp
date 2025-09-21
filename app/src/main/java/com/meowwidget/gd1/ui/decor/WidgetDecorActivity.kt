@@ -5,6 +5,8 @@ import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.graphics.Rect
+import android.graphics.drawable.NinePatchDrawable
 import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
@@ -32,6 +34,7 @@ class WidgetDecorActivity : AppCompatActivity() {
     private val KEY_DECOR_BORDER_COLOR = "decor_border_color" // Int (ARGB)
     private val KEY_DECOR_BG_COLOR = "decor_bg_color"         // Int (ARGB) or -1 = transparent
     private val KEY_DECOR_ICON = "decor_icon_key"
+    private val KEY_DECOR_FRAME = "decor_frame_key"
 
     // ===== B5 (Decor Preview only in bước 1) =====
     private val KEY_DECOR_BG_MODE  = "decor_bg_mode"   // "none" | "image"
@@ -44,7 +47,9 @@ class WidgetDecorActivity : AppCompatActivity() {
     // ===== B5.2: Icon (preview only; chưa lưu) =====
     private var selectedIconKey: String? = null
     private var selectedIconThumb: ImageView? = null
-
+    // [MEOW_FRAME] state — khung hình
+private var selectedFrameSlug: String? = null
+private var selectedFrameThumb: ImageView? = null
 
 
     // Preview selection state (highlight only; not persisted in B4.x)
@@ -142,6 +147,15 @@ class WidgetDecorActivity : AppCompatActivity() {
             visibility = View.GONE // default hidden; will be used in B5
         }
         updateFrameImageClip(frameImageLayer)
+// [MEOW_FRAME] khung hình (9‑patch) — dưới chữ, trên nền
+val frameOverlayLayer = View(this).apply {
+    layoutParams = FrameLayout.LayoutParams(
+        FrameLayout.LayoutParams.MATCH_PARENT,
+        FrameLayout.LayoutParams.MATCH_PARENT
+    )
+    visibility = View.GONE
+}
+        
         // Content layer (text)
         val contentLayer = FrameLayout(this).apply {
             setPadding(dp(16), dp(16), dp(16), dp(16))
@@ -178,6 +192,7 @@ class WidgetDecorActivity : AppCompatActivity() {
         previewCard.addView(bgLayer)
         previewCard.addView(frameImageLayer)
         previewCard.addView(borderLayer)
+        previewCard.addView(frameOverlayLayer)
         previewCard.addView(contentLayer)
         previewCard.addView(iconLayer)
 
@@ -504,6 +519,15 @@ class WidgetDecorActivity : AppCompatActivity() {
                 } else {
                     editor.remove(KEY_DECOR_ICON)
                 }
+// [MEOW_FRAME] persist frame slug
+run {
+    val slug = selectedFrameSlug?.trim()
+    if (slug.isNullOrEmpty()) {
+        editor.remove(KEY_DECOR_FRAME)
+    } else {
+        editor.putString(KEY_DECOR_FRAME, slug)
+    }
+}                
 editor.apply()
 
                 // Broadcast widget update
@@ -618,6 +642,82 @@ editor.apply()
 
         content.addView(titleBgImage)
         content.addView(thumbScroll)
+        // ===== B6: Khung hình (nâng cao) =====
+val titleFrame = TextView(this).apply {
+    text = "Khung hình (nâng cao)"
+    setTextColor(0xFF111111.toInt())
+    textSize = 20f
+    typeface = Typeface.DEFAULT_BOLD
+    setPadding(0, dp(14), 0, dp(6))
+}
+val frameScroll = HorizontalScrollView(this).apply {
+    isHorizontalScrollBarEnabled = false
+    layoutParams = LinearLayout.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.WRAP_CONTENT
+    )
+}
+val frameRow = LinearLayout(this).apply {
+    orientation = LinearLayout.HORIZONTAL
+    layoutParams = LinearLayout.LayoutParams(
+        ViewGroup.LayoutParams.WRAP_CONTENT,
+        ViewGroup.LayoutParams.WRAP_CONTENT
+    )
+}
+// Ô đầu: KHÔNG KHUNG HÌNH
+run {
+    val b = outlineButton("KHÔNG KHUNG").apply {
+        setOnClickListener {
+            // bỏ chọn mới
+            selectedFrameThumb?.background = outline(0x00000000, 0xFFBDBDBD.toInt(), 1)
+            selectedFrameThumb = null
+            selectedFrameSlug = null
+
+            // ẩn khung hình, khôi phục viền stroke cũ + padding mặc định
+            frameOverlayLayer.background = null
+            frameOverlayLayer.visibility = View.GONE
+            updateBorder(borderLayer)
+            contentLayer.setPadding(dp(16), dp(16), dp(16), dp(16))
+        }
+    }
+    frameRow.addView(b)
+    frameRow.addView(spaceH(dp(8)))
+}
+// Autoscan: quét mọi drawable tên "frame_<slug>_thumb" và tồn tại "frame_<slug>"
+run {
+    val slugs = scanFrameSlugs()
+    slugs.forEach { slug ->
+        val thumbName = "frame_${'$'}slug" + "_thumb"
+        val thumbId = resources.getIdentifier(thumbName, "drawable", packageName)
+        if (thumbId != 0) {
+            val iv = ImageView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(dp(56), dp(56)).apply { rightMargin = dp(8) }
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                setImageResource(thumbId)
+                background = outline(0x00000000, 0xFFBDBDBD.toInt(), 1)
+                setOnClickListener { v ->
+                    val self = v as ImageView
+                    // bỏ viền cũ
+                    selectedFrameThumb?.background = outline(0x00000000, 0xFFBDBDBD.toInt(), 1)
+                    // chọn mới
+                    selectedFrameThumb = self
+                    selectedFrameSlug = slug
+                    self.background = outline(0x00000000, 0xFF2F80ED.toInt(), 2)
+
+                    // ẩn stroke; hiển thị khung hình + padding theo 9‑patch
+                    borderLayer.visibility = View.GONE
+                    frameOverlayLayer.visibility = View.VISIBLE
+                    applyFrameSelection(frameOverlayLayer, contentLayer, slug)
+                }
+            }
+            frameRow.addView(iv)
+        }
+    }
+}
+frameScroll.addView(frameRow)
+
+content.addView(titleFrame)
+content.addView(frameScroll)
 
 
         
@@ -806,4 +906,73 @@ content.addView(actionRow)
         borderLayer.background = d
         borderLayer.visibility = View.VISIBLE
     }
+
+    // [MEOW_FRAME] START — helpers: autoscan, padding từ 9‑patch, áp preview
+/** Quét R.drawable để tìm mọi frame_<slug>_thumb có cặp frame_<slug>. */
+private fun scanFrameSlugs(): List<String> {
+    val out = ArrayList<String>()
+    try {
+        val f = R.drawable::class.java.fields
+        for (field in f) {
+            val name = field.name ?: continue
+            if (name.startsWith("frame_") && name.endsWith("_thumb")) {
+                val slug = name.removePrefix("frame_").removeSuffix("_thumb")
+                // xác minh có file 9‑patch tương ứng
+                val idFull = resources.getIdentifier("frame_${'$'}slug", "drawable", packageName)
+                if (idFull != 0) out.add(slug)
+            }
+        }
+    } catch (_: Exception) { }
+    return out.sorted()
+}
+
+/** Tính padding theo content area của 9‑patch, scale theo kích thước previewCard hiện tại. */
+private fun computeFramePaddingPx(slug: String, outW: Int, outH: Int): Rect? {
+    val resId = resources.getIdentifier("frame_${'$'}slug", "drawable", packageName)
+    if (resId == 0) return null
+    val dr = try { resources.getDrawable(resId, null) } catch (_: Exception) { null }
+    if (dr !is NinePatchDrawable) return null
+
+    val base = Rect()
+    dr.getPadding(base)
+    val iw = dr.intrinsicWidth.coerceAtLeast(1)
+    val ih = dr.intrinsicHeight.coerceAtLeast(1)
+    val sx = outW.toFloat() / iw
+    val sy = outH.toFloat() / ih
+    return Rect(
+        (base.left * sx).toInt(),
+        (base.top * sy).toInt(),
+        (base.right * sx).toInt(),
+        (base.bottom * sy).toInt()
+    )
+}
+
+/** Áp dụng khung hình vào preview: set background 9‑patch + padding cho content. */
+private fun applyFrameSelection(frameOverlayLayer: View, contentLayer: FrameLayout, slug: String) {
+    val resId = resources.getIdentifier("frame_${'$'}slug", "drawable", packageName)
+    if (resId == 0) return
+    // set background 9‑patch để vẽ đúng stretch
+    try { frameOverlayLayer.setBackgroundResource(resId) } catch (_: Exception) { return }
+
+    // Lấy size thực của preview theo layout hiện tại
+    frameOverlayLayer.post {
+        val w = frameOverlayLayer.width.coerceAtLeast(1)
+        val h = frameOverlayLayer.height.coerceAtLeast(1)
+        val pad = computeFramePaddingPx(slug, w, h) ?: return@post
+
+        // Nếu đang có icon preview -> cộng thêm phần tránh icon (đúng thông số đã chốt)
+        val hasIcon = (selectedIconKey != null)
+        val d = resources.displayMetrics.density
+        val extraEnd = if (hasIcon) (86f * d).toInt() else 0
+        val extraStart = if (hasIcon) (16f * d).toInt() else 0
+        val extraTop = if (hasIcon) (8f * d).toInt() else 0
+
+        val left = pad.left + extraStart
+        val top = pad.top + extraTop
+        val right = pad.right + extraEnd
+        val bottom = pad.bottom
+
+        contentLayer.setPadding(left, top, right, bottom)
+    }
+}
 }
