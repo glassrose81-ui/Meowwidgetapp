@@ -460,7 +460,7 @@ try {
 
 // [MEOW_FRAME] START — helpers cho khung hình
 private fun computeFramePaddingPx(context: Context, slug: String, destW: Int, destH: Int): android.graphics.Rect? {
-    val name = "frame_${'$'}slug"
+    val name = "frame_${slug}"
     val resId = context.resources.getIdentifier(name, "drawable", context.packageName)
     if (resId == 0) return null
     val dr = try { context.resources.getDrawable(resId, null) } catch (_: Exception) { null }
@@ -489,7 +489,7 @@ private fun overlayFrameIfAny(context: Context, base: Bitmap, destW: Int, destH:
     val slug = sp.getString("decor_frame_key", null)?.trim()
     if (slug.isNullOrEmpty() || slug.equals("none", ignoreCase = true)) return
 
-    val name = "frame_${'$'}slug"
+    val name = "frame_${slug}"
     val resId = context.resources.getIdentifier(name, "drawable", context.packageName)
     if (resId == 0) return
     val dr = try { context.resources.getDrawable(resId, null) } catch (_: Exception) { null }
