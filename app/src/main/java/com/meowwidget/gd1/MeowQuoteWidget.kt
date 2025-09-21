@@ -24,6 +24,7 @@ import android.view.View
 import android.graphics.BitmapFactory
 import android.graphics.Path
 import android.graphics.Rect
+import android.graphics.drawable.NinePatchDrawable
 
 class MeowQuoteWidget : AppWidgetProvider() {
 
@@ -162,6 +163,31 @@ override fun onEnabled(context: Context) {
                     try { setViewPadding(R.id.widget_text_serif, side, 0, side, side) } catch (_: Exception) {}
                 }
             } catch (_: Exception) {}
+            // [MEOW_FRAME] START — padding theo content area của khung hình (+ cộng thêm padEnd nếu có icon)
+try {
+    val spFrame = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
+    val slug = spFrame.getString("decor_frame_key", null)?.trim()
+    if (!slug.isNullOrEmpty() && !slug.equals("none", ignoreCase = true)) {
+        val pad = computeFramePaddingPx(context, slug, wPx, hPx)
+        if (pad != null) {
+            // Cộng thêm padEnd khi có icon (đúng thông số: H=70dp, right=12dp, top=0; padEnd=86dp; padStart=16dp, padTop=8dp)
+            val d = context.resources.displayMetrics.density
+            val spPad = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
+            val hasIconNow = !spPad.getString("decor_icon_key", null).isNullOrBlank()
+            val extraEnd = if (hasIconNow) (86f * d).toInt() else 0
+            val extraStart = if (hasIconNow) (16f * d).toInt() else 0
+            val extraTop = if (hasIconNow) (8f * d).toInt() else 0
+
+            val left = pad.left + extraStart
+            val top = pad.top + extraTop
+            val right = pad.right + extraEnd
+            val bottom = pad.bottom
+
+            try { setViewPadding(R.id.widget_text, left, top, right, bottom) } catch (_: Exception) {}
+            try { setViewPadding(R.id.widget_text_serif, left, top, right, bottom) } catch (_: Exception) {}
+        }
+    }
+} catch (_: Exception) { /* bỏ qua nếu thiếu 9‑patch */ }
 
 
             // Click: tạo 1 PendingIntent mở MeowSettingsActivity dùng chung cho sans & serif
@@ -178,6 +204,13 @@ override fun onEnabled(context: Context) {
             try {
                 val bmp = buildDecorBitmap(context, wPx, hPx, borderStyle, borderWidthDp, borderColor, bgOrNull)
                 setImageViewBitmap(R.id.widget_bg, bmp)
+
+                // [MEOW_FRAME] START — overlay khung hình (nếu có) lên bitmap nền
+try {
+    overlayFrameIfAny(context, bmp, wPx, hPx)
+    // vẽ lại vào widget_bg (ghi đè bức nền vừa set)
+    setImageViewBitmap(R.id.widget_bg, bmp)
+} catch (_: Exception) { /* an toàn: bỏ qua nếu thiếu tài nguyên */ }
             } catch (_: Exception) {
                 // fallback: nếu thiếu widget_bg, chỉ áp nền phẳng (nếu có) lên TextView
                 if (decorBgColor != -1) {
@@ -424,6 +457,49 @@ override fun onEnabled(context: Context) {
 }
 
 // === B4.5 helper: vẽ bitmap nền + viền ===
+
+// [MEOW_FRAME] START — helpers cho khung hình
+private fun computeFramePaddingPx(context: Context, slug: String, destW: Int, destH: Int): android.graphics.Rect? {
+    val name = "frame_${'$'}slug"
+    val resId = context.resources.getIdentifier(name, "drawable", context.packageName)
+    if (resId == 0) return null
+    val dr = try { context.resources.getDrawable(resId, null) } catch (_: Exception) { null }
+    if (dr !is NinePatchDrawable) return null
+
+    // Lấy padding gốc từ 9‑patch
+    val base = android.graphics.Rect()
+    dr.getPadding(base)
+
+    // Scale padding theo kích thước render thực tế
+    val iw = dr.intrinsicWidth.coerceAtLeast(1)
+    val ih = dr.intrinsicHeight.coerceAtLeast(1)
+    val sx = destW.toFloat() / iw
+    val sy = destH.toFloat() / ih
+    return android.graphics.Rect(
+        (base.left * sx).toInt(),
+        (base.top * sy).toInt(),
+        (base.right * sx).toInt(),
+        (base.bottom * sy).toInt()
+    )
+}
+
+/** Vẽ khung (nếu có) đè lên bitmap nền. Không làm gì nếu chưa chọn khung. */
+private fun overlayFrameIfAny(context: Context, base: Bitmap, destW: Int, destH: Int) {
+    val sp = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
+    val slug = sp.getString("decor_frame_key", null)?.trim()
+    if (slug.isNullOrEmpty() || slug.equals("none", ignoreCase = true)) return
+
+    val name = "frame_${'$'}slug"
+    val resId = context.resources.getIdentifier(name, "drawable", context.packageName)
+    if (resId == 0) return
+    val dr = try { context.resources.getDrawable(resId, null) } catch (_: Exception) { null }
+    if (dr == null) return
+
+    // Thiết lập bounds = full bitmap
+    dr.setBounds(0, 0, destW, destH)
+    val canvas = Canvas(base)
+    dr.draw(canvas)
+}
 private fun buildDecorBitmap(
     context: Context,
     widthPx: Int,
