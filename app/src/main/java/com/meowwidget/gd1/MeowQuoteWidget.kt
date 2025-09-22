@@ -202,7 +202,15 @@ try {
             try { setTextColor(R.id.widget_text, decorTextColor) } catch (_: Exception) {}
             // Áp bitmap nền/viền nếu có ImageView nền
             try {
-                val bmp = buildDecorBitmap(context, wPx, hPx, borderStyle, borderWidthDp, borderColor, bgOrNull)
+// [MEOW_FRAME] OFF stroke & clip when frame selected (baseline overlay mode)
+val spFrame = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
+val slugFrame = spFrame.getString("decor_frame_key", null)?.trim()
+val hasFrame = !slugFrame.isNullOrEmpty() && !slugFrame.equals("none", ignoreCase = true)
+
+val borderStyleEff = if (hasFrame) "none" else borderStyle
+val borderWidthDpEff = if (hasFrame) 0 else borderWidthDp
+                
+                val bmp = buildDecorBitmap(context, wPx, hPx, borderStyleEff, borderWidthDpEff, borderColor, bgOrNull)
                 val bmpMut = bmp.copy(Bitmap.Config.ARGB_8888, true)
                 setImageViewBitmap(R.id.widget_bg, bmp)
 
