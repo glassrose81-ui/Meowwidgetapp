@@ -211,6 +211,22 @@ val borderWidthDpEff = if (hasFrame) 0 else borderWidthDp
                 val bmp = buildDecorBitmap(context, wPx, hPx, borderStyleEff, borderWidthDpEff, borderColor, bgOrNull)
                 val bmpMut = bmp.copy(Bitmap.Config.ARGB_8888, true)
                 setImageViewBitmap(R.id.widget_bg, bmp)
+                // [MEOW_FRAME] set/clear lớp khung overlay từ decor_frame_key
+try {
+    val spF = context.getSharedPreferences("meow_settings", Context.MODE_PRIVATE)
+    val slug = spF.getString("decor_frame_key", null)?.trim()
+    if (!slug.isNullOrEmpty() && !slug.equals("none", true)) {
+        val resId = context.resources.getIdentifier("frame_${slug}", "drawable", context.packageName)
+        if (resId != 0) {
+            try { setImageViewResource(R.id.widget_frame, resId) } catch (_: Exception) {}
+            try { setViewVisibility(R.id.widget_frame, View.VISIBLE) } catch (_: Exception) {}
+        } else {
+            try { setViewVisibility(R.id.widget_frame, View.GONE) } catch (_: Exception) {}
+        }
+    } else {
+        try { setViewVisibility(R.id.widget_frame, View.GONE) } catch (_: Exception) {}
+    }
+} catch (_: Exception) { /* no-op */ }
 
                 // [MEOW_FRAME] START — overlay khung hình (nếu có) lên bitmap nền
 try {
