@@ -153,9 +153,10 @@ override fun onEnabled(context: Context) {
                     val d = context.resources.displayMetrics.density
                     val padSide = (12f * d).toInt()
                     val padTop = (8f * d).toInt()
-                    val padEnd = (86f * d).toInt()
-                    try { setViewPadding(R.id.widget_text, padSide, padTop, padEnd, padSide) } catch (_: Exception) {}
-                    try { setViewPadding(R.id.widget_text_serif, padSide, padTop, padEnd, padSide) } catch (_: Exception) {}
+                    val padEnd = (84f * d).toInt()
+                    val padBottomExtra = (2f * d).toInt()
+                    try { setViewPadding(R.id.widget_text, padSide, padTop, padEnd, padSide + padBottomExtra) } catch (_: Exception) {}
+                    try { setViewPadding(R.id.widget_text_serif, padSide, padTop, padEnd, padSide + padBottomExtra) } catch (_: Exception) {}
                 } else {
                     val d = context.resources.displayMetrics.density
                     val side = (4f * d).toInt()
