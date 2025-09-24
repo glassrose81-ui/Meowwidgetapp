@@ -108,11 +108,17 @@ override fun onEnabled(context: Context) {
         // Quyết định cỡ chữ ổn định
         val heightDp = extractStableHeightDp(mgr, widgetId, options)
         val sizeClass = decideSizeClassWithHysteresis(widgetId, heightDp)
-        val sp = when (sizeClass) {
+        var sp = when (sizeClass) {
             0 -> 16f
             1 -> 18f
             else -> 22f
         }
+        val frameKey = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+    .getString("decor_frame_key", "") ?: ""
+if (frameKey.isNotEmpty() && frameKey != "none") {
+    sp -= 3f
+}
+
         // === B4.5: đọc lựa chọn trang trí & ước lượng kích thước nền/viền ===
         val decorSp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
         val decorTextColor = decorSp.getInt("decor_text_color", 0xFF111111.toInt())
