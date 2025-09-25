@@ -163,9 +163,11 @@ if (frameKey.isNotEmpty() && frameKey != "none") {
                     
                     try { setViewPadding(R.id.widget_text,       padSide, padTop, padEnd, padSide) } catch (_: Exception) {}
                     try { setViewPadding(R.id.widget_text_serif, padSide, padTop, padEnd, padSide) } catch (_: Exception) {}
-
-                    try { views.setBoolean(R.id.widget_text,       "setIncludeFontPadding", true) } catch (_: Exception) {}
-                    try { views.setBoolean(R.id.widget_text_serif, "setIncludeFontPadding", true) } catch (_: Exception) {}
+                    if (hasIconNow) {
+    try { setBoolean(R.id.widget_text,       "setIncludeFontPadding", true) } catch (_: Exception) {}
+    try { setBoolean(R.id.widget_text_serif, "setIncludeFontPadding", true) } catch (_: Exception) {}
+}
+                    
                 } else {
                     val d = context.resources.displayMetrics.density
                     val side = (4f * d).toInt()
