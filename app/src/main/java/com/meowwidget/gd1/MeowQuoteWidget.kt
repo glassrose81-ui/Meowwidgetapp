@@ -159,10 +159,13 @@ if (frameKey.isNotEmpty() && frameKey != "none") {
                     val d = context.resources.displayMetrics.density
                     val padSide = (12f * d).toInt()
                     val padTop = (8f * d).toInt()
-                    val padEnd = (82f * d).toInt()
+                    val padEnd = (84f * d).toInt()
                     
                     try { setViewPadding(R.id.widget_text,       padSide, padTop, padEnd, padSide) } catch (_: Exception) {}
                     try { setViewPadding(R.id.widget_text_serif, padSide, padTop, padEnd, padSide) } catch (_: Exception) {}
+
+                    try { views.setBoolean(R.id.widget_text,       "setIncludeFontPadding", true) } catch (_: Exception) {}
+                    try { views.setBoolean(R.id.widget_text_serif, "setIncludeFontPadding", true) } catch (_: Exception) {}
                 } else {
                     val d = context.resources.displayMetrics.density
                     val side = (4f * d).toInt()
