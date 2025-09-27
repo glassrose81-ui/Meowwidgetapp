@@ -22,8 +22,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.meowwidget.gd1.MeowQuoteWidget
 import com.meowwidget.gd1.R
-import android.graphics.Color
-import android.util.TypedValue
 
 class WidgetDecorActivity : AppCompatActivity() {
 
