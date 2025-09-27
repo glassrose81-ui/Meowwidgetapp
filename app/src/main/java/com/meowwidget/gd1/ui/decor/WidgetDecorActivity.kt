@@ -793,6 +793,87 @@ content.addView(frameScroll)
         content.addView(iconScroll)
 
 content.addView(actionRow)
+run {
+    val d = resources.displayMetrics.density
+    fun dp(x: Float) = (x * d).toInt()
+
+    // Spacer 32dp để CÁCH XA nút Áp dụng
+    content.addView(
+        android.view.View(this),
+        android.view.ViewGroup.MarginLayoutParams(
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+            dp(32f)
+        )
+    )
+
+    // Divider 1dp mờ phía trên footer
+    val divider = android.view.View(this).apply {
+        setBackgroundColor(0x40000000.toInt()) // #40000000 (đen 25%)
+    }
+    content.addView(
+        divider,
+        android.view.ViewGroup.LayoutParams(
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+            dp(1f)
+        )
+    )
+
+    // Footer container: dọc, canh giữa
+    val footer = android.widget.LinearLayout(this).apply {
+        orientation = android.widget.LinearLayout.VERTICAL
+        gravity = android.view.Gravity.CENTER_HORIZONTAL
+        setPadding(0, dp(12f), 0, dp(24f))
+    }
+    content.addView(
+        footer,
+        android.view.ViewGroup.LayoutParams(
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+            android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+    )
+
+    // Các dòng nội dung footer
+    fun android.widget.TextView.sz(sp: Float) =
+        setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, sp)
+
+    android.widget.TextView(this).apply {
+        text = "The Meow Widget"
+        setTypeface(typeface, android.graphics.Typeface.BOLD)
+        sz(14f)
+        footer.addView(this)
+    }
+
+    android.widget.TextView(this).apply {
+        text = "By GL Rose & AI GPT Friend"
+        sz(12f)
+        footer.addView(this)
+    }
+
+    android.widget.TextView(this).apply {
+        text = "08.2025 – 09.2025"
+        sz(12f)
+        footer.addView(this)
+    }
+
+    android.widget.TextView(this).apply {
+        text = "v1.0 · © 2025"
+        sz(12f)
+        setPadding(0, 0, 0, dp(8f))
+        footer.addView(this)
+    }
+
+    android.widget.TextView(this).apply {
+        text = "Cảm ơn bạn đã dùng ứng dụng."
+        sz(12f)
+        footer.addView(this)
+    }
+
+    android.widget.TextView(this).apply {
+        text = "Chúc một ngày “meow” thiệt vui! 🐾"
+        sz(12f)
+        footer.addView(this)
+    }
+}
 
         root.addView(content)
         setContentView(root)
