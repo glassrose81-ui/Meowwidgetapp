@@ -1,0 +1,80 @@
+name: Repo Size Check
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  repo-size:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Show snapshot & .git sizes
+        run: |
+          echo "== Snapshot (working tree, không tính .git) =="
+          du -sh --exclude=.git . || true
+          echo
+          echo "== .git directory size =="
+          du -sh .git || true
+          echo
+          echo "== git count-objects (có packs, dạng đã nén) =="
+          git count-objects -vH || true
+
+      - name: Top 20 largest files in history (by blob size)
+        shell: bash
+        run: |
+          echo "== Top 20 blobs lớn nhất trong lịch sử =="
+          # Duyệt toàn bộ đối tượng và lọc blob
+          # Cảnh báo: repo cực lớn có thể tốn 10–90s
+          git rev-list --objects --all | while read sha path; do
+            [ -z "$sha" ] && continue
+            type=$(git cat-file -t "$sha" 2>/dev/null || echo "")
+            if [ "$type" = "blob" ]; then
+              size=$(git cat-file -s "$sha" 2>/dev/null || echo "0")
+              echo -e "${size}\t${path}"
+            fi
+          done | sort -nr | head -n 20
+
+      - name: Write summary
+        shell: bash
+        run: |
+          {
+            echo "## Repo Size Summary"
+            echo ""
+            echo "### Snapshot (không tính .git)"
+            du -sh --exclude=.git . | sed 's/^/- /'
+            echo ""
+            echo "### .git directory size"
+            du -sh .git | sed 's/^/- /'
+            echo ""
+            echo "### git count-objects -vH"
+            echo ""
+            echo '| Trường | Giá trị |'
+            echo '|---|---|'
+            git count-objects -vH | sed 's/: */| /' | sed 's/^/| /' | sed 's/$/ |/'
+            echo ""
+            echo "### Top 20 blobs lớn nhất (unpacked size, byte → lớn nhất trước)"
+            echo ""
+            echo '| Bytes | Đường dẫn |'
+            echo '|---:|---|'
+            git rev-list --objects --all | while read sha path; do
+              [ -z "$sha" ] && continue
+              type=$(git cat-file -t "$sha" 2>/dev/null || echo "")
+              if [ "$type" = "blob" ]; then
+                size=$(git cat-file -s "$sha" 2>/dev/null || echo "0")
+                echo -e "${size}\t${path}"
+              fi
+            done | sort -nr | head -n 20 | awk -F'\t' '{printf("| %s | %s |\n",$1,$2)}'
+            echo ""
+            echo "> Gợi ý đọc số liệu:"
+            echo "> - **Snapshot** ~ tổng kích thước file hiện đang có."
+            echo "> - **size-pack** trong \`git count-objects -vH\` ~ dung lượng lịch sử nén."
+            echo "> - Tổng ước lượng ≈ Snapshot + size-pack."
+            echo "> - Nếu tổng < 1 GB → còn an toàn với giới hạn GitHub cho repo thông thường."
+          } >> \"$GITHUB_STEP_SUMMARY\"
