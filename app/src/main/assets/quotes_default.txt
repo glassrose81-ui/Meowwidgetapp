@@ -1,84 +1,574 @@
- Mỗi bước chân ta đi đều để lại dấu ấn trên con đường đời. 
- Trong những giọt mưa rơi, ta học được bài học về sự kiên nhẫn. 
- Đừng đếm những vì sao đã tắt, hãy ngắm những vì sao còn sáng. 
- Cuộc đời như dòng sông, uốn lượn qua từng khúc quanh của số phận. 
- Khi nhìn lại quá khứ, điều quan trọng không phải thành công mà là bài học. 
- Mỗi sớm mai thức dậy đều mang theo cơ hội bắt đầu lại từ đầu. 
- Đôi khi ta phải lạc đường để tìm ra con đường đúng đắn nhất. 
- Những cánh hoa rơi dạy ta bài học về sự buông bỏ. 
- Trong góc tối nhất vẫn ẩn chứa tia sáng của hy vọng. 
- Mỗi giọt mồ hôi đổ xuống đều góp phần tạo nên thành công. 
- Đừng so sánh mình với người khác, hãy trở thành phiên bản tốt nhất của chính mình. 
- Những vết thương trong cuộc sống sẽ trở thành những bông hoa kinh nghiệm. 
- Khi một cánh cửa đóng lại, cửa sổ của cơ hội mới sẽ mở ra. 
- Mỗi ngọn gió nghịch cảnh đều giúp ta bay cao hơn. 
- Trong tim mỗi người đều có một khu vườn cần được chăm sóc. 
- Đừng để những đám mây đen che khuất ánh mặt trời trong tâm hồn. 
- Mỗi giọt nước mắt đều chứa đựng một bài học về sự trưởng thành. 
- Hạnh phúc không nằm ở đích đến mà trong từng bước đi. 
- Những viên đá ngáng đường sẽ trở thành bậc thang dẫn tới thành công. 
- Thời gian không chờ đợi ai, nhưng kỷ niệm sẽ mãi ở lại. 
- Mỗi người đều mang trong mình một câu chuyện đáng được lắng nghe. 
- Đừng để nỗi sợ hãi ngăn cản những điều tuyệt vời đến với mình. 
- Trong mỗi thất bại đều ẩn chứa hạt mầm của thành công. 
- Những giấc mơ lớn nhất thường bắt đầu từ những bước đi nhỏ nhất. 
- Mỗi khoảnh khắc hiện tại đều là món quà của cuộc sống. 
- Những khoảnh khắc quý giá nhất thường đến không báo trước. 
- Thời gian trôi như dòng nước, nhưng kỷ niệm đọng lại như những viên ngọc. 
- Mỗi hoàng hôn đều mang theo bài học về sự vô thường của cuộc sống. 
- Đừng đánh mất hiện tại vì nuối tiếc quá khứ hay lo lắng tương lai. 
- Những phút giây yên lặng thường mang đến những suy ngẫm sâu sắc nhất. 
- Trong dòng chảy vô tận của thời gian, mỗi khoảnh khắc đều là một món quà. 
- Những giây phút đơn giản nhất đôi khi lại là những kỷ niệm đẹp nhất. 
- Thời gian không chờ đợi ai, nhưng những khoảnh khắc đẹp sẽ đợi người biết trân trọng. 
- Mỗi bình minh đều mang theo cơ hội viết lại câu chuyện của đời mình. 
- Trong từng nhịp đập của trái tim đều chứa đựng một khoảnh khắc vĩnh cửu. 
- Đừng để những giây phút quý giá trôi qua trong vô nghĩa. 
- Mỗi mùa trong đời đều mang theo những bài học riêng về sự trưởng thành. 
- Những khoảnh khắc đẹp nhất thường đến từ những điều giản dị nhất. 
- Thời gian sẽ chữa lành mọi vết thương, nhưng kỷ niệm đẹp sẽ mãi còn. 
- Trong dòng chảy của thời gian, hãy để lại dấu ấn của riêng mình. 
- Mỗi phút giây ta sống đều góp phần tạo nên câu chuyện cuộc đời. 
- Đừng đếm những ngày đã qua, hãy làm cho những ngày còn lại trở nên ý nghĩa. 
- Những khoảnh khắc tưởng chừng bình thường lại trở thành vô giá khi nhìn lại. 
- Thời gian không quay trở lại, nhưng kỷ niệm sẽ mãi ở lại trong tim. 
- Mỗi giây phút đều là cơ hội để tạo nên điều kỳ diệu. 
- Trong từng hơi thở đều chứa đựng một khoảnh khắc của vĩnh hằng. 
- Những phút giây chia sẻ với người thân yêu quý giá hơn vàng ngọc. 
- Thời gian trôi nhanh nhất khi ta hạnh phúc, nhưng kỷ niệm sẽ mãi đọng lại. 
- Mỗi khoảnh khắc đều là cơ hội để bắt đầu lại từ đầu. 
- Trong dòng chảy vô tận của thời gian, hãy sống trọn từng giây phút. 
-Trong cơn bão tố mạnh mẽ nhất mới thấy được sức mạnh của cây đại thụ. 
- Những thử thách không phải để đánh gục ta mà để rèn giũa ý chí. 
- Giữa muôn vàn khó khăn, nghị lực chính là ngọn đuốc soi đường. 
- Đường đi khó không vì ngăn sông cách núi mà vì thiếu nghị lực vượt qua. 
- Những tâm hồn mạnh mẽ nhất được tôi luyện từ nghịch cảnh. 
- Trong tim người kiên cường luôn chứa đựng sức mạnh của đại dương. 
+Không phải ai đang trong đất cũng sẽ lên mầm. Nhưng một mầm còn thở, còn run rẩy tìm ánh sáng sớm muộn cũng xuyên đất mà lên.
+Hãy trở lại chính mình sau những ngày tháng lạc lối, rồi bạn sẽ có lại hạnh phúc của riêng mình.
+Cho dù bạn đơn độc, cũng phải là một kẻ đơn độc hạnh phúc.
+Tôi không thể chọn nơi mình sinh ra, nhưng tôi có thể chọn nơi mình sẽ đi - Rata
+Thân phận không quyết định giá trị, lựa chọn mới làm nên con người - Rata
+Thế giới không sai khi ta muốn khác – chỉ đáng buồn khi ta từ bỏ điều đó vì sợ bị cười - Rata
+Không thiếu người sống, chỉ thiếu người sống tử tế - Rata
+Thôi thì cứ làm tốt nhất có thể đi - Rata
+Chúng ta xứng đáng với những điều tuyệt vời, có thể đến chậm, nhưng nhất định sẽ tới.
+Bạn chỉ sống một lần duy nhất, nhưng nếu bạn làm đúng thì chỉ cần một lần là đủ.
+Mọi khó khăn rồi cũng sẽ qua đi, như cách cơn mưa rào chạy ngang qua cửa sổ.
+Ngôi sao không thể tỏa sáng mà không có bóng tối.
+Cuộc sống như việc đạp một chiếc xe, để giữ thăng bằng, bạn phải đi tiếp.
+Không cần bay lên, chỉ cần trườn qua cũng được. Miễn còn động đậy, là nó không né được bạn mãi đâu 
+Thì ra cái kỳ diệu đó không xảy đến như phép màu mà là mình lì đòn sống sót lâu đến mức nó không né được mình nữa.
+Đừng quên mình đã từng là ai – ký ức là gốc của nhân tính - Carol
+Ký ức không hề trừng phạt, nó chỉ buộc ta đối diện với cảm xúc mà ta từng chôn - Carol
+Tha thứ bắt đầu bằng việc dám khóc cho chính mình - Carol
+Bản chất của ký ức nó không phán xét, nếu có ai đang trừng phạt Scrooge thì chính là lương tâm ông ấy - Carol
+Nếu một ngày bạn vượt qua mọi nỗi đau, trở nên kiên cường, cũng không cần nói với ai đó rằng vì ai đó từng làm tổn thương bạn nên mới tạo nên bạn của hôm nay. 
+Con người ta đến thế gian này không phải để sống cả đời theo cách của người khác - M1
+Hạnh phúc trong hiện thực, nên là sự kết hợp giữa may mắn và bất hạnh theo tỷ lệ thích đáng - M1
+Mỗi người đều có quyền lựa chọn cách trưởng thành tốt nhất theo ý nguyện của mình - M1
+Chân lý duy nhất trên thế gian là, bạn phóng chiếu thứ gì ra thế giới, thế giới sẽ đáp trả bạn thứ nấy - M1
+Nó nhắc bạn rằng có những khả năng vẫn nằm im trong đời, chỉ chờ tình cờ đúng hoàn cảnh. 
+Gió có thể rung lá, nhưng không thể lay được rễ sâu. 
+Đôi khi mình không cần đi tìm mà chỉ cần để đời có một chút thiếu hụt nó tự đưa mình đến điều bất ngờ.
+Những giây phút đơn giản nhất đôi khi lại là những kỷ niệm đẹp nhất
+Giữa muôn vàn thử thách, chỉ có ý chí mới là bất diệt. 
+Đường đời không trải hoa hồng nhưng sẽ nở hoa cho người kiên định. 
+Trong tim người kiên cường có sức mạnh của cả thiên nhiên.
+Thiên nhiên ban cho mỗi chú chim một loài sâu, nhưng không ném sâu vào tổ nó - Ping
+Chúng ta thường dễ mất hứng thú khi bắt đầu nhìn về trước quá xa - Ping
+Nghĩ điều cam kết quá lớn lao, chiều cao quá sức tưởng tượng, và vì vậy chúng ta không dám bắt đầu - Ping
+Giữa muôn vàn thử thách, chỉ có ý chí mới là bất tử.
+Thỉnh thoảng làm đứa trẻ cũng tốt, mà chẳng khi nào tốt hơn vào dịp Giáng Sinh - Carol
+Tinh thần tốt đẹp không có lỗi chỉ lòng người méo mó mới biến nó thành giả trá - Carol 
+Con đường của con người sẽ báo trước một kết cục nhưng nếu con đường thay đổi, kết cục cũng sẽ đổi theo - Carol
+Có những hành trình đưa ta rời xa mái nhà và có những cuộc phiêu lưu dẫn ta đến với định mệnh của chính mình.
+Mụ phù thủy biết Phép thuật Cổ Xưa nhưng còn một phép sâu hơn nữa mà mụ không biết quyền năng của tình yêu trao đi tự nguyện
+Mỗi vết thương đều để lại một bài học về sự trưởng thành.
+Có thể đó không phải là điều ta từng nghi đến hay có ý định kiếm tìm, nhưng sau cùng sẽ chứng minh rằng điều đó là tốt cho cuộc sống của chúng ta
+Nghiệp quả không phải để trừng phạt mà để dạy ta những bài học - NP
+Mọi việc xảy ra đều có lí do của nó dù ta không hiểu ngay - NP
+Nhân quả không bao giờ sai, chỉ có cách hiểu của ta là chưa đúng - NP
+Nghiệp quả có thể đến nhanh hay chậm nhưng chắc chắn sẽ đến - NP
+Niềm vui lớn không nhất thiết trọn vẹn, nhưng vẫn đủ thật để đáng sống - Rata
+Khi chơi với đam mê, ta trở lại với năng lượng thuần khiết nhất của mình - Rata
+Đừng chỉ tồn tại, hãy sống nở rộ - Rata
+Đừng để họ làm con nhiễm độc bằng cay đắng của họ - Rata
+Nghiệp tốt như bóng theo hình, phước báu như bóng theo người - NP 
+Có thể bị động chấp nhận hiện thực, cũng có thể chủ động giữ vững nguyên tắc cá nhân - M1  
+Am hiểu thói đời nhưng không giảo hoạt, tĩnh tâm lại được, cúi đầu xuống được, đây mới là trí tuệ chín chắn - M1 
+Trên đường đời, có một con đường mỗi người đều nhất định phải đi, đó chính là con đường vòng thời trẻ - M1 
+Đối diện với người trẻ tuổi, người từng trải đừng mắc “tật cản đường”, vì ngăn cản anh ta cũng vô ích, chỉ có thể nói một câu “Đi đường cẩn thận”
+Nếu mình đang giữ một điều có giá trị thật thì sao phải quan tâm người khác có nhận ra nó hay không. 
+Tình yêu không phải là sự đền đáp mà là một kết nối tự do nếu không có nó, mọi cố gắng cũng chỉ là đơn phương.
+Đức tin không miễn cho ta khỏi thử thách - Narnia
+Thế giới của điều thiện không biến mất — nó chỉ ẩn đi khỏi những tâm hồn đã chai sạn - Narnia
+Sai lầm không giết người ta – chỉ sự không dám sửa sai mới giết - Narnia
+Trưởng thành thật không phải rời bỏ mộng mơ, mà là trở lại thế giới cũ với đôi mắt mới - Narnia
+Tin vào điều thiện khi thấy nó hiện diện là dễ — nhưng tin khi nó vắng mặt mới là bản lĩnh thật.
+Nhiều người đánh mất đức tin không vì thất bại, mà vì không còn cảm thấy “điều kỳ diệu” - Narnia
+Tình yêu chỉ như một loại gia vị thêm thì đậm đà, nhưng không có thì món ăn cuộc sống vẫn ngon
+Chúng ta luôn giỏi làm tổn thương những người yêu thương mình, vì chúng ta hoàn toàn không thẻ làm tổn thương những người không yêu thương mình
+Khi bạn hoàn toàn giao phó cho người khác thỏa mãn nhu cầu cuộc đời mình, thì đừng trách người khác khiến bạn thất vọng - M1 
+Đừng sợ thay đổi, đừng sợ thử nghiệm, cuộc đời không phải chỉ có một cách sống - M1 
+Sở dĩ con người ta đau khổ, không phải vì thiếu khả năng kiểm soát, mà do cảm thấy bản thân không còn giá trị - M1
+Thành thực với bản thân và với người khác vào lúc thích hợp, chính là biểu hiện tôn trọng bản thân và người khác - M2 
+Bạn phải vô cùng cố gắng, mới có nhiều khả năng hơn để lựa chọn - M2 
+May mắn xuất hiện khi sự chuẩn bị gặp được thời cơ.
+Giúp người khác không sai, sai ở chỗ, bạn đã giúp nhầm đối tượng - M2
+Những chặng đường khó khăn nhất thường mang lại sự phát triển lớn nhất. 
+Trong quá trình trưởng thành, mỗi thất bại đều là một bậc thang tiến lên.
+Hãy khôn ngoan hơn người khác nếu bạn có thể nhưng đừng nói với họ như vậy - Andrew
+Bạn sẽ hạnh phúc hơn khi chấp nhận người khác đúng như bản chất của họ - Andrew  
+Biếu tặng không phải là trao đổi. Khi bạn tặng ai cái gì là không mong nó được trả lại dù dưới bất kỳ hình thức nào. 
+Chúng ta học được nhiều từ kinh nghiệm của chúng ta thành công thì ăn mừng, thất bại thì suy ngẫm - Andrew 
+Con người chỉ thay đổi khi họ đã sẵn sàng để thay đổi. Bạn không cần phải rao giảng trước để phòng ngừa - Andrew
+Đừng so sánh mình với người khác, hãy trở thành phiên bản tốt nhất của chính mình. 
+Khi một cánh cửa đóng lại, cửa sổ của cơ hội mới sẽ mở ra. 
+Mỗi ngọn gió nghịch cảnh đều giúp ta bay cao hơn. 
+Những người chiến thắng không phải không sợ hãi, họ chỉ không để nỗi sợ chi phối. 
+Đừng để khó khăn đánh gục ước mơ, hãy để nghị lực dẫn lối. 
+Những phút giây chia sẻ với người thân yêu quý giá hơn vàng ngọc. 
+Thời gian trôi nhanh nhất khi ta hạnh phúc, nhưng kỷ niệm sẽ mãi đọng lại.
+Nếu không thành thật với chính bản thân, làm sao đối xử tốt với người khác? - M1 
+Người làm tổn thương bạn xưa nay chưa từng nghĩ đến việc giúp bạn trưởng thành, thứ thật sự khiến bạn trưởng thành là nỗi đau khổ và sự ngẫm lại của bạn. 
+Bản thân trải nghiệm không có ý nghĩa đặc biệt, điều khiến nó trở nên có ý nghĩa là sự kiên cường của bạn - M1 
+Trong cơn bão tố mạnh mẽ nhất mới thấy được sức mạnh của cây đại thụ.
+Nỗi sợ và niềm tin có chung chữ F, nghĩa là tương lai vốn là điều chưa xảy ra - Jon.G
+Nỗi sợ tin vào tương lai tiêu cực, còn Niềm tin tin vào tương lai tích cực - Jon.G
+Khi mong muốn tìm được thức ăn, bạn sẽ tìm được - Jon.G
+Chân lý không thay đổi, chỉ tầm nhìn của con người thay đổi - Narnia
+Nếu cứ đòi thấy phép màu như ngày xưa, ta sẽ không bao giờ nhận ra phép màu hôm nay - Narnia
+Người nhìn thấy điều không ai thấy – là người thay đổi điều mọi người thấy - Narnia
+Cùng một giấc mơ, nhưng cách ta đến với nó tiết lộ bản chất thật của ta - CNTCF
+Một việc tốt nhỏ cũng tỏa sáng giữa thế gian mệt mỏi - CNTCF
+Sự điên rồ đúng liều là khôn ngoan – vì nó giữ cho trái tim ta mềm mại trước thế giới cứng nhắc - CNTCF
+Người khôn ngoan không phải người hiểu thế giới, mà là người hiểu giá trị của những điều gần nhất - CNTCF
+Người duy nhất có khả năng giới hạn các năng lực của bạn chính là bản thân bạn - Jon.G
+Đừng để quá khứ quyết định tương lai của bạn - Jon.G
+Thay vì thất vọng về vị trí hiện thời, hãy lạc quan hy vọng về nơi bạn đang đến - Jon.G
+Hãy cố gắng đừng nhìn quá xa, cũng đừng cam kết điều gì lớn lao hơn việc thực hiện từng bước nhỏ - Ping
+Đừng bao giờ đánh mất tầm nhìn về những gì ta luôn ao ước hay những nơi ta muốn đến - Ping
+Cuộc hành trình vĩ đại nhất chính là cuộc hành trình mà ta tin tưởng - Ping
+Với mỗi sự bắt đầu đều có một kết thúc, và với mỗi kết thúc đều có một sự khởi đầu mới - Ping
+Mục đích của cuộc sống là một cuộc sống có mục đích - Ping
+Khi bạn không còn chọn kiểu người cũ, yêu mà quên mất chính mình đó là lúc bạn vượt qua bài kiểm tra mà không cần thi 
+Người đủ mạnh sẽ không thấy bạn là mối đe dọa, mà là một người cùng đẳng cấp để trân trọng.
+Chịu thiệt là phúc nhưng lúc nào cũng chịu thiệt thì lấy đâu ra phúc - M1
+Vì không biết giá trị của mình nằm ở đâu, nên không biết mình phải giữ vững điều gì, cũng không biết nên cố gắng vì thứ gì, đành sống theo yêu cầu người khác. 
+Đây là một thế giới mà bạn định nghĩa bản thân thế nào, thì thế giới sẽ định nghĩa bạn thế ấy - M1 
+Không phải mọi sự cho đi đều có đền đáp, cũng không phải mọi sự cho đi đều cần đền đáp - M1 
+Bạn không thể coi “việc tốt" của mình giống như khoản tiền gửi vào ngân hàng, người khác phải trả hết vốn lẫn lời theo lãi suất mà bạn mong đợi vào một ngày nào đó. 
+Đường là do chúng ta tự đi, không ai có thể thấu hiểu cảm nhận và nhu cầu chân thực nhất, cụ thể nhất của chúng ta - M1 
+Những người thành công không mơ tới tiền. Họ mơ về cách làm ra tiền và dùng tiền đó vào việc gì - Andrew 
+Nếu bạn yêu bản thân mình, người khác sẽ yêu bạn - Andrew 
+Bạn tạo ra cuộc đời mình. Bạn không cần phải thuyết phục ai cả. Bạn chỉ cần thay đổi cảm nhận - Andrew 
+Sự hài hòa bạn tìm kiếm không phải là hài hòa với mọi người, mà là hài hòa với chính bản thân mình - Andrew 
+Sống không phải là đấu tranh không ngừng. Hãy cứ để mọi việc thuận theo tự nhiên. Điều này không có nghĩa là thờ ơ, chỉ là không cưỡng cầu
+Họ không cần bạn “thu nhỏ lại” để thấy mình lớn, vì họ đã đủ lớn để đứng cạnh bạn mà không bị lu mờ. 
+Họ sẽ nhìn thấy sự mạnh mẽ trong bạn và chỉ muốn dang tay ra để bạn có thể yếu mềm khi cần chứ không bắt bạn phải luôn gồng. 
+Những điều tốt đẹp, nó không vì bạn hoài nghi mà ngừng tồn tại. Chúng chỉ ở quỹ đạo riêng mình chờ đến lúc chạm nhau
+Một tình yêu trưởng thành không nên khiến bạn phải thu nhỏ lại chỉ để vừa vặn trong lòng một người chưa đủ lớn.
+
+Bày tỏ suy nghĩ chân thực, không “phụ thuộc”, không “lấy lòng”, có thể khiến cuộc sống của chúng ta từ trong mắt người khác trở về trong tay mình 
+Học được cách chạy nhảy tự do, bạn mới có thể tận hưởng ánh nắng của cuộc sống - M1
+Tốt bụng là một lựa chọn cần đến trí tuệ - M1
+Thông minh là thiên phú; tốt bụng là lựa chọn, làm người tốt khó hơn làm người thông minh nhiều - M1
+Chúng ta không có cơ hội ngồi đợi lòng tốt của ai đó chống chọi rủi ro hộ mình - M1 
+Bất kể thế nào, chúng ta đều nên chung sống và yêu thương người khác trên cơ sở có thể tự lập - M1
+Hãy tôn trọng bản thân hơn nữa! Khi bạn cảm thấy tốt về bản thân mình, nhà phê bình sẽ bỏ đi - Andrew
+Không có gì trong đời này là miễn phí nhưng cuộc sống vẫn đẹp và tràn đầy bất ngờ - Le Festin
+Khi ta sống theo trái tim mình – đó mới là lý do thật sự - Le Festin
+Những điều ta khao khát luôn đòi hỏi đánh đổi,cái đẹp chỉ thành sự thật khi ta dám trả giá để chạm đến nó.
+Giấc mơ này cũng là của riêng tôi và tôi vẫn đuổi theo nó cả trong giấc ngủ - Le Festin
+Thỉnh thoảng cũng phải dừng lại, và ngửi mùi phô mai chứ - Rata
+Chúng ta cho phép bản thân mình quyền được không hoàn hảo - Andrew 
+Yêu thương bản thân không phải là khoác lác với cả thế giới. Đây là vấn đề chấp nhận bản thân - cả cái tốt đẹp và thiếu sót của bạn 
+Để duy trì những quan hệ tốt đẹp, bạn phải chọn làm người bạn tốt nhất của chính mình trước - Andrew
+Mỗi sự kiện trong cuộc đời đều là kết quả của những lựa chọn và hành động trước đó - NP
+Bạn không thể thay đổi quá khứ nhưng có thể định hình tương lai - NP
+Mỗi giây phút hiện tại là cơ hội để điều chỉnh nhân cho tương lai - NP
+Người sống để khoe mình giỏi sẽ nổ tung vì chính cái tôi của họ - CNTCF
+Người khác leo lên được đỉnh núi đương nhiên là rất giỏi nhưng bạn từ vực thẳm leo lên được mặt đất cũng là rất giỏi.
+Đừng để bản thân bị cuốn vào vòng xoáy so sánh vì mỗi bước đi của bạn dù nhỏ bé đều mang ý nghĩa riêng.
+Có người vươn tới đỉnh cao, có người thoát khỏi vực sâu cả hai đều đáng được công nhận.
+Hãy kiên trì với con đường của mình bởi sự nổ lực từng ngày chính là điều làm nên giá trị của bạn
+Mọi sự vật đều liên kết với nhau theo một quy luật vô hình - NP
+Tương lai chúng ta có trở nên tốt đẹp hơn hay không là do năng lượng từ chính những suy nghĩ, hành động hôm nay - NP
+Chính bạn mới có thể chuyển hóa được nghiệp quả của mình không phải bất kì một ai khác - NP
+Đừng sợ thay đổi, vì đó chính là dấu hiệu của sự trưởng thành. 
+Những trải nghiệm đau thương nhất thường tạo nên những bài học quý giá nhất. 
+Mỗi ngày đều là cơ hội để trở thành phiên bản tốt hơn của chính mình. 
+Trong hành trình phát triển, không có con đường nào trải đầy hoa hồng.
+Chúng ta không phải là tập tiếp theo của cha mẹ, cũng không phải là tiền truyện của con cái, càng không phải là ngoại truyện của bạn bè - M1 
+Đừng ép người khác hiểu mình, cũng đừng ép mình lấy lòng người khác - M1 
+Không có người nào tồn tại để hoàn thành sứ mệnh của người khác; không có người nào tồn tại để sống cuộc đời của người khác - M1 
+Những khó khăn không phải để đánh gục ta mà để giúp ta trưởng thành. 
+Đừng so sánh với người khác, hãy so sánh với chính mình của ngày hôm qua.
+Những thay đổi lớn nhất thường bắt đầu từ những quyết định nhỏ nhất.
+Có những mối quan hệ tưởng chừng như rất xa lạ nhưng lại gần gũi đến lạ thường đó chính là duyên từ kiếp trước - NP
+Chúng ta không phải là nạn nhân của hoàn cảnh mà là người kiến tạo vận mệnh của chính mình - NP
+Nhân quả giống như một vòng tuần hoàn những gì bạn gieo sẽ chính xác là những gì bạn gặt - NP
+Nhân quả không phân biệt giàu nghèo, địa vị mà chỉ đơn giản là sự tác động và phản hồi - NP
+Khi chúng ta không thích bản thân thì chúng ta có xu hướng ghét người giỏi hơn chúng ta - Andrew 
+Những người luôn bộc lộ sự tự tin giả tạo “Tôi thật tuyệt vời! cảm thấy dễ đổ vỡ đến nỗi không thể thú nhận bất kỳ yếu kém nào trước mọi người. 
+Trước hết bạn phải là ai đó trước. Chẳng có gì hay khi phải làm “một nửa của ai đó” - bạn là một chỉnh thể thống nhất và độc đáo kia mà 
+Mỗi bước chân ta đi đều để lại dấu ấn trên con đường đời. 
+Tình yêu là nguyên liệu bí mật biến điều bình thường thành phi thường - Rata
+Sự hấp dẫn thật đến từ việc người kia khiến ta không thể giữ dáng vẻ mình tưởng là “ổn định”
+Mơ mộng thì có gì sai? - Rata
+Khi niềm tin “ai cũng làm được” bị lạm dụng, nó biến thành mỉa mai và tầm thường hóa sáng tạo thật - Rata
+Khiêm tốn thật không phải là hạ mình, mà là không cần chứng minh gì cả.
+Đạt đến đỉnh cao hay thoát khỏi vực sâu cả hai đều là thành tựu đáng trân trọng.
+Hãy học cách yêu thương và tự hào về hành trình của bản thân bởi mỗi nổ lực bạn bỏ ra đều góp phần tạo nên một bạn mạnh mẽ hơn.
+Sẽ có những đoạn đường bạn sẽ phải vửa đi vừa khóc nhưng mà không sao cả, mọi chuyện rồi sẽ ổn thôi.
+Khóc không làm bạn yếu đuối mà chỉ chứng minh rằng bạn vẫn đang cố gắng.
+Hãy tin rằng mọi chuyện rồi sẽ ổn, nổi đau nào rồi cũng qua và ánh sáng luôn xuất hiện sau những ngày giông bão.
+Và nếu chẳng thể ổn, hy vọng bạn sẽ đủ chai lì để vượt qua vì dù thế nào bạn cũng đang tiến về phía trước
+Mỗi người đều mang trong mình một câu chuyện đáng được lắng nghe.
+Vũ trụ rất công bằng và chính trực. Nếu bạn cho đi tình cảm và sự quan tâm, những điều tốt đẹp sẽ đến với bạn, dù không từ người bạn mong 
+Không ai có thể sống một mình dù có lúc chúng ta giả bộ là có thể - Andrew  
+Chẳng có phần thưởng gì cho việc dành cả cuộc đời để chơi cái trò chơi: “Tôi không sao. Tôi không cần ai hết" - Andrew 
+Vũ trụ sẽ cho ta bài ta cần học, nếu chúng ta không chịu nhớ thì chúng ta phải học đi học lại - Andrew 
+Nếu bạn cố làm hài lòng tất cả mọi người tức là bạn không thật lòng với ai cả, ít nhất là với chính bạn - Andrew 
+Bạn chỉ có thể đạt được cái mình muốn nếu là chính mình - Andrew 
+Nhìn chung nên chứng minh với chính bản thân là bạn kiểm soát được đời mình bằng cách giữ lời hứa với mình - Andrew 
+Càng thực hiện được cam kết của mình thì bạn càng mạnh mẽ - Andrew 
+Để tin vào bản thân thì bạn phải tin điều mình nói và làm điều mình nói - Andrew
+Cuộc sống không phải chỉ để chạy — đôi khi phải dừng lại để cảm nhận điều nhỏ bé khiến ta vui.
+Khi con người thật sự thay đổi, họ không tuyên bố; họ chỉ trở nên khiêm nhường - Rata
+Không phải lúc nào nỗ lực cũng ra trái ngọt ngay, nhưng vẫn đáng để tiếp tục - Rata
+Bí mật không nằm ở nguyên liệu nào cả — mà chính là con - Rata
+Muốn làm đầu bếp, trước hết phải học cách dọn dẹp - Rata
+Thật đáng kinh ngạc những gì ta có thể làm — khi ta chưa biết rằng mình không thể - Rata
+Ai đi tìm ước mơ đều có lúc nghi ngờ chính mình - Rata
+Đừng bao giờ đi đánh lộn với heo - bạn thì bị bẩn mà nó thì thích thú - Andrew
+Nếu bạn không có khả năng chủ động chấm dứt tổn thương, thì cũng không có khả năng hưởng thụ hạnh phúc - M1 
+Cuộc đời này quá ngắn ngủi, tớ rất “ích kỷ”, không muốn chỉ sống cho họ nhìn - M1 
+Cố gắng nhỏ bé đến đâu cũng sẽ khiến cuộc đời mình trở nên đặc sắc hơn chút - M1 
+Thứ thật sự có thể bảo vệ bạn là lựa chọn của bản thân bạn - M1  
+Thứ thật sự có thể làm tổn thương bạn, cũng vẫn la lựa chọn của bản thân bạn - M1 
+Họ đã uống đủ chén rượu cuộc đời này, tự mình biết rõ mùi vị trong đó. Vì khi còn trẻ, mắt được nước mắt rửa sạch, do đó có tầm nhìn rộng mở - M1 
+Thế giới này không hoàn mỹ, nếu đã như thế, chi bằng tiếp nhận thử thách, cố gắng phấn đấu - M1 
+Họ sẽ trân trọng mỗi một ngày của hiện tại, vì số phận bi thảm đến đâu, họ đều có thể thông qua cố gắng của mình để xoay chuyển cục diện bất lợi
+Nếu ngay cả vết thương của mình chúng ta còn không thể chữa, thì làm sao nghĩ cho người khác - M2 
+Nếu bản thân chúng ta còn chưa bò dậy, làm sao dìu người khác dậy, chữa lành vết thương của người khác - M2
+Người may mắn, cả đời đều được tuổi thơ chữa lành; người bất hạnh, cả đời đều đang chữa lành tuổi thơ - M2
+Nhiều quan hệ rạn vỡ do người này chỉ muốn kiểm soát người kia, chứ không xem đối phương là người có nhân cách lành mạnh giống mình - M2 
+Kẻ làm tổn hại người khác thường không nhớ sự tàn nhẫn của mình, vì người đau không phải là họ - M2
+Khi người ta thừa nhận mình sai về ai đó, họ đang thoát khỏi định kiến bước đầu tiên để yêu thật và sống thật.
+Ta phải luôn sẵn sàng cho mọi thứ - Rata
+Thức ăn đâu có tự bơi lên đĩa đâu - Rata
+Đôi khi người ta không tỏ ra khác – họ đang tìm lại đúng bản thể thật - Rata
+Không ai có thể khiến bạn tổn thương sâu sắc nếu bạn không bỏ quên chính mình. 
+Bởi mục tiêu không phải chỉ là cùng khởi hành mà còn là cùng đồng hành. 
+Có những người đến để cùng ta đi qua một quãng đời không phải để đi hết cuộc đời. 
+Đôi khi chúng ta ở trong một cơn bão quá lâu đến mức ta quên mất là có thể sống ở nơi yên bình hơn. 
+Bạn có thể yêu quá đẹp đến mức quên hỏi: người ấy có đủ trưởng thành để yêu lại mình một cách tương xứng không? 
+Cơ thể không cần bạn phải hoàn hảo. Nó chỉ cần bạn đừng quay lưng lại với nó
+Tập trung tìm kiếm thức ăn, tránh xa những thứ khiến bạn xao lãng - Jon.G
+Bạn sẽ không tìm được thức ăn khi cứ ngủ mãi dưới một tảng đá - Jon.G
+Bạn không thể bắt được sóng biển ngừng lại, nhưng bạn có thể học cách cưỡi sóng - Jon.G
+Bơi theo hướng đi đích thực của bạn - Jon.G
+Dám khác biệt dù điều đó khiến bạn cô đơn - Jon.G
+Bản năng bẩm sinh của mỗi người chúng ta là hoàn thành sứ mệnh của mình, sống cuộc đời của mình - M1 
+Bạn không trở thành kẻ ác, đó chính là lòng lương thiện kiên định nhất của bạn - M1
+Khi một điều chưa được thấy rõ, nó vẫn điều khiển bạn ở tầng vô thức. 
+Bạn cần cho phép mình sống đúng độ rực rỡ mà bạn đã cố gắng cả đời để có được. 
+Bạn không cần phải “xin lỗi” vì đã có được những điều mình xứng đáng. 
+Càng giấu đi những điều tốt đẹp, lâu dần bạn sẽ dần tin rằng nó không đáng để nói ra.
+Không đáng để người khác biết như thể mình phải “xin lỗi” vì đã sống tốt hơn, đã có nhiều hơn.
+Đừng để nỗi sợ hãi ngăn cản những điều tuyệt vời đến với mình. 
+Trong mỗi thất bại đều ẩn chứa hạt mầm của thành công.
+Đừng đếm những vì sao đã tắt, hãy ngắm những vì sao còn sáng. 
+Cuộc đời như dòng sông, uốn lượn qua từng khúc quanh của số phận.
+Hãy học cách cưỡi sóng vượt khó - Jon.G
+Bạn chính là tác giả của câu chuyện đời mình - Jon.G
+Bất cứ lúc nào, bạn cũng có thể viết lên một chương mới - Jon.G
+Ngay cả người giỏi nhất đôi khi cũng thất bại - Jon.G
+Vào những ngày khó khăn, hay vào mỗi ngày, hãy luôn khẳng định với chính mình, “Mọi chuyện rồi sẽ tốt đẹp!" - Andrew 
+Hôm nay tôi không phán xét những gì xảy ra - Andrew 
+Chấp nhận không có nghĩa là, “Tôi muốn ở đây." Chấp nhận có nghĩa, “Đây là nơi tôi đang có mặt – và bây giờ tôi chuyển sang nơi tôi muốn.” 
+Chấp nhận không có nghĩa là bỏ cuộc. Chấp nhận là nhận thức rằng “đây là một phần của cuộc hành trình
+Lời đánh giá của người khác không liên quan đến giá trị thực tế của chúng ta - M1
+Khi bi quan thất vọng, đừng quên trong tay bạn có một nửa số phận của mình. Khi vênh vang tự đắc, đừng quên còn có một nửa số phận nằm trong tay ông Trời. 
+Sở dĩ chúng ta phấn đấu, không phải để thay đổi thế giới, mà là để không bị thế giới thay đổi - M1
+Thật ra, rất nhiều việc không phải chúng ta không làm được, mà là không thể hạ thấp mình - M1
+Đôi khi, phải để mọi thứ tự diễn ra - Rata
+Sự tuyệt vời luôn ở quanh con, chỉ cần con dừng lại và thưởng thức - Rata
+Chúng ta là điều mà ta chọn để trở thành - Rata
+Không có đam mê thật nào mà không mang sẹo - Rata
+Hãy làm nên điều đáng nhớ - Rata
+Giới hạn thật sự luôn nằm trong nỗi sợ của chính mình - Rata
+Tài năng mà không hành động chỉ là một lời cầu nguyện dang dở - Rata
+Cuộc đời thật khó cho những kẻ mơ mộng - Rata
+Chủ động là một loại năng lực, chủ động chấm dứt tổn thương cũng là một loại năng lực - M1
+Niềm tin của bạn vĩ đại hơn mọi điều tiêu cực và hoài nghi - Jon.G
+Không tin đại dương luôn có đủ thức ăn cho mọi loài, thì cậu sẽ không bao giờ tìm được thức ăn - Jon.G
+Hãy chọn đặt niềm tin lên trên nổi sợ - Jon.G
+Đừng để những đám mây đen che khuất ánh mặt trời trong tâm hồn.
+Tưởng chừng như rất lâu nhưng thật ra thì chẳng mất tí thời gian nào cả - Ping
+Không có con đường nào dẫn đến hạnh phúc cả; chính hạnh phúc là Con Đường - Ping
+Không bao giờ là quá trễ để trở thành điều mình muốn - Ping
+Hây vươn đến thành công bằng cách giúp đỡ người khác - Ping
+Yêu thương không phải là bước xuống hố cùng ai đó, mà là giữ mình vững vàng để nếu họ muốn trèo lên, bạn mới có thể giúp họ được. 
+Những lời hứa này là “quà” của bạn-quá khứ gửi bạn-tương-lai nhưng quyền quyết định nằm ở phiên bản sẽ sống ngày đó.
+Không phải vì ai thuyết phục, mà vì sự thật lúc ấy là của bạn-lúc-ấy. 
+Hiện tại bạn điều khiển rất tốt; tương lai vẫn là bình địa riêng của nó. 
+Nếu không có một sự kiện “gần giống như cũ” xảy ra, bạn sẽ không chứng kiến mình ứng xử khác đi thế nào
+Lòng tốt mù quáng, có thể chính là điều ác. Đây chính là “Từ bi sinh tai họa, thuận tiện ra đê hèn” - M2
+Chúng ta phải lương thiện, nhưng cũng phải có giới hạn, phải học cách từ chối - M2 
+Bất kể lòng tốt từng gặp phải những tình huống thậm tệ đến đâu, chúng ta vẫn sẽ không vứt bỏ ý tốt trong lòng - M2 
+Chúng ta phải giữ lòng thiện cơ bản nhất, nhưng cũng bất tất vì sự hy sinh không cần thiết mà đánh mất hạnh phúc của mình - M2 
+Tha thứ và thông cảm mù quáng là dung túng cho cái ác, khinh nhờn cái thiện - M2
+Khi có thể bình thản đối xử với bản thân, bạn mới có thể thật sự vui vẻ đối xử với người khác - M2 
+Bản thân ở trên bờ, mới cứu được người dưới nước - M2 
+Nguyện cho tất cả những người không hiểu và thấu hiểu trên đời không ngừng trưởng thành nhưng vẫn tốt bụng như xưa - M1 
+Cuộc đời này phải sống vì bản thân mình. Đời khốc liệt bao nhiêu, bạn phải kiên cường bấy nhiêu - M1
+Lòng tốt của bạn cần thêm đôi phần sắc sảo, nếu không chẳng khác nào con số không tròn trĩnh - Ralph Waldo Emerson
+Một mực nhường nhịn hoặc lấy lòng, đó không phải tốt bụng mà chỉ là thái độ nhu nhược bạn không muốn thừa nhận - M1
+Người bản tính tốt bụng nhưng rành mạch rõ ràng, lại biết nổi cáu, sẽ sống tốt hơn - M1
+Khoan dung không đồng nghĩa với vô nguyên tắc, bạn nên thoải mái, nhưng cũng phải giữ giới hạn - M1
+Chỉ khi công nhận bản thân, chúng ta mới không hoài nghi giá trị của mình vì phán đoán phiến diện của người khác - M1
+Khiếm khuyết là một kiểu tín hiệu ngầm, nó đang gọi ý bạn nên cố gắng nhiều hơn - M1 
+Không nên hiếu thắng đem khuyết điểm của bản thân ra so sánh với ưu thế của người khác - M1
+Điều mỗi người có thể quyết định chỉ là lựa chọn hành động của mình - M1
+Làm người phải biết giữ lại chút tình yêu cho mình - M1
+Định mệnh không phải là một điều gì đó được định sẵn mà không thể thay đổi, mà chính là kết quả của những nhân mà ta đã gieo trong quá khứ
+Duyên đến thì tụ duyên tan thì tán đó là quy luật tự nhiên của vũ trụ mà không ai có thể thay đổi được - NP
+Mỗi cuộc gặp gỡ đều có ý nghĩa riêng của nó không có gì là ngẫu nhiên trong cuộc đời này - NP
+Chúng ta nên tin tưởng mọi người đều có thể sửa đổi sai lầm, nhưng hãy để cuộc đời kiểm chứng điều đó - TT  
+Tự chăm sóc bản thân, không ỷ lại vào người khác, cứ kiên trì tiến lên, chắc chắn sẽ nhìn thấy ánh sáng và sự ấm áp trên đoạn đường phía trước – TT 
+Người ta nghĩ gì, mình không thể biết; người khác làm gì, mình cũng không quản được - TT 
+Điều duy nhất có thể là tận lực hết lòng làm tốt việc của bản thân, đi con đường đã lựa chọn và sống tốt cuộc đời của chính mình – TT
+Đừng hấp thu thứ mà ta chưa hiểu - Rata
+Người ta sợ kẻ có tiêu chuẩn – vì tiêu chuẩn làm lộ ra sự dễ dãi của họ - Rata
+Tình yêu luôn đối mặt với sự thật và nỗi sợ rằng ta không bao giờ hiểu trọn người khác - Rata
+Giấc mơ bắt đầu không bằng tầm nhìn, mà bằng khứu giác cảm nhận sự sống trước khi chạm được tới nó - Rata
+Đừng cố tìm sự hoàn hảo quá mức - Rata
+Dù khác biệt, tình thân vẫn là sợi dây giữ ta khỏi lạc mất nhân tính - Rata
+Không gì bị bỏ phí nếu biết cách dùng nó - Rata
+Kẻ tầm thường thấy rác, người sáng tạo thấy nguyên liệu - Rata
+Đừng quá cố chấp vào bất kỳ chuyện gì. Thế giới này không phải dành riêng cho bạn, địa câu này chẳng phải chỉ vì một mình bạn mà quay – TT 
+Những cơ hội và những mối quan hệ làm thay đổi cuộc đời thường xuất hiện khi chúng ta ít mong đợi nhất. Vì vậy “Đừng bao giờ coi thường giây phút hiện tại 
+Khi chúng ta nghĩ mọi chuyện đang không ổn, thường là không phải thế. Chỉ là chúng ta chưa thấy hết bức tranh tổng thể
+Con đường, từng bước từng bước mà đi hết; tình cảm, từng chút từng chút mà hình thành; đời người, từng trang từng trang mà viết nên - TT
+Phần lớn những bước đột phá thường xảy ra trong những tình huống không được chờ đợi nhất. Đó là cách cuộc sống nhắc nhỏ ta tôn trọng từng người mà ta gặp 
+Để đạt được kết quả, bạn cần phải nghiêm túc. Cuộc sống sẽ khen thưởng cho sự nỗ lực chứ không phải những lời bào chữa
+Cuộc sống sẽ là một cuộc hành trình đầy ý nghĩa nếu bạn tự tìm cho mình một lối đi riêng - Lối đi của chính mình - FN 
+Điều mà tất cả chúng ta thường ao ước chính là: “Giá như tôi có thêm chút thời gian nữa - FN
+Mỗi giọt nước mắt đều chứa đựng một bài học về sự trưởng thành. 
+Hạnh phúc không nằm ở đích đến mà trong từng bước đi. 
+Những viên đá ngáng đường sẽ trở thành bậc thang dẫn tới thành công. 
+Khi nhìn lại quá khứ, điều quan trọng không phải thành công mà là bài học.
+Tôi muốn làm một người như vôi, người khác càng hắt nước lạnh, cuộc đời càng sôi sục - M1 
+Những người ngay cả dòng sông nhỏ cũng chưa từng thấy, lại ra vẻ am hiểu biển xanh - M1 
+Nhiều sự việc, chỉ có liên kết tiền căn hậu quả của nó lại, chúng ta mới có thể nhìn ra vấn đề gốc rễ - M1 
+Nếu có người xem thường bạn, không phải vì anh ta thật sự mạnh hơn bạn, mà vì anh ta không muốn phát hiện giá trị của bạn - M1
+Mỗi sớm mai thức dậy đều mang theo cơ hội bắt đầu lại từ đầu. 
+Đôi khi ta phải lạc đường để tìm ra con đường đúng đắn nhất.
+Nếu không cưỡi lên con sóng của sự thay đổi, bạn sẽ thấy mình nằm bên dưới nó - Jon.G
+Những con sóng truyền cảm hứng không phải vì chúng dâng lên rồi sụp xuống mà vì mỗi lần ngã xuống chúng đều lập tức vươn mình lên - Jon.G
+Là Cá mập hay Cá vàng đó là lựa chọn của chính bạn - Jon.G
+Hầu hết những con sóng mang đến sự thay đổi đều cho chúng ta những cơ hội để khởi đầu lại một cách tốt hơn - Jon.G
+Nghịch cảnh không phải là dấu chấm hết mà là một khởi đầu cho một điều tốt đẹp hơn - Jon.G
+Nếu bạn nghĩ rằng những năm tháng tươi đẹp của mình còn ở phía trước thì chúng đang chờ đón bạn - Jon.G
+Cuộc hành trình có ý nghĩa nhất chính là cuộc hành trình bên trong chúng ta - Ping
+Ai có thể đoán được chính xác thời điểm cuộc sống của mình thay đổi? - Ping
+Trong góc tối nhất vẫn ẩn chứa tia sáng của hy vọng. 
+Mỗi bình minh đều mang theo cơ hội viết lại câu chuyện của đời mình. 
+Đừng để những giây phút quý giá trôi qua trong vô nghĩa. 
+Mỗi mùa trong đời đều mang theo những bài học riêng về sự trưởng thành.
+Mọi khổ nạn đều là chất dinh dưỡng cần thiết cho trưởng thành và mọi sự trưởng thành đều mách bảo chúng ta rằng, bạn có thể sống tốt hơn một chút. 
+Mỗi người chỉ có thể chịu trách nhiệm cho cuộc đời mình, khi làm bất cứ việc gì, chúng ta đều phải đón nhận kết quả mà nó có thể mang lại. 
+Vứt bỏ ý nghĩ cho đi vì người khác để đổi lấy tôn trọng và đền đáp, thật ra chính là yêu cầu chúng ta chấp nhận sự khác biệt giữa người khác và bản thân
+Trong tim mỗi người đều có một khu vườn cần được chăm sóc. 
+Thời gian không chờ đợi ai, nhưng kỷ niệm sẽ mãi ở lại. 
+Những giấc mơ lớn nhất thường bắt đầu từ những bước đi nhỏ nhất. 
+Con sẽ chẳng bao giờ hạnh phúc nếu cứ giấu đi con người thật của mình - Rata
+Hạnh phúc không đến từ việc được chấp nhận, mà từ việc dám hiện ra đúng bản chất - Rata
+Đôi khi điều khó nhất chỉ là bắt đầu - Rata
+Mỗi khoảnh khắc hiện tại đều là món quà của cuộc sống.
+Trong góc tối nhất vẫn ẩn chứa tia sáng của hy vọng. 
+Nếu con đường bạn đi không có trở ngại nào, thì nó cũng chẳng đưa bạn đến đâu cả - Ping
+Nếu cháu không biết mình đang đi đâu thì đi theo con đường nào cũng vậy - Ping
+Tài năng là thiên phú, trong khi kỹ năng phải được rèn luyện - Ping
+Sống một cuộc sống có chủ đích là bước vào dòng chảy của số phận, luôn vận dụng luồng chảy của nó - Ping
+Hạnh phúc không phải là đích đến, mà là một hành trình - Ping
+Sai không đáng sợ, đáng sợ là không muốn sửa sai. 
+Bạn không sai vì đã từng hy vọng. Nhưng tiếp tục kỳ vọng vào một điều không còn tồn tại là cách tự đày đọa bản thân.
+Chịu thiệt là phúc nhưng lúc nào cũng chịu thiệt thì lấy đâu ra phúc - M1 
+Bạn không thẳng vì không đau.Bạn thắng vì vẫn giữ được sự nhân hậu và trí tuệ ngay cả khi đau. 
+Tôi không bắt đầu lại từ đầu.Tôi bắt đầu lại với mọi thứ tôi đã học được từ lần trước. 
+Yêu một người tổn thương sâu và không muốn chữa lành là bạn sẽ dần trở thành người đau kế tiếp
+Nhiều “người tốt" không phải tốt thật sự, mà là không có bản lĩnh để xấu xa - M2
+Con người ta có thể chia làm người tốt và kẻ xấu. Người tốt ngủ ngon hơn, còn kẻ xấu hình như có thể tận hưởng thời gian thức tốt hơn. 
+Nếu có người không hiểu cảm nhận chân thực của bạn, còn cố ý làm tổn thương bạn, thế thì, đừng quá tốt với người đó, cũng là cho mình một con đường sống
+Thấu cảm là giúp ai đó đứng dậy, chứ không phải chịu đau giùm họ. 
+Bản chất thật của một người không nằm ở lúc mọi thứ suôn sẻ, mà lộ ra rõ nhất khi họ bị "tác động". 
+Tất cả những "người chứng minh" đều rất để tâm người khác nhìn nhận thế nào đánh giá thế nào nên sống rất vất vả - M2
+Cơn phẫn nộ của kẻ đòi hỏi bắt nguồn từ nỗi tự ti và sợ hãi trước cảnh ngộ thất bại của mình - M2
+Tốt với người khác không phải trách nhiệm của tôi, chẳng qua tôi có lòng tốt thôi - M2
+Nếu ngày nào đó người khác cảm thấy sự giúp đỡ của tôi là lẽ đương nhiên, e rằng tôi đã có lỗi với lương tâm của mình, dùng cái thiện nhỏ để thực hiện cái ác lớn
+Đời người là một quá trình thử sai, trưởng thành cũng không ngoại lệ - M1
+Nên làm những gì, đi con đường nào, mỗi người đều tuân theo tiếng nói của nội tâm, dò dẫm từng bước một - M1
+Vấp ngã, thì bò dậy; va vỡ đầu, thì lùi lại; đi đường sai, thì quay lại; lạc lối, thì ngừng chân... - M1 
+Cuộc đời của mỗi người mỗi khác, ai ai cũng phải tự mình trải qua, mỗi người đều có bài học nhân sinh cần bản thân một mình hoàn thành - M1
+Bởi vì từng trải, cho nên thấu hiểu - M1
+Một khi đã gây ra nhân thì chắc chắn sẽ gặt quả, luật nhân quả trước giờ không bao giờ sai - NP
+Gặp nhau có khi là duyên, có khi là nợ gặp nhau có lúc để trả nợ có lúc để nối lại duyên xưa - NP
+Có biết bao việc diễn ra trong đời tưởng chừng như là ngẫu nhiên nhưng thật ra đã được sắp đặt từ trước - NP
+Có những cuộc gặp gỡ tưởng chừng tình cờ nhưng thật ra đã được sắp đặt từ trước bởi những sợi dây duyên nghiệp vô hình - NP
+Thật ra sự việc dù đơn giản đến đâu, nếu nghĩ quá nhiều cũng trở nên phức tạp – TT 
+Đi qua vùng giông bão, mặt trời tự nhiên sẽ xuất hiện – TT 
+Cố gắng đối xử tốt với những người bên mình một chút. Vì qua đời này rồi, chưa chắc đã gặp lại – TT 
+Mặt trời không vì bạn không vui mà sớm mai không mọc. Ảnh trăng cũng không vì bạn trách hờn mà cuối đêm – TT 
+Bất luận hôm nay gặp bao nhiêu khó khăn, hãy vững tin rằng: chỉ có hôm qua là không thể trở lại, còn ngày mai, chắc chắn sẽ đến – TT 
+Mọi việc đều có đáp án riêng của nó, đã có gắng hết mình rồi thì không cần phải lo lắng hay muộn phiền, cứ thuận theo nhân duyên là được – TT 
+Tha thứ cho người là bỏ qua cho mình. Nhưng nếu lại tiếp tục tin tưởng mù quáng, chính là trao cho kẻ khác thêm cơ hội tổn thương bạn - TT 
+Những người hạnh phúc sẽ ân cần và chu đáo hơn. Những người không hạnh phúc chỉ biết lo lắng cho chính bản thân họ - Andrew 
+Thường thì nơi tốt nhất để làm lại từ đầu chính là nơi bạn đang sống - Andrew 
+Bạn có thể không thành công, nhưng không thể không trưởng thành - M1
+Có lẽ trạng thái tốt nhất mà bạn đạt được sau cùng là, bạn đã biết yêu bản thân thế nào - M1 
+Phía sau sự vĩ đại, thường là những chi tiết vụn vặt như khó khăn, gian khổ, vùng vẫy mà ít ai hay biết - M1 
+Nỗi đau về tinh thần cũng mang đến cho chúng ta thông điệp tương tự, tức là: “Bạn nên thay đổi điều bạn đang nghĩ - Andrew 
+Khi chúng ta không thích chính bản thân mình, chúng ta cũng không thích ai khác được - Andrew 
+Nếu không biết trân trọng bản thân, bạn sẽ không đạt được điều mình muốn trong cuộc sống. Bạn phải cảm thấy rằng mình xứng đáng có được nó. 
+Chỉ trích bản thân không phải là khiêm tốn – mà là ngu ngốc - Andrew 
+Đừng phán xét cuộc sống chỉ bởi một lúc khó khăn - FN 
+Hãy kiên nhẫn vượt qua những lúc khốn khó và những lúc tươi đẹp hơn chắc chắn sẽ đến vào một lúc nào đó - FN 
+Đừng đi qua cuộc sống nhanh quá đến nỗi bạn quên là mình đang ở đâu và sẽ đi đâu - FN 
+Cuộc đời không phải là một cuộc đua nhưng là một hành trình với từng bước đi - FN 
+Người ta không thua khi bại trận mà chỉ thua khi đầu hàng - FN 
+Bạn không thể hiểu được giá trị của hạnh phúc khi chưa từng có những năm tháng bất hạnh, khổ đau - FN 
+Sự may mắn do chúng ta tự tạo ra mới là may mắn thật sự, và nó sẽ ở với chúng ta lâu dài - BM 
+Ai cũng mong muốn có được may mắn và thành công. Nhưng chỉ có một số ít người quyết tâm theo đuổi nó - BM
+Những thử thách không phải để đánh gục ta mà để rèn giũa ý chí. 
+Giữa muôn vàn khó khăn, nghị lực chính là ngọn đuốc soi đường. 
+Đường đi khó không vì ngăn sông cách núi mà vì thiếu nghị lực vượt qua. 
+Những tâm hồn mạnh mẽ nhất được tôi luyện từ nghịch cảnh. 
+Trong tim người kiên cường luôn chứa đựng sức mạnh của đại dương. 
  Đừng để hoàn cảnh định đoạt số phận, hãy để nghị lực dẫn đường. 
- Những đỉnh cao vĩ đại nhất chỉ dành cho những tâm hồn không biết mệt mỏi. 
- Giông bão càng dữ dội càng tôi luyện nên ý chí kiên cường. 
- Trong từng hơi thở đều chứa đựng sức mạnh của niềm tin. 
- Những vết thương không làm ta yếu đuối mà khiến ta mạnh mẽ hơn. 
- Đường lên đỉnh núi tuy xa nhưng không xa bằng ý chí vươn tới. 
- Trong tim người chiến thắng luôn có ngọn lửa không bao giờ tắt. 
- Những chặng đường khó khăn nhất sẽ dẫn đến thành công ngọt ngào nhất. 
- Đừng để nỗi sợ hãi đánh bại khát vọng vươn lên. 
- Trong từng thất bại đều ẩn chứa sức mạnh để đứng dậy mạnh mẽ hơn. 
- Những tâm hồn không bao giờ đầu hàng sẽ không bao giờ thất bại. 
- Giữa muôn vàn thử thách, chỉ có ý chí mới là bất diệt. 
- Đường đời không trải hoa hồng nhưng sẽ nở hoa cho người kiên định. 
- Trong tim người kiên cường có sức mạnh của cả thiên nhiên. 
- Những người chiến thắng không phải không sợ hãi, họ chỉ không để nỗi sợ chi phối. 
- Đừng để khó khăn đánh gục ước mơ, hãy để nghị lực dẫn lối. 
- Trong từng bước chân đều chứa đựng sức mạnh của niềm tin. 
- Những đỉnh cao vĩ đại luôn chờ đợi những tâm hồn không biết mệt mỏi. 
- Giữa muôn vàn thử thách, chỉ có ý chí mới là bất tử. 
- Mỗi vết thương đều để lại một bài học về sự trưởng thành. 
- Những chặng đường khó khăn nhất thường mang lại sự phát triển lớn nhất. 
- Trong quá trình trưởng thành, mỗi thất bại đều là một bậc thang tiến lên. 
- Đừng sợ thay đổi, vì đó chính là dấu hiệu của sự trưởng thành. 
- Những trải nghiệm đau thương nhất thường tạo nên những bài học quý giá nhất. 
- Mỗi ngày đều là cơ hội để trở thành phiên bản tốt hơn của chính mình. 
- Trong hành trình phát triển, không có con đường nào trải đầy hoa hồng. 
- Những khó khăn không phải để đánh gục ta mà để giúp ta trưởng thành. 
- Đừng so sánh với người khác, hãy so sánh với chính mình của ngày hôm qua.
+ Những đỉnh cao vĩ đại nhất chỉ dành cho những tâm hồn không biết mệt mỏi
+Mình biết mình là ai, nên kể cả khi người ta không hiểu mình, mình vẫn không đánh mất bản thân. 
+Bạn chỉ cần đúng người, người không cần bạn phải “bé lại” để họ được làm đàn ông. 
+Tình yêu không cần bạn phải co lại mà cần người đủ rộng lòng để chứa được một bạn đang lớn lên mỗi ngày. 
+Không phải cứ thua trong ván bài cảm xúc là bạn thua trong hành trình trưởng thành.
+Có những thất bại dạy bạn cách yêu mình hơn cả năm năm yêu người khác
+Một người biết tôn trọng nguyện vọng của bản thân cũng thường sẵn lòng dành cho người khác sự tôn trọng tương tự - M1
+Nếu chúng ta quen khẳng định bản thân thông qua người khác, thì cũng sẽ phải sống trong cái nhìn và lời nói của người khác - M1
+Bạn nên làm một "người tốt" thật sự khiến bản thân vui vẻ và người khác tán thưởng, chứ không phải là “người ba phải - M1
+Thật kỳ lạ, từ lúc nào tốt bụng đã trở thành cái cớ để đạp lên lý lẽ nhỉ? - M1
+Luôn cố gắng giúp người khác, mà quên mất người nên được giúp nhất chính là mình - M1
+Một mực thuận theo người khác, sợ nói ra suy nghĩ trong lòng mình, chứng tỏ chúng ta quá đỗi phụ thuộc vào sự khẳng định và khen ngợi của người khác 
+Khi sải bước chân của mình, bạn sẽ phát hiện phản ứng của người khác không hề tồi tệ như bạn tưởng - M2  
+Khi duyên đến thì mọi thứ sẽ tự nhiên diễn ra không cần phải cố gắng hay cưỡng ép - NP
+Mỗi người đến với nhau đều có nguyên do của nó, có thể là trả nợ, đòi nợ hay để học những bài học cần thiết - NP
+Không có gì là ngẫu nhiên trong vũ trụ này mọi việc đều nằm trong trật tự của nhân duyên - NP
+Duyên đến thì tuy duyên nhưng không đánh mất chính mình đó mới là cách ứng xử không ngoan - NP
+Trên thế gian này, chỉ có một điều nên làm duy nhất, là bạn nên yêu bản thân, đồng thời vì yêu bản thân mà nâng cao năng lực yêu thương - M1
+Mỗi cuộc đời đều có chặng đường riêng, mỗi ý thức đều trải qua phương thức hình thành riêng biệt - M1 
+Nhiều lúc chúng ta cần lắng nghe ý kiến của người khác, nhưng điều này không có nghĩa là chúng ta nhất định phải tin cách nói của người khác - M1
+Không có ai là trắc trở cả đời, không người nào là trọn đời không đau khổ. Chỉ cần giữ tâm thái tích cực, mọi thứ sẽ tốt đẹp theo – TT 
+Cây dù cao vạn trượng cũng không thể thiếu gốc, người dù huy hoàng thế nào cũng không thể quên ơn – TT 
+Lương thiện là điều tốt, nhưng nên biết ứng dụng đúng người đúng chỗ - TT 
+Nếu cứ bỏ qua mình để lo cho kẻ khác, sẽ chẳng ai quan tâm đến cảm nhận của bạn đâu – TT 
+Một nhân duyên tốt không cần đến sớm, mà là đến rồi sẽ không rời đi nữa, bởi đôi bên đều biết cách trân trọng giữ gìn – TT
+Không ai khác có trách nhiệm phải yêu mến bạn cả. Bạn phải có trách nhiệm yêu mến bản thân mình - Andrew 
+Tha thứ cho một người nào đó không có nghĩa là bạn phải đồng ý với những gì họ đã làm. Bạn chỉ muốn tốt cho cuộc sống của mình mà thôi. 
+Nếu tha thứ cho người khác là rất khó, tha thứ cho chính mình thâm chỉ còn khó hơn - Andrew
+Chỉ cần chúng ta cố gắng không mệt mỏi, tự kiểm điểm trong sai sót, trong đau khổ, thì cuối cùng cũng có thể tìm thấy con đường thuộc về mình. 
+Có lẽ có người cản trở bạn thành công, nhưng không ai cản trở bạn trưởng thành - M1
+Đến cuối cùng thứ giúp chúng ta đạt được mục đích không phải là số phận mà là bản thân chúng ta - M1
+Niềm vui của sự cho đi là ở chính thời điểm cho đi - Andrew 
+Một khi bạn đã cho đi rồi, thì việc đó đã kết thúc. Nếu bạn muốn hạnh phúc thì chỉ có một cách để cho đi – đó là không mong chờ được đền đáp. 
+Điều tốt nhất mà bạn có thể giúp những người nghèo khó là đừng trở thành một trong số họ - Andrew 
+Phần khó khăn nhất không phải là thực hiện công việc. Phần khó khăn nhất chính là quyết định thực hiện công việc - Andrew
+Trong quá trình trưởng thành, đôi khi ta phải đánh mất để tìm thấy.
+Đừng sợ thay đổi, vì đó là cách duy nhất để phát triển.
+Mỗi quyết định đều là một viên gạch xây dựng tương lai.
+Trưởng thành không phải là điểm đến mà là hành trình không ngừng học hỏi.
+Đôi khi khó khăn không phải để ngăn cản mà để kiểm tra xem chúng ta có thực sự nghiêm túc với sự lựa chọn của mình không.
+Để có được may mắn, bạn không nên chần chừ, phải cải tạo, phải tạo ra những điều kiện và môi trường tốt hơn - BM 
+Khi bạn cho đi nghĩa là bạn đang nhận về - BM 
+Vừa tìm kiếm để tạo ra những điều kiện của may mắn  vừa biết chia sẻ, giúp đỡ người khác sẽ khiến cho may mắn đến với bạn nhanh hơn - BM 
+Sau khi đã tạo ra tất cả những điều kiện cần thiết thì hãy nhẫn nại, đừng vội từ bỏ dù có bất kỳ điều gì xảy ra - BM 
+Để đạt được may mắn, bạn phải có niềm tin và lòng kiên trì - BM
+Những khoảnh khắc quý giá nhất thường đến không báo trước. 
+Mỗi hoàng hôn đều mang theo bài học về sự vô thường của cuộc sống. 
+Đừng đánh mất hiện tại vì nuối tiếc quá khứ hay lo lắng tương lai. 
+Những phút giây yên lặng thường mang đến những suy ngẫm sâu sắc nhất.
+Phải biết rằng, bạn chỉ cần làm tốt chuyện của mình, chuyện của ông Trời bạn không quản nổi, chuyện của người khác không liên quan đến bạn - M1 
+Vì đánh đồng việc thừa nhận đạo lý là đúng với việc hiểu được bản thân đạo lý, dẫn đến tình huống “hiểu rất nhiều đạo lý, vẫn không thể sống tốt đời này. 
+Đừng để mình sống quá mệt mỏi, bất cứ mối quan hệ nào đều cần đôi bên cùng duy trì, đó là nghĩa vụ của cả hai - M1 
+Nhường nhịn quá mức với người khác là tàn nhẫn với bản thân - M1
+Một số người không sợ thất bại, họ chỉ sợ người yêu mình thành công hơn họ. 
+Có những người đến để cùng ta đi qua một quãng đời không phải để đi hết cuộc đời. 
+Vì vậy, hãy cứ là bạn không cần huy hoàng, chỉ cần thật.  
+Mình vượt qua bài này không phải vì nó dễ mà vì mình đã lớn hơn nó rồi.
+Những khoảnh khắc đẹp nhất thường đến từ những điều giản dị nhất. 
+Mỗi phút giây ta sống đều góp phần tạo nên câu chuyện cuộc đời.
+Con sẽ không bao giờ biết mình sinh ra để làm gì cho đến khi con thử - Rata
+Đôi khi người bi quan nhất không phải kẻ xấu, mà là người từng mơ – và từng bị nghiền nát giấc mơ.
+Đôi khi chuyến tàu sai lại đưa ta đến đúng nơi cần đến - Rata
+Không ai sinh ra đã là đầu bếp giỏi; người ta học bằng cách làm - Rata
+Giỏi không phải là bẩm sinh, mà là kiên trì nếm thất bại - Rata
+Sức mạnh thật không phải không cần ai, mà là biết ai cần để cùng đi tiếp - Rata
+Đừng đếm những ngày đã qua, hãy làm cho những ngày còn lại trở nên ý nghĩa.
+Mình đã bắt đầu một điều lớn hơn mình có thể nghĩ từ một suy nghĩ nhỏ bé. 
+Hãy bắt đầu từ một suy nghĩ nhỏ vì biết đâu nó là một cái rễ của cây đại thụ thì sao. 
+Nhưng ý tưởng không hành vi sẽ là mộng tưởng. 
+Người đàn ông tử tế tự nâng vị thế bằng chính mình người đàn ông vội vàng mới cần 'bình hoa' để đứng cao.
+Những khoảnh khắc tưởng chừng bình thường lại trở thành vô giá khi nhìn lại. 
+Mỗi giây phút đều là cơ hội để tạo nên điều kỳ diệu
+Giông bão càng dữ dội càng tôi luyện nên ý chí kiên cường. 
+Trong từng hơi thở đều chứa đựng sức mạnh của niềm tin. 
+Những vết thương không làm ta yếu đuối mà khiến ta mạnh mẽ hơn.
+Chúng ta phải biết làm một "con nhím" hiền lành nhưng cũng có “vũ khí”, bảo vệ mình một cách thích đáng - M1
+Điều đáng sợ nhất của đời người là không biết mình muốn gì, hoặc người ta bảo sao ta tào lao làm vậy - M1
+Tuy kiên trì thứ mình thích chưa chắc có thể nhanh chóng thành công; nhưng kiên trì thứ mình không thích nhất định rất khó thành công - M1 
+Không phải nghề nghiệp này không thích hợp với tôi, mà là tôi phải nắm vững những kỹ năng trông có vẻ rất tẻ nhạt kia rồi mới có cơ hội làm việc mình thích nhất. 
+Trên con đường phấn đấu, đã lựa chọn thì phải từng bước từng bước đi tiếp - M1
+Đường lên đỉnh núi tuy xa nhưng không xa bằng ý chí vươn tới. 
+Trong tim người chiến thắng luôn có ngọn lửa không bao giờ tắt. 
+Những chặng đường khó khăn nhất sẽ dẫn đến thành công ngọt ngào nhất.
+Một phần vì đại của cuộc hành trình chính là người mà ta chọn làm bạn đồng hành - Ping
+Đừng hy vọng vào việc làm cho bầu trời quang đãng. Hãy giống như tre - mạnh mẽ, kiên cường - Ping
+Để sống với ước mơ, đừng lo lắng về những gì đã làm – hãy thực hiện những gì cản thực hiện - Ping
+Chính các quyết định chứ không phải những điều kiện, mới quyết định số phận của mình - Ping
+Giống như học bơi cả năm lý thuyết, thì cũng cần phải bước xuống nước 1 lần mới biết mình không còn sợ nữa. 
+Vũ trụ không gửi người để “xem bạn có đủ tốt để được yêu chưa", mà để xem bạn còn tự đẩy mình vào điều không lành không. 
+Lòng tốt thật sự chỉ cần dựa trên nguyên tắc, không dựa trên vô tư cống hiến bao nhiêu - M2 
+Đừng làm kẻ địch của chính mình, đừng sống trong lời khen chê của người đời - M2
+Bạn xứng đáng được tử tế với bản thân, cũng xứng đáng được người khác đối đãi tử tế - M2
+Đừng tệ bạc với bản thân, bằng không người khác chỉ ngược đãi bạn tàn nhẫn hơn mà thôi - M2
+Chúng ta sợ từ chối, thường vì quá đỗi dựa dẫm vào sự khẳng định và khen ngợi của người khác - M2
+Đến một ngày mọi sự chịu đựng của bạn sẽ trở nên có ý nghĩa. Đừng bỏ cuộc trước thời điểm đó.
+Nếu cảm thấy mệt mỏi hãy dừng lại nghĩ ngơi nhìn lại những gì đã trải qua để biết bản thân đã cố gắng thế nào và tiếp tục bước tiếp.
+Người khác giỏi hơn bạn thế nào không quan trọng, quan trọng là dù ít hay nhiều bạn phải giỏi hơn bạn của ngày hôm qua.
+Mọi thứ đều có thể thay đổi và mọi thứ sẽ thay đổi.
+Chỉ cần bạn không từ bỏ thì tất cả sẽ đâu vào đó, cứ bình tĩnh rồi mọi chuyện sẽ ổn cả thôi.
+Nước đến tận cùng là thác đổ, người đến đường cùng người hồi sinh.
+Đôi khi bạn phải buông bỏ những gì đã không còn phù hợp với cuộc sống của mình để tạo khoảng không cho những điều tốt đẹp mới tìm đến
+Lòng tốt của bạn cần thêm đôi phần sắc sảo.Thay vì xúp gà đôi khi bạn cũng cần một gáo nước lạnh - M1
+Một người có thể sống cả đời theo cách mình thích là chuyện vô cùng khó khăn - M1
+Chúng ta không giây phút nào không bị thế giới bên ngoài chỉ trỏ, lâu dần sẽ quên mất tâm tư ban sơ, mất đi khả năng suy nghĩ độc lập và giữ vững cái tôi.
+Có những cuộc gặp gỡ chỉ diễn ra trong tích tắc nhưng có thể thay đổi cả cuộc đời, đó chính lả duyên - NP
+Định mệnh chính là kết quả tất yêu của những hành động trong quá khứ nhưng tương lai thì luôn có thể thay đổi bằng những hành động hiện tại.
+Duyên phận không phải là một điều gì cố định mà là những mối quan hệ hình thành từ những nhân duyên trong quá khứ - NP
+Mỗi cuộc gặp gỡ đều là cơ hội để học hỏi và trưởng thành dù đó là duyên lành hay duyên nghiệp - NP
+Nếu có duyên, không mời cũng tự đến, đã vô duyên thì cưỡng cầu cũng chẳng được - TT 
+Kẻ không trân trọng, dù thề non hẹn biển rồi cũng sẽ quay lưng; người thật lòng với bạn, chẳng hứa hẹn gì vẫn ân cần gắn bó – TT 
+Sai sót ở đâu thì làm lại nơi đó – TT 
+Hôm qua đã không còn, ngày mai thì chưa đến, chỉ có bây giờ, ở đây. Hiện tại chăm chỉ cày cấy thì ngày sau ắt có cái để thu hoạch – TT 
+Người vinh quang đến đâu, phía sau cũng sẽ có những niềm đau giấu kín; kẻ hạnh phúc thế nào, trong lòng cũng sẽ có vài điều lo lắng khó xử - TT
+Bất kể bạn muốn đi đâu, hãy bắt đầu bằng những bước nhỏ, hãy biến thành công thành một thói quen - Andrew 
+Những đứa trẻ hạnh phúc và thành công sẽ học được cách đánh thắng trận chiến của riêng chúng - Andrew 
+Hãy nỗ lực tối đa đối với bất cứ chuyện gì ngay trước mặt bạn, cho dù nó nhỏ cỡ nào, và cơ hội sẽ bắt đầu tìm đến bạn - Andrew 
+Khi chúng ta tiếp tục nỗ lực hết sức mình, cuộc sống sẽ dẫn chúng ta đến những cơ hội mới. Đôi khi điều đó cần một khoảng thời gian, nhưng nó sẽ xảy ra.
+Không phải khả năng của ta làm nên con người thật của ta. Mà chính là chọn lựa của ta – HRPT 
+Nếu bạn không biết nơi mình muốn đến thì mọi con đường đều như nhau - ALI 
+Nếu bạn không biết mình muốn đến đâu thì mọi hướng đi đều có vẻ đúng và bạn chắc sẽ “đến đâu đó” nhưng không có gì đảm bảo rằng đó là nơi bạn muốn đến. 
+Đừng để nỗi sợ hãi đánh bại khát vọng vươn lên. 
+Trong từng thất bại đều ẩn chứa sức mạnh để đứng dậy mạnh mẽ hơn.
+Nếu muốn cuộc đời khỏi mờ mịt, trước tiên bản thân phải kiên cường; nếu muốn cho người khác hơi ấm, trước tiên phải để bản thân tỏa sáng - M1 
+May mắn chính là cố gắng học tập, cố gắng nâng cao năng lực của bản thân, khi cơ hội xuất hiện, có thể nắm bắt - M1
+Liệu có phải bạn đang sống cuộc đời treo trên miệng kẻ khác? - M1 
+Nếu bạn không mù, thì đừng quen biết tôi qua lời người khác - M1
+Một con chim có thể đậu trên bất kì cành cây nào mà nó thích và không sợ cành cây đó gãy vì nó đặt niềm tin vào đôi cánh của mình.
+Nếu cứ nhìn mãi vào những gì đã bỏ lại sau lưng,con sẽ chẳng bao giờ thấy điều đang chờ phía trước - Rata
+Thay đổi là tự nhiên, phần chúng ta có thể tác động chính là khi ta quyết định bắt đầu - Rata
+Không cần phải chờ cơ hội chỉ cần chọn sống khác, là ta đã thay đổi số phận rồi - Rata
+Con phải có trí tưởng tượng và trái tim mạnh mẽ, phải dám thử cả những điều có thể thất bại - Rata
+Món ăn sẽ luôn đến với những ai yêu việc nấu ăn - Rata
+Khi ta yêu điều mình làm, vũ trụ sẽ sắp xếp phần còn lại - Rata
+Muốn trở thành người thế nào, thì phải cố gắng hướng về mục tiêu thế ấy - M1 
+Những tâm hồn không bao giờ đầu hàng sẽ không bao giờ thất bại.
+Như đứng giữa sa mạc và nghĩ thế giới chỉ có cát nhưng không biết rằng, cách đó 100km thôi có một cánh rừng đang mưa. 
+Người đã từng bước qua bóng tối sẽ biết đâu là ánh sáng thật
+Trong từng bước chân đều chứa đựng sức mạnh của niềm tin. 
+Những đỉnh cao vĩ đại luôn chờ đợi những tâm hồn không biết mệt mỏi
+Bạn sẽ phải trả giá rất nhiều, nhưng nhờ đó bạn có thể đạt được khả năng chiến thắng mọi nghịch cảnh trong đời, đối mặt với cuộc sống một cách ung dung hơn. 
+Bạn đối với người khác thế nào, sẽ quyết định người khác đối với bạn thế ấy - M1
+Lòng tốt thật sự, là để người bên cạnh tự sống vui mỗi ngày, vào lúc cần giúp đỡ thì dốc hết sức giúp đỡ - M1 
+Không ai có quyền áp đặt “ý tốt” của mình hoặc cưỡng ép người khác tuân theo “bổn phận đạo đức” mà mình cho là đúng cả - M1
+Nhân quả giống như là tấm gương, phản chiếu chính xác những gì chúng ta đã vun trồng - NP
+Không có ai là nạn nhân hay kẻ chiến thắng thực sự chỉ có những bài học được trải nghiệm - NP
+Khi nhìn thấy ai đó đang sống cuộc sống mà bạn mong muốn, hãy nghĩ rằng: “Có nhiều bằng chứng hơn cho thấy những điều tốt đẹp hoàn toàn có thể xảy ra!” 
+Người tiếc thường tiếc phần mình chưa sống, hay phần mình gửi nhầm vào một 'đích'. Người không tiếc là người  thấy mình đã sống gì – và nói cảm ơn. 
+Từ bi đúng là từ bi có ranh giới: giữ lòng ấm, nhưng trả trách nhiệm về đúng chủ - Andrew 
+Nếu bạn có thể cảm nhận tốt hơn một chút hôm nay và hơn một chút nữa ngày mai, vậy là đủ - Andrew 
+Đừng oán trách nữa, cũng đừng sống cuộc đời theo lời người khác - M1 
+Muốn chăm sóc người khác, trước hết phải chăm sóc tốt bản thân - M1
+Chúng ta hoặc là chọn thứ mình thích, hoặc là thích thứ mình chọn - M1 
+Chúng ta phải đối mặt với cái tôi chân thực nhất, chấp nhận sự thực bản thân là một người bình thường - M1
+Những điều ước thành hiện thực không phải là cho không - Into The Wood
+Nếu ta là những gì mình ăn, thì tôi chỉ muốn ăn những thứ tốt đẹp - Rata
+Con người được nuôi dưỡng không chỉ bởi thức ăn, mà bởi điều ta chọn đưa vào tâm hồn mình.
+Điều duy nhất có thể dự đoán trong cuộc sống là nó chẳng thể đoán được - Rata
+Người thông minh thật sự không phải kẻ luôn đúng, mà là kẻ đủ khiêm nhường để thay đổi niềm tin của mình
+Trí tuệ mà không có lòng khiêm nhường thì chỉ là bóng tối có học thức - Rata
+Cái mới bị nghi ngờ không vì nó sai, mà vì nó khiến người ta phải thay đổi thói quen cũ - Rata
+Sự hiện hữu có thể biến mất nhưng ấn tượng thì không - ALI 
+Nếu ai cũng lo việc của mình thế giới này hẳn quay nhanh hơn nhiều - ALI 
+Con người luôn thay đổi hình dạng, nhưng chỉ ai giữ được bình tĩnh mới hiểu mình là ai - ALI
+Ánh sáng của ký ức và nhận thức là thứ con người thường sợ nhất vì nó buộc ta đối diện với chính mình - Carol
+Con người không sinh ra lạnh lùng — họ trở thành như vậy - Carol
+Con người không chỉ tồn tại — họ khám phá, họ sáng tạo - Rata
+Sự sống không chỉ là duy trì, mà là phát triển tinh thần - Rata
+Không thể hạnh phúc khi phải xin lỗi vì con người thật của mình - Rata 
+
